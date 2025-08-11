@@ -3,52 +3,117 @@
     Layout = "_Layout";
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h4 class="mb-0">Dashboard - Servicio Comunal</h4>
+<div class="dashboard-content">
+    <div class="content-header">
+        <h1>Dashboard de Administrador</h1>
+        <p>Control total del sistema</p>
+    </div>
+
+    <div class="dashboard-cards">
+        <!-- Card: Estudiantes -->
+        <div class="dashboard-card">
+            <div class="card-icon students">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <div class="card-content">
+                <h3>Estudiantes</h3>
+                <p>Gestionar lista de estudiantes</p>
+            </div>
+            <div class="card-stats">
+                <div class="stat-number">6</div>
+                <div class="stat-label">2 sin grupo</div>
+            </div>
+        </div>
+
+        <!-- Card: Grupos -->
+        <div class="dashboard-card">
+            <div class="card-icon groups">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="card-content">
+                <h3>Grupos</h3>
+                <p>Administrar formación de grupos</p>
+            </div>
+            <div class="card-stats">
+                <div class="stat-number">2</div>
+                <div class="stat-label">1 con tutor asignado</div>
+            </div>
+        </div>
+
+        <!-- Card: Tutores -->
+        <div class="dashboard-card">
+            <div class="card-icon tutors">
+                <i class="fas fa-chalkboard-teacher"></i>
+            </div>
+            <div class="card-content">
+                <h3>Tutores</h3>
+                <p>Asignar tutores a grupos</p>
+            </div>
+            <div class="card-stats">
+                <div class="stat-number">3</div>
+                <div class="stat-label">1 disponible</div>
+            </div>
+        </div>
+
+        <!-- Card: Progreso -->
+        <div class="dashboard-card">
+            <div class="card-icon progress">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="card-content">
+                <h3>Progreso Promedio</h3>
+                <p>Seguimiento del avance general</p>
+            </div>
+            <div class="card-stats">
+                <div class="stat-number">38%</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 38%"></div>
                 </div>
-                <div class="card-body text-center">
-                    @if (ViewBag.Success == true)
-                    {
-                        <div class="alert alert-success">
-                            <i class="fas fa-check-circle"></i> 
-                            <pre style="white-space: pre-wrap; text-align: left; margin-top: 10px;">@ViewBag.Message</pre>
-                        </div>
-                    }
-                    else if (ViewBag.Success == false)
-                    {
-                        <div class="alert alert-danger">
-                            <i class="fas fa-exclamation-triangle"></i> 
-                            <pre style="white-space: pre-wrap; text-align: left; margin-top: 10px;">@ViewBag.Message</pre>
-                        </div>
-                    }
-                    else
-                    {
-                        <h5>@ViewBag.Message</h5>
-                        <p class="text-muted">Esta será la página principal después del login exitoso.</p>
-                    }
-                    
-                    <div class="mt-4">
-                        <a href="@Url.Action("SeedData", "Home")" class="btn btn-primary me-2">
-                            <i class="fas fa-database"></i> Poblar BD Completa
-                        </a>
-                        <a href="@Url.Action("SeedUsuariosSafe", "Home")" class="btn btn-success me-2">
-                            <i class="fas fa-shield-alt"></i> Crear Usuarios (Seguro)
-                        </a>
-                        <a href="@Url.Action("ReseedUsuarios", "Home")" class="btn btn-warning me-2">
-                            <i class="fas fa-redo"></i> Recrear Usuarios
-                        </a>
-                        <a href="@Url.Action("VerificarUsuarios", "Home")" class="btn btn-info me-2">
-                            <i class="fas fa-users"></i> Verificar Usuarios
-                        </a>
-                        <a href="@Url.Action("Login", "Auth")" class="btn btn-outline-secondary">
-                            <i class="fas fa-sign-out-alt"></i> Ir al Login
-                        </a>
-                    </div>
-                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions Section -->
+    <div class="dashboard-actions">
+        <div class="actions-card">
+            <div class="actions-icon">
+                <i class="fas fa-upload"></i>
+            </div>
+            <div class="actions-content">
+                <h4>Importación</h4>
+                <p>Importar datos desde Excel</p>
+                <button class="btn btn-action">
+                    <i class="fas fa-file-upload"></i>
+                    Importar archivo
+                </button>
+            </div>
+        </div>
+
+        <div class="actions-card">
+            <div class="actions-icon">
+                <i class="fas fa-cogs"></i>
+            </div>
+            <div class="actions-content">
+                <h4>Configuración</h4>
+                <p>Permisos, configurar reportes</p>
+                <button class="btn btn-action">
+                    <i class="fas fa-cog"></i>
+                    Configurar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alerts Section -->
+    <div class="dashboard-alerts">
+        <div class="alert-item warning">
+            <div class="alert-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="alert-content">
+                <strong>3 estudiantes</strong>
+                <p>No tienen grupo asignado</p>
+                <a href="@Url.Action("Estudiantes", "Home")" class="alert-link">Gestionar grupos</a>
             </div>
         </div>
     </div>

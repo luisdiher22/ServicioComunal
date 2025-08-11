@@ -1,0 +1,281 @@
+@model IEnumerable<ServicioComunal.Models.Estudiante>
+@{
+    ViewData["Title"] = "Estudiantes";
+    Layout = "_Layout";
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle"></i>
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="dashboard-content">
+    <div class="content-header">
+        <div class="header-left">
+            <h1>Estudiantes</h1>
+            <p>Gestionar lista de estudiantes</p>
+        </div>
+        <div class="header-actions">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalEstudiante">
+                <i class="fas fa-plus"></i>
+                Agregar Estudiante
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtros y búsqueda -->
+    <div class="filters-section">
+        <div class="filters-card">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="Buscar por nombre, apellidos o cédula..." class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select id="filterClase" class="form-select">
+                        <option value="">Todas las clases</option>
+                        <option value="10mo">10mo</option>
+                        <option value="11mo">11mo</option>
+                        <option value="12mo">12mo</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select id="filterGrupo" class="form-select">
+                        <option value="">Todos los estados</option>
+                        <option value="con-grupo">Con grupo asignado</option>
+                        <option value="sin-grupo">Sin grupo asignado</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-outline-secondary w-100" onclick="limpiarFiltros()">
+                        <i class="fas fa-times"></i>
+                        Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas rápidas -->
+    <div class="stats-cards">
+        <div class="stat-card">
+            <div class="stat-icon students">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-number" id="totalEstudiantes">@Model.Count()</div>
+                <div class="stat-label">Total Estudiantes</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon groups">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-number" id="conGrupo">@Model.Count(e => e.GruposEstudiantes.Any())</div>
+                <div class="stat-label">Con Grupo</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon warning">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-number" id="sinGrupo">@Model.Count(e => !e.GruposEstudiantes.Any())</div>
+                <div class="stat-label">Sin Grupo</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de estudiantes -->
+    <div class="table-section">
+        <div class="table-card">
+            <div class="table-header">
+                <h3>Lista de Estudiantes</h3>
+                <div class="table-actions">
+                    <a href="#" onclick="exportarEstudiantes()" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-download"></i>
+                        Exportar
+                    </a>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover" id="tablaEstudiantes">
+                    <thead>
+                        <tr>
+                            <th>Cédula</th>
+                            <th>Nombre Completo</th>
+                            <th>Clase</th>
+                            <th>Estado Grupo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var estudiante in Model)
+                        {
+                            <tr data-estudiante-id="@estudiante.Identificacion">
+                                <td>@estudiante.Identificacion</td>
+                                <td>@estudiante.Nombre @estudiante.Apellidos</td>
+                                <td>
+                                    <span class="badge-clase">@estudiante.Clase</span>
+                                </td>
+                                <td>
+                                    @if (estudiante.GruposEstudiantes.Any())
+                                    {
+                                        <span class="badge badge-success">
+                                            <i class="fas fa-check-circle"></i>
+                                            Con Grupo
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-warning">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            Sin Grupo
+                                        </span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                onclick="verEstudiante(@estudiante.Identificacion)" 
+                                                title="Ver detalles">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-warning" 
+                                                onclick="editarEstudiante(@estudiante.Identificacion)" 
+                                                title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                onclick="eliminarEstudiante(@estudiante.Identificacion)" 
+                                                title="Eliminar">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Agregar/Editar Estudiante -->
+<div class="modal fade" id="modalEstudiante" tabindex="-1" aria-labelledby="modalEstudianteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEstudianteLabel">Agregar Estudiante</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEstudiante" novalidate>
+                    <input type="hidden" id="estudianteId" name="identificacionOriginal">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="identificacion" class="form-label">Número de Cédula *</label>
+                                <input type="number" class="form-control" id="identificacion" name="identificacion" required>
+                                <div class="invalid-feedback">
+                                    Por favor ingrese un número de cédula válido.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="clase" class="form-label">Clase *</label>
+                                <select class="form-select" id="clase" name="clase" required>
+                                    <option value="">Seleccionar clase</option>
+                                    <option value="10mo">10mo</option>
+                                    <option value="11mo">11mo</option>
+                                    <option value="12mo">12mo</option>
+                                </select>
+                                <div class="invalid-feedback">
+                                    Por favor seleccione una clase.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="nombre" class="form-label">Nombre *</label>
+                                <input type="text" class="form-control" id="nombre" name="nombre" required>
+                                <div class="invalid-feedback">
+                                    Por favor ingrese el nombre.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="apellidos" class="form-label">Apellidos *</label>
+                                <input type="text" class="form-control" id="apellidos" name="apellidos" required>
+                                <div class="invalid-feedback">
+                                    Por favor ingrese los apellidos.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" onclick="guardarEstudiante()">
+                    <i class="fas fa-save"></i>
+                    Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación para eliminar -->
+<div class="modal fade" id="modalEliminar" tabindex="-1" aria-labelledby="modalEliminarLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="modalEliminarLabel">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro que deseas eliminar este estudiante?</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-info-circle"></i>
+                    Esta acción no se puede deshacer.
+                </div>
+                <div id="estudianteInfo"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarEliminar">
+                    <i class="fas fa-trash"></i>
+                    Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/estudiantes.js"></script>
+}

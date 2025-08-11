@@ -55,7 +55,7 @@ namespace ServicioComunal.Controllers
                 // Por ahora redirigir al dashboard
                 return RedirectToAction("Dashboard", "Home");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 ViewBag.Error = "Error interno del servidor. Inténtalo más tarde.";
                 // TODO: Log the exception
@@ -66,6 +66,12 @@ namespace ServicioComunal.Controllers
         public IActionResult ForgotPassword()
         {
             return View();
+        }
+
+        public IActionResult Logout()
+        {
+            // TODO: Limpiar sesión/cookies
+            return RedirectToAction("Login");
         }
     }
 }

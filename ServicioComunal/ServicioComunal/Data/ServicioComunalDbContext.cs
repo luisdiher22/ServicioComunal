@@ -14,6 +14,7 @@ namespace ServicioComunal.Data
         public DbSet<Estudiante> Estudiantes { get; set; }
         public DbSet<Grupo> Grupos { get; set; }
         public DbSet<GrupoEstudiante> GruposEstudiantes { get; set; }
+        public DbSet<GrupoProfesor> GruposProfesores { get; set; }
         public DbSet<Entrega> Entregas { get; set; }
         public DbSet<Formulario> Formularios { get; set; }
         public DbSet<Notificacion> Notificaciones { get; set; }
@@ -26,6 +27,10 @@ namespace ServicioComunal.Data
             // Configuración de la clave compuesta para GrupoEstudiante
             modelBuilder.Entity<GrupoEstudiante>()
                 .HasKey(ge => new { ge.EstudianteIdentificacion, ge.GrupoNumero });
+
+            // Configuración de la clave compuesta para GrupoProfesor
+            modelBuilder.Entity<GrupoProfesor>()
+                .HasKey(gp => new { gp.GrupoNumero, gp.ProfesorIdentificacion });
 
             // Configurar claves primarias sin IDENTITY (auto-incremento)
             modelBuilder.Entity<Profesor>()
@@ -57,10 +62,17 @@ namespace ServicioComunal.Data
                 .HasForeignKey(ge => ge.GrupoNumero)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<GrupoEstudiante>()
-                .HasOne(ge => ge.Profesor)
-                .WithMany(p => p.GruposEstudiantes)
-                .HasForeignKey(ge => ge.ProfesorIdentificacion)
+            // Configuración de relaciones para GrupoProfesor
+            modelBuilder.Entity<GrupoProfesor>()
+                .HasOne(gp => gp.Grupo)
+                .WithMany(g => g.GruposProfesores)
+                .HasForeignKey(gp => gp.GrupoNumero)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<GrupoProfesor>()
+                .HasOne(gp => gp.Profesor)
+                .WithMany(p => p.GruposProfesores)
+                .HasForeignKey(gp => gp.ProfesorIdentificacion)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Configuración de relaciones para Entrega

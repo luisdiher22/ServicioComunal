@@ -1,0 +1,627 @@
+// Variables globales
+let tutorAEliminar = null;
+let tutorEnEdicion = null;
+let modoEdicion = false;
+
+// Inicialización
+document.addEventListener('DOMContentLoaded', function() {
+    inicializarEventos();
+    inicializarFiltros();
+});
+
+function inicializarEventos() {
+    // Modal de tutor
+    const modalTutor = document.getElementById('modalTutor');
+    modalTutor.addEventListener('hidden.bs.modal', function () {
+        limpiarFormulario();
+    });
+
+    // Validación en tiempo real
+    const form = document.getElementById('formTutor');
+    form.addEventListener('input', function(e) {
+        validarCampo(e.target);
+    });
+}
+
+function inicializarFiltros() {
+    // Búsqueda en tiempo real
+    document.getElementById('searchInput').addEventListener('input', function() {
+        filtrarTabla();
+    });
+
+    // Filtros por select
+    document.getElementById('filterRol').addEventListener('change', function() {
+        filtrarTabla();
+    });
+
+    document.getElementById('filterDisponibilidad').addEventListener('change', function() {
+        filtrarTabla();
+    });
+}
+
+function filtrarTabla() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const rolFilter = document.getElementById('filterRol').value;
+    const disponibilidadFilter = document.getElementById('filterDisponibilidad').value;
+    
+    const tbody = document.querySelector('#tablaTutores tbody');
+    const rows = tbody.querySelectorAll('tr');
+    
+    let visibleRows = 0;
+    
+    rows.forEach(row => {
+        const tutor = row.cells[0].textContent.toLowerCase();
+        const rol = row.cells[1].textContent.trim();
+        const grupos = row.cells[2].textContent;
+        const disponibilidad = row.cells[3].textContent;
+        
+        const cantidadGrupos = parseInt(grupos.match(/\d+/)[0]) || 0;
+        
+        let mostrar = true;
+        
+        // Filtro de búsqueda
+        if (searchTerm && !tutor.includes(searchTerm)) {
+            mostrar = false;
+        }
+        
+        // Filtro de rol
+        if (rolFilter && rol !== rolFilter) {
+            mostrar = false;
+        }
+        
+        // Filtro de disponibilidad
+        if (disponibilidadFilter) {
+            switch (disponibilidadFilter) {
+                case 'disponible':
+                    if (cantidadGrupos > 0) mostrar = false;
+                    break;
+                case 'asignado':
+                    if (cantidadGrupos === 0 || disponibilidad.includes('Capacidad completa')) mostrar = false;
+                    break;
+                case 'completo':
+                    if (!disponibilidad.includes('Capacidad completa')) mostrar = false;
+                    break;
+            }
+        }
+        
+        row.style.display = mostrar ? '' : 'none';
+        if (mostrar) visibleRows++;
+    });
+    
+    // Mostrar mensaje si no hay resultados
+    mostrarMensajeNoResultados(visibleRows === 0);
+}
+
+function mostrarMensajeNoResultados(mostrar) {
+    let mensajeRow = document.getElementById('noResultsRow');
+    
+    if (mostrar && !mensajeRow) {
+        const tbody = document.querySelector('#tablaTutores tbody');
+        mensajeRow = document.createElement('tr');
+        mensajeRow.id = 'noResultsRow';
+        mensajeRow.innerHTML = `
+            <td colspan="5" class="text-center py-4">
+                <div class="no-results">
+                    <i class="fas fa-search fa-2x text-muted mb-2"></i>
+                    <p class="text-muted">No se encontraron tutores que coincidan con los filtros aplicados.</p>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(mensajeRow);
+    } else if (!mostrar && mensajeRow) {
+        mensajeRow.remove();
+    }
+}
+
+function limpiarFiltros() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('filterRol').value = '';
+    document.getElementById('filterDisponibilidad').value = '';
+    filtrarTabla();
+}
+
+function verTutor(identificacion) {
+    // Obtener datos del tutor
+    fetch(`/Home/ObtenerTutor/${identificacion}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                mostrarDetallesTutor(data.tutor);
+            } else {
+                mostrarError('Error al cargar los datos del tutor');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            mostrarError('Error al comunicarse con el servidor');
+        });
+}
+
+function mostrarDetallesTutor(tutor) {
+    // TODO: Implementar modal de detalles o navegación a página de detalles
+    let detalles = `Detalles del tutor:\n`;
+    detalles += `Cédula: ${tutor.identificacion}\n`;
+    detalles += `Nombre: ${tutor.nombre} ${tutor.apellidos}\n`;
+    detalles += `Rol: ${tutor.rol}\n`;
+    detalles += `Grupos asignados: ${tutor.gruposAsignados || 0}`;
+    alert(detalles);
+}
+
+function editarTutor(identificacion) {
+    modoEdicion = true;
+    
+    // Obtener datos del tutor
+    fetch(`/Home/ObtenerTutor/${identificacion}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                cargarDatosEnFormulario(data.tutor);
+                document.getElementById('modalTutorLabel').textContent = 'Editar Tutor';
+                const modal = new bootstrap.Modal(document.getElementById('modalTutor'));
+                modal.show();
+            } else {
+                mostrarError('Error al cargar los datos del tutor');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            mostrarError('Error al comunicarse con el servidor');
+        });
+}
+
+function cargarDatosEnFormulario(tutor) {
+    document.getElementById('tutorId').value = tutor.identificacion;
+    document.getElementById('identificacion').value = tutor.identificacion;
+    document.getElementById('nombre').value = tutor.nombre;
+    document.getElementById('apellidos').value = tutor.apellidos;
+    document.getElementById('rol').value = tutor.rol;
+    
+    // En modo edición, deshabilitar el campo de cédula
+    document.getElementById('identificacion').disabled = true;
+}
+
+function asignarGrupos(identificacion) {
+    tutorEnEdicion = parseInt(identificacion);
+    
+    console.log('Asignando grupos para tutor:', tutorEnEdicion);
+    
+    // Obtener información del tutor y cargar grupos
+    fetch(`/Home/ObtenerTutor/${tutorEnEdicion}`)
+        .then(response => {
+            console.log('Respuesta ObtenerTutor:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Datos del tutor:', data);
+            if (data.success) {
+                document.getElementById('tutorNombreModal').textContent = `${data.tutor.nombre} ${data.tutor.apellidos}`;
+                
+                // Cargar grupos disponibles y asignados
+                console.log('Cargando grupos disponibles y asignados...');
+                return Promise.all([
+                    fetch('/Home/ObtenerGruposDisponibles'),
+                    fetch(`/Home/ObtenerGruposAsignadosATutor?tutorId=${tutorEnEdicion}`)
+                ]);
+            } else {
+                throw new Error(data.message || 'Error al obtener datos del tutor');
+            }
+        })
+        .then(responses => {
+            console.log('Respuestas grupos:', responses.map(r => r.status));
+            // Verificar que ambas respuestas sean exitosas
+            responses.forEach((response, index) => {
+                if (!response.ok) {
+                    throw new Error(`Error en consulta ${index}: ${response.status}`);
+                }
+            });
+            return Promise.all(responses.map(r => r.json()));
+        })
+        .then(([disponibles, asignados]) => {
+            console.log('Datos grupos disponibles:', disponibles);
+            console.log('Datos grupos asignados:', asignados);
+            if (disponibles.success && asignados.success) {
+                cargarGruposModal(disponibles.grupos, asignados.grupos);
+                const modal = new bootstrap.Modal(document.getElementById('modalAsignarGrupos'));
+                modal.show();
+            } else {
+                throw new Error('Error al cargar los grupos: ' + 
+                    (!disponibles.success ? disponibles.message : '') + 
+                    (!asignados.success ? asignados.message : ''));
+            }
+        })
+        .catch(error => {
+            console.error('Error completo:', error);
+            mostrarError('Error al comunicarse con el servidor: ' + error.message);
+        });
+}
+
+function cargarGruposModal(disponibles, asignados) {
+    const contenedorDisponibles = document.getElementById('gruposDisponibles');
+    const contenedorAsignados = document.getElementById('gruposAsignados');
+    
+    // Cargar grupos disponibles
+    contenedorDisponibles.innerHTML = '';
+    disponibles.forEach(grupo => {
+        const div = document.createElement('div');
+        div.className = 'grupo-item disponible';
+        div.innerHTML = `
+            <div class="grupo-info">
+                <strong>Grupo ${grupo.numero}</strong>
+                <small class="text-muted">${grupo.estudiantes} estudiantes</small>
+            </div>
+            <button class="btn btn-sm btn-success" onclick="asignarGrupoATutor(${grupo.numero})">
+                <i class="fas fa-plus"></i>
+            </button>
+        `;
+        contenedorDisponibles.appendChild(div);
+    });
+    
+    // Cargar grupos asignados
+    contenedorAsignados.innerHTML = '';
+    asignados.forEach(grupo => {
+        const div = document.createElement('div');
+        div.className = 'grupo-item asignado';
+        div.innerHTML = `
+            <div class="grupo-info">
+                <strong>Grupo ${grupo.numero}</strong>
+                <small class="text-muted">${grupo.estudiantes} estudiantes</small>
+            </div>
+            <button class="btn btn-sm btn-danger" onclick="quitarGrupoDeTutor(${grupo.numero})">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        contenedorAsignados.appendChild(div);
+    });
+}
+
+function asignarGrupoATutor(grupoNumero) {
+    console.log('Asignando grupo', grupoNumero, 'al tutor', tutorEnEdicion);
+    
+    fetch('/Home/AsignarGrupoATutor', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            tutorId: parseInt(tutorEnEdicion),
+            grupoNumero: parseInt(grupoNumero)
+        })
+    })
+    .then(response => {
+        console.log('Respuesta AsignarGrupoATutor:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Resultado asignación:', data);
+        if (data.success) {
+            // Recargar los grupos en el modal
+            asignarGrupos(tutorEnEdicion);
+            mostrarExito('Grupo asignado al tutor');
+        } else {
+            mostrarError(data.message || 'Error al asignar el grupo al tutor');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarError('Error al comunicarse con el servidor: ' + error.message);
+    });
+}
+
+function quitarGrupoDeTutor(grupoNumero) {
+    console.log('Quitando grupo', grupoNumero, 'del tutor', tutorEnEdicion);
+    
+    fetch('/Home/QuitarGrupoDeTutor', {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            tutorId: parseInt(tutorEnEdicion),
+            grupoNumero: parseInt(grupoNumero)
+        })
+    })
+    .then(response => {
+        console.log('Respuesta QuitarGrupoDeTutor:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Resultado remoción:', data);
+        if (data.success) {
+            // Recargar los grupos en el modal
+            asignarGrupos(tutorEnEdicion);
+            mostrarExito('Grupo quitado del tutor');
+        } else {
+            mostrarError(data.message || 'Error al quitar el grupo del tutor');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarError('Error al comunicarse con el servidor: ' + error.message);
+    });
+}
+
+function asignacionAutomatica() {
+    if (confirm('¿Deseas realizar una asignación automática de tutores a grupos? Esta acción asignará tutores disponibles a grupos sin tutor.')) {
+        fetch('/Home/AsignacionAutomaticaTutores', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                mostrarExito(`Asignación automática completada. ${data.asignaciones} grupos asignados.`);
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            } else {
+                mostrarError(data.message || 'Error en la asignación automática');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            mostrarError('Error al comunicarse con el servidor');
+        });
+    }
+}
+
+function eliminarTutor(identificacion) {
+    tutorAEliminar = identificacion;
+    
+    // Obtener datos del tutor para mostrar en el modal
+    fetch(`/Home/ObtenerTutor/${identificacion}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('tutorInfo').innerHTML = `
+                    <strong>Cédula:</strong> ${data.tutor.identificacion}<br>
+                    <strong>Nombre:</strong> ${data.tutor.nombre} ${data.tutor.apellidos}<br>
+                    <strong>Rol:</strong> ${data.tutor.rol}<br>
+                    <strong>Grupos asignados:</strong> ${data.tutor.gruposAsignados || 0}
+                `;
+                
+                const modal = new bootstrap.Modal(document.getElementById('modalEliminar'));
+                modal.show();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            mostrarError('Error al cargar los datos del tutor');
+        });
+}
+
+// Confirmar eliminación
+document.getElementById('btnConfirmarEliminar').addEventListener('click', function() {
+    if (tutorAEliminar) {
+        fetch(`/Home/EliminarTutor/${tutorAEliminar}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remover la fila de la tabla
+                const row = document.querySelector(`tr[data-tutor-id="${tutorAEliminar}"]`);
+                if (row) {
+                    row.remove();
+                }
+                
+                // Actualizar estadísticas
+                actualizarEstadisticas();
+                
+                // Cerrar modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalEliminar'));
+                modal.hide();
+                
+                mostrarExito('Tutor eliminado exitosamente');
+            } else {
+                mostrarError(data.message || 'Error al eliminar el tutor');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            mostrarError('Error al comunicarse con el servidor');
+        })
+        .finally(() => {
+            tutorAEliminar = null;
+        });
+    }
+});
+
+function guardarTutor() {
+    const form = document.getElementById('formTutor');
+    
+    if (!validarFormulario(form)) {
+        return;
+    }
+    
+    const formData = new FormData(form);
+    const tutor = {
+        identificacion: parseInt(formData.get('identificacion')),
+        nombre: formData.get('nombre').trim(),
+        apellidos: formData.get('apellidos').trim(),
+        rol: formData.get('rol')
+    };
+    
+    // Si estamos en modo edición, incluir la identificación original
+    if (modoEdicion) {
+        tutor.identificacionOriginal = parseInt(formData.get('identificacionOriginal'));
+    }
+    
+    const url = modoEdicion ? '/Home/ActualizarTutor' : '/Home/CrearTutor';
+    const method = modoEdicion ? 'PUT' : 'POST';
+    
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(tutor)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalTutor'));
+            modal.hide();
+            
+            mostrarExito(modoEdicion ? 'Tutor actualizado exitosamente' : 'Tutor creado exitosamente');
+            
+            // Recargar la página para mostrar los cambios
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            mostrarError(data.message || 'Error al guardar el tutor');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarError('Error al comunicarse con el servidor');
+    });
+}
+
+function validarFormulario(form) {
+    let valido = true;
+    const campos = form.querySelectorAll('input[required], select[required]');
+    
+    campos.forEach(campo => {
+        if (!validarCampo(campo)) {
+            valido = false;
+        }
+    });
+    
+    return valido;
+}
+
+function validarCampo(campo) {
+    let valido = true;
+    let mensaje = '';
+    
+    // Validación básica de campo requerido
+    if (campo.hasAttribute('required') && !campo.value.trim()) {
+        valido = false;
+        mensaje = 'Este campo es requerido';
+    }
+    
+    // Validaciones específicas
+    switch (campo.id) {
+        case 'identificacion':
+            if (campo.value && (isNaN(campo.value) || campo.value <= 0)) {
+                valido = false;
+                mensaje = 'Debe ser un número válido';
+            }
+            break;
+        case 'nombre':
+        case 'apellidos':
+            if (campo.value && campo.value.length < 2) {
+                valido = false;
+                mensaje = 'Debe tener al menos 2 caracteres';
+            }
+            break;
+    }
+    
+    // Aplicar estilos de validación
+    if (valido) {
+        campo.classList.remove('is-invalid');
+        campo.classList.add('is-valid');
+    } else {
+        campo.classList.remove('is-valid');
+        campo.classList.add('is-invalid');
+        
+        // Actualizar mensaje de error
+        const feedback = campo.nextElementSibling;
+        if (feedback && feedback.classList.contains('invalid-feedback')) {
+            feedback.textContent = mensaje;
+        }
+    }
+    
+    return valido;
+}
+
+function limpiarFormulario() {
+    const form = document.getElementById('formTutor');
+    form.reset();
+    
+    // Limpiar clases de validación
+    const campos = form.querySelectorAll('.form-control, .form-select');
+    campos.forEach(campo => {
+        campo.classList.remove('is-valid', 'is-invalid');
+        campo.disabled = false;
+    });
+    
+    // Restablecer título del modal
+    document.getElementById('modalTutorLabel').textContent = 'Agregar Tutor';
+    modoEdicion = false;
+}
+
+function actualizarEstadisticas() {
+    // Contar filas visibles
+    const rows = document.querySelectorAll('#tablaTutores tbody tr:not(#noResultsRow)');
+    let total = 0;
+    let conGrupos = 0;
+    let disponibles = 0;
+    let totalGruposAsignados = 0;
+    
+    rows.forEach(row => {
+        if (row.style.display !== 'none') {
+            total++;
+            const grupos = row.cells[2].textContent;
+            const cantidadGrupos = parseInt(grupos.match(/\d+/)[0]) || 0;
+            
+            totalGruposAsignados += cantidadGrupos;
+            
+            if (cantidadGrupos > 0) {
+                conGrupos++;
+            } else {
+                disponibles++;
+            }
+        }
+    });
+    
+    document.getElementById('totalTutores').textContent = total;
+    document.getElementById('conGrupos').textContent = conGrupos;
+    document.getElementById('disponibles').textContent = disponibles;
+    document.getElementById('promedio').textContent = total > 0 ? (totalGruposAsignados / total).toFixed(1) : 0;
+}
+
+function mostrarExito(mensaje) {
+    mostrarNotificacion(mensaje, 'success');
+}
+
+function mostrarError(mensaje) {
+    mostrarNotificacion(mensaje, 'error');
+}
+
+function mostrarNotificacion(mensaje, tipo) {
+    // Crear elemento de notificación
+    const notificacion = document.createElement('div');
+    notificacion.className = `alert alert-${tipo === 'success' ? 'success' : 'danger'} alert-dismissible fade show notification-toast`;
+    notificacion.innerHTML = `
+        <i class="fas fa-${tipo === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i>
+        ${mensaje}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Agregar al DOM
+    document.body.appendChild(notificacion);
+    
+    // Auto-eliminar después de 5 segundos
+    setTimeout(() => {
+        if (notificacion.parentNode) {
+            notificacion.remove();
+        }
+    }, 5000);
+}

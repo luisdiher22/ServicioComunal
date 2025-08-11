@@ -14,6 +14,7 @@ namespace ServicioComunal.Models
         // Propiedades de navegación
         public virtual ICollection<Entrega> Entregas { get; set; } = new List<Entrega>();
         public virtual ICollection<GrupoEstudiante> GruposEstudiantes { get; set; } = new List<GrupoEstudiante>();
+        public virtual ICollection<GrupoProfesor> GruposProfesores { get; set; } = new List<GrupoProfesor>();
         public virtual ICollection<Notificacion> Notificaciones { get; set; } = new List<Notificacion>();
     }
 }

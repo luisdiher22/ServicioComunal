@@ -12,17 +12,11 @@ namespace ServicioComunal.Models
         [Key, Column("GRUPO_Numero", Order = 1)]
         public int GrupoNumero { get; set; }
 
-        [Column("PROFESOR_Identificacion")]
-        public int ProfesorIdentificacion { get; set; }
-
         // Propiedades de navegación
         [ForeignKey("EstudianteIdentificacion")]
         public virtual Estudiante Estudiante { get; set; } = null!;
 
         [ForeignKey("GrupoNumero")]
         public virtual Grupo Grupo { get; set; } = null!;
-
-        [ForeignKey("ProfesorIdentificacion")]
-        public virtual Profesor Profesor { get; set; } = null!;
     }
 }
