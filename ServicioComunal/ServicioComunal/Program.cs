@@ -41,5 +41,5 @@ using (var scope = app.Services.CreateScope())
     var dataSeeder = scope.ServiceProvider.GetRequiredService<DataSeederService>();
     await dataSeeder.SeedDataAsync();
 }
-
+//Prueba 
 app.Run();
