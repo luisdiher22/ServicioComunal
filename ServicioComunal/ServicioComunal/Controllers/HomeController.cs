@@ -589,11 +589,46 @@ namespace ServicioComunal.Controllers
             }
         }
 
-        public IActionResult Configuracion()
+        public async Task<IActionResult> Configuracion()
         {
-            // TODO: Implementar configuración
-            ViewBag.Message = "Configuración del Sistema";
-            return View("Dashboard");
+            try
+            {
+                // Cargar datos para la configuración
+                var formularios = await _context.Formularios
+                    .Include(f => f.Profesor)
+                    .OrderByDescending(f => f.FechaIngreso)
+                    .ToListAsync();
+
+                var entregas = await _context.Entregas
+                    .Include(e => e.Grupo)
+                    .Include(e => e.Profesor)
+                    .OrderByDescending(e => e.FechaLimite)
+                    .ToListAsync();
+
+                var profesores = await _context.Profesores
+                    .OrderBy(p => p.Apellidos)
+                    .ThenBy(p => p.Nombre)
+                    .ToListAsync();
+
+                var grupos = await _context.Grupos
+                    .Include(g => g.GruposEstudiantes)
+                    .OrderBy(g => g.Numero)
+                    .ToListAsync();
+
+                // Configuración actual (valores por defecto o de base de datos)
+                ViewBag.MaxIntegrantesPorGrupo = 5; // Valor por defecto, puedes cambiarlo según tus necesidades
+                ViewBag.Formularios = formularios;
+                ViewBag.Entregas = entregas;
+                ViewBag.Profesores = profesores;
+                ViewBag.Grupos = grupos;
+
+                return View();
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Error = $"Error al cargar la configuración: {ex.Message}";
+                return View();
+            }
         }
 
         public async Task<IActionResult> SeedData()
@@ -1101,6 +1136,243 @@ namespace ServicioComunal.Controllers
         public IActionResult Error()
         {
             return View();
+        }
+
+        // ===== ACCIONES PARA CONFIGURACIÓN =====
+
+        [HttpPost]
+        public async Task<IActionResult> CrearFormulario([FromBody] Formulario formulario)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(formulario.Nombre) || 
+                    string.IsNullOrWhiteSpace(formulario.Descripcion))
+                {
+                    return Json(new { success = false, message = "Nombre y descripción son requeridos" });
+                }
+
+                formulario.FechaIngreso = DateTime.Now;
+                if (formulario.ArchivoRuta == null)
+                    formulario.ArchivoRuta = "";
+
+                _context.Formularios.Add(formulario);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Formulario creado exitosamente" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error al crear formulario: {ex.Message}" });
+            }
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> ActualizarFormulario([FromBody] Formulario formulario)
+        {
+            try
+            {
+                var formularioExistente = await _context.Formularios
+                    .FirstOrDefaultAsync(f => f.Identificacion == formulario.Identificacion);
+
+                if (formularioExistente == null)
+                {
+                    return Json(new { success = false, message = "Formulario no encontrado" });
+                }
+
+                formularioExistente.Nombre = formulario.Nombre;
+                formularioExistente.Descripcion = formulario.Descripcion;
+                formularioExistente.ArchivoRuta = formulario.ArchivoRuta ?? "";
+                if (formulario.ProfesorIdentificacion > 0)
+                    formularioExistente.ProfesorIdentificacion = formulario.ProfesorIdentificacion;
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Formulario actualizado exitosamente" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error al actualizar formulario: {ex.Message}" });
+            }
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> EliminarFormulario(int id)
+        {
+            try
+            {
+                var formulario = await _context.Formularios
+                    .FirstOrDefaultAsync(f => f.Identificacion == id);
+
+                if (formulario == null)
+                {
+                    return Json(new { success = false, message = "Formulario no encontrado" });
+                }
+
+                _context.Formularios.Remove(formulario);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Formulario eliminado exitosamente" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error al eliminar formulario: {ex.Message}" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CrearEntrega([FromBody] Entrega entrega)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(entrega.Nombre) || 
+                    string.IsNullOrWhiteSpace(entrega.Descripcion))
+                {
+                    return Json(new { success = false, message = "Nombre y descripción son requeridos" });
+                }
+
+                if (entrega.ArchivoRuta == null)
+                    entrega.ArchivoRuta = "";
+                if (entrega.Retroalimentacion == null)
+                    entrega.Retroalimentacion = "";
+
+                _context.Entregas.Add(entrega);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Entrega creada exitosamente" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error al crear entrega: {ex.Message}" });
+            }
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> ActualizarEntrega([FromBody] Entrega entrega)
+        {
+            try
+            {
+                var entregaExistente = await _context.Entregas
+                    .FirstOrDefaultAsync(e => e.Identificacion == entrega.Identificacion);
+
+                if (entregaExistente == null)
+                {
+                    return Json(new { success = false, message = "Entrega no encontrada" });
+                }
+
+                entregaExistente.Nombre = entrega.Nombre;
+                entregaExistente.Descripcion = entrega.Descripcion;
+                entregaExistente.FechaLimite = entrega.FechaLimite;
+                entregaExistente.ArchivoRuta = entrega.ArchivoRuta ?? "";
+                entregaExistente.Retroalimentacion = entrega.Retroalimentacion ?? "";
+                if (entrega.GrupoNumero > 0)
+                    entregaExistente.GrupoNumero = entrega.GrupoNumero;
+                if (entrega.ProfesorIdentificacion > 0)
+                    entregaExistente.ProfesorIdentificacion = entrega.ProfesorIdentificacion;
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Entrega actualizada exitosamente" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error al actualizar entrega: {ex.Message}" });
+            }
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> EliminarEntrega(int id)
+        {
+            try
+            {
+                var entrega = await _context.Entregas
+                    .FirstOrDefaultAsync(e => e.Identificacion == id);
+
+                if (entrega == null)
+                {
+                    return Json(new { success = false, message = "Entrega no encontrada" });
+                }
+
+                _context.Entregas.Remove(entrega);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Entrega eliminada exitosamente" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error al eliminar entrega: {ex.Message}" });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ObtenerFormulario(int id)
+        {
+            try
+            {
+                var formulario = await _context.Formularios
+                    .Include(f => f.Profesor)
+                    .FirstOrDefaultAsync(f => f.Identificacion == id);
+
+                if (formulario == null)
+                {
+                    return Json(new { success = false, message = "Formulario no encontrado" });
+                }
+
+                return Json(new { 
+                    success = true, 
+                    formulario = new {
+                        identificacion = formulario.Identificacion,
+                        nombre = formulario.Nombre,
+                        descripcion = formulario.Descripcion,
+                        archivoRuta = formulario.ArchivoRuta,
+                        fechaIngreso = formulario.FechaIngreso,
+                        profesorIdentificacion = formulario.ProfesorIdentificacion,
+                        profesorNombre = formulario.Profesor != null ? 
+                            $"{formulario.Profesor.Nombre} {formulario.Profesor.Apellidos}" : ""
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error al obtener formulario: {ex.Message}" });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ObtenerEntrega(int id)
+        {
+            try
+            {
+                var entrega = await _context.Entregas
+                    .Include(e => e.Grupo)
+                    .Include(e => e.Profesor)
+                    .FirstOrDefaultAsync(e => e.Identificacion == id);
+
+                if (entrega == null)
+                {
+                    return Json(new { success = false, message = "Entrega no encontrada" });
+                }
+
+                return Json(new { 
+                    success = true, 
+                    entrega = new {
+                        identificacion = entrega.Identificacion,
+                        nombre = entrega.Nombre,
+                        descripcion = entrega.Descripcion,
+                        archivoRuta = entrega.ArchivoRuta,
+                        fechaLimite = entrega.FechaLimite,
+                        retroalimentacion = entrega.Retroalimentacion,
+                        fechaRetroalimentacion = entrega.FechaRetroalimentacion,
+                        grupoNumero = entrega.GrupoNumero,
+                        profesorIdentificacion = entrega.ProfesorIdentificacion,
+                        profesorNombre = entrega.Profesor != null ? 
+                            $"{entrega.Profesor.Nombre} {entrega.Profesor.Apellidos}" : ""
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error al obtener entrega: {ex.Message}" });
+            }
         }
     }
 }

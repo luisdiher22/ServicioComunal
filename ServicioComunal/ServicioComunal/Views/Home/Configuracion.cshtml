@@ -1,0 +1,378 @@
+@using System.Linq
+@using ServicioComunal.Models
+@{
+    ViewData["Title"] = "Configuración";
+    Layout = "_Layout";
+}
+
+<div class="dashboard-content">
+    <div class="content-header">
+        <h1>Configuración del Sistema</h1>
+        <p>Gestionar configuraciones, formularios y entregas</p>
+    </div>
+
+    <!-- Tiles de Configuración Principal -->
+    <div class="dashboard-cards">
+        <!-- Tile: Configuración General -->
+        <div class="dashboard-card config-tile">
+            <div class="card-icon config">
+                <i class="fas fa-cogs"></i>
+            </div>
+            <div class="card-content">
+                <h3>Configuración General</h3>
+                <p>Ajustar parámetros del sistema</p>
+            </div>
+            <div class="card-stats">
+                <div class="config-setting">
+                    <label>Max. integrantes por grupo:</label>
+                    <input type="number" class="form-control-inline" id="maxIntegrantes" value="@ViewBag.MaxIntegrantesPorGrupo" min="1" max="20">
+                    <button class="btn btn-sm btn-primary" onclick="guardarConfiguracion()">
+                        <i class="fas fa-save"></i> Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tile: Estadísticas de Formularios -->
+        <div class="dashboard-card stats-tile" onclick="mostrarSeccionFormularios()">
+            <div class="card-icon forms">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <div class="card-content">
+                <h3>Formularios</h3>
+                <p>Gestionar formularios del sistema</p>
+            </div>
+            <div class="card-stats">
+                <div class="stat-number">@(ViewBag.Formularios != null ? ((IList<Formulario>)ViewBag.Formularios).Count : 0)</div>
+                <div class="stat-label">formularios registrados</div>
+            </div>
+        </div>
+
+        <!-- Tile: Estadísticas de Entregas -->
+        <div class="dashboard-card stats-tile" onclick="mostrarSeccionEntregas()">
+            <div class="card-icon deliveries">
+                <i class="fas fa-upload"></i>
+            </div>
+            <div class="card-content">
+                <h3>Entregas</h3>
+                <p>Administrar entregas y fechas</p>
+            </div>
+            <div class="card-stats">
+                <div class="stat-number">@(ViewBag.Entregas != null ? ((IList<Entrega>)ViewBag.Entregas).Count : 0)</div>
+                <div class="stat-label">entregas programadas</div>
+            </div>
+        </div>
+
+        <!-- Tile: Acciones Rápidas -->
+        <div class="dashboard-card actions-tile">
+            <div class="card-icon actions">
+                <i class="fas fa-bolt"></i>
+            </div>
+            <div class="card-content">
+                <h3>Acciones Rápidas</h3>
+                <p>Herramientas de administración</p>
+            </div>
+            <div class="card-stats">
+                <div class="quick-actions">
+                    <button class="btn btn-sm btn-success" onclick="mostrarModalFormulario()">
+                        <i class="fas fa-plus"></i> Nuevo Formulario
+                    </button>
+                    <button class="btn btn-sm btn-info" onclick="mostrarModalEntrega()">
+                        <i class="fas fa-plus"></i> Nueva Entrega
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección Expandible: Formularios -->
+    <div class="expandable-section" id="seccionFormularios" style="display: none;">
+        <div class="section-header">
+            <h3><i class="fas fa-file-alt"></i> Gestión de Formularios</h3>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="ocultarSeccion('seccionFormularios')">
+                <i class="fas fa-times"></i> Cerrar
+            </button>
+        </div>
+        <div class="section-content">
+            <div class="table-responsive">
+                <table class="table config-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th>Fecha Ingreso</th>
+                            <th>Profesor</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ViewBag.Formularios != null)
+                        {
+                            @foreach (var formulario in ViewBag.Formularios)
+                            {
+                                <tr>
+                                    <td><span class="badge badge-secondary">@formulario.Identificacion</span></td>
+                                    <td><strong>@formulario.Nombre</strong></td>
+                                    <td class="text-truncate">@formulario.Descripcion</td>
+                                    <td>@formulario.FechaIngreso.ToString("dd/MM/yyyy")</td>
+                                    <td>
+                                        @if (formulario.Profesor != null)
+                                        {
+                                            <div class="profesor-info">
+                                                <i class="fas fa-user"></i>
+                                                @formulario.Profesor.Nombre @formulario.Profesor.Apellidos
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Sin asignar</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="editarFormulario(@formulario.Identificacion)">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarFormulario(@formulario.Identificacion)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        @if (ViewBag.Formularios == null || ((IList<Formulario>)ViewBag.Formularios).Count == 0)
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                                    No hay formularios registrados
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección Expandible: Entregas -->
+    <div class="expandable-section" id="seccionEntregas" style="display: none;">
+        <div class="section-header">
+            <h3><i class="fas fa-upload"></i> Gestión de Entregas</h3>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="ocultarSeccion('seccionEntregas')">
+                <i class="fas fa-times"></i> Cerrar
+            </button>
+        </div>
+        <div class="section-content">
+            <div class="table-responsive">
+                <table class="table config-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th>Fecha Límite</th>
+                            <th>Grupo</th>
+                            <th>Profesor</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ViewBag.Entregas != null)
+                        {
+                            @foreach (var entrega in ViewBag.Entregas)
+                            {
+                                <tr>
+                                    <td><span class="badge badge-secondary">@entrega.Identificacion</span></td>
+                                    <td><strong>@entrega.Nombre</strong></td>
+                                    <td class="text-truncate">@entrega.Descripcion</td>
+                                    <td>
+                                        @{
+                                            var esVencida = entrega.FechaLimite < DateTime.Now;
+                                            var esProxima = entrega.FechaLimite <= DateTime.Now.AddDays(7) && entrega.FechaLimite >= DateTime.Now;
+                                        }
+                                        <span class="badge @(esVencida ? "badge-danger" : esProxima ? "badge-warning" : "badge-success")">
+                                            @entrega.FechaLimite.ToString("dd/MM/yyyy")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-primary">Grupo @entrega.GrupoNumero</span>
+                                    </td>
+                                    <td>
+                                        @if (entrega.Profesor != null)
+                                        {
+                                            <div class="profesor-info">
+                                                <i class="fas fa-user"></i>
+                                                @entrega.Profesor.Nombre @entrega.Profesor.Apellidos
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Sin asignar</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="editarEntrega(@entrega.Identificacion)">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarEntrega(@entrega.Identificacion)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        @if (ViewBag.Entregas == null || ((IList<Entrega>)ViewBag.Entregas).Count == 0)
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                                    No hay entregas programadas
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Formularios -->
+<div class="modal fade" id="modalFormulario" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalFormularioTitulo">Nuevo Formulario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formFormulario">
+                    <input type="hidden" id="formularioId" value="0">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Nombre del Formulario</label>
+                                <input type="text" class="form-control" id="formularioNombre" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Profesor Asignado</label>
+                                <select class="form-select" id="formularioProfesor">
+                                    <option value="">Seleccionar profesor</option>
+                                    @if (ViewBag.Profesores != null)
+                                    {
+                                        @foreach (var profesor in ViewBag.Profesores)
+                                        {
+                                            <option value="@profesor.Identificacion">@profesor.Nombre @profesor.Apellidos</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Descripción</label>
+                        <textarea class="form-control" id="formularioDescripcion" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Ruta del Archivo (opcional)</label>
+                        <input type="text" class="form-control" id="formularioArchivo" placeholder="Ej: /uploads/formulario.pdf">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarFormulario()">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Entregas -->
+<div class="modal fade" id="modalEntrega" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEntregaTitulo">Nueva Entrega</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEntrega">
+                    <input type="hidden" id="entregaId" value="0">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Nombre de la Entrega</label>
+                                <input type="text" class="form-control" id="entregaNombre" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Fecha Límite</label>
+                                <input type="date" class="form-control" id="entregaFechaLimite" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Grupo</label>
+                                <select class="form-select" id="entregaGrupo" required>
+                                    <option value="">Seleccionar grupo</option>
+                                    @if (ViewBag.Grupos != null)
+                                    {
+                                        @foreach (var grupo in ViewBag.Grupos)
+                                        {
+                                            <option value="@grupo.Numero">Grupo @grupo.Numero (@grupo.GruposEstudiantes.Count estudiantes)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Profesor Evaluador</label>
+                                <select class="form-select" id="entregaProfesor" required>
+                                    <option value="">Seleccionar profesor</option>
+                                    @if (ViewBag.Profesores != null)
+                                    {
+                                        @foreach (var profesor in ViewBag.Profesores)
+                                        {
+                                            <option value="@profesor.Identificacion">@profesor.Nombre @profesor.Apellidos</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Descripción</label>
+                        <textarea class="form-control" id="entregaDescripcion" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Ruta del Archivo (opcional)</label>
+                        <input type="text" class="form-control" id="entregaArchivo" placeholder="Ej: /uploads/entrega.pdf">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Retroalimentación (opcional)</label>
+                        <textarea class="form-control" id="entregaRetroalimentacion" rows="2" placeholder="Comentarios sobre la entrega"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarEntrega()">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/configuracion.js"></script>
+}

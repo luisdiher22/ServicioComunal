@@ -11,49 +11,55 @@
 
     <div class="dashboard-cards">
         <!-- Card: Estudiantes -->
-        <div class="dashboard-card">
-            <div class="card-icon students">
-                <i class="fas fa-graduation-cap"></i>
+        <a href="@Url.Action("Estudiantes", "Home")" class="dashboard-card-link">
+            <div class="dashboard-card">
+                <div class="card-icon students">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Estudiantes</h3>
+                    <p>Gestionar lista de estudiantes</p>
+                </div>
+                <div class="card-stats">
+                    <div class="stat-number">6</div>
+                    <div class="stat-label">2 sin grupo</div>
+                </div>
             </div>
-            <div class="card-content">
-                <h3>Estudiantes</h3>
-                <p>Gestionar lista de estudiantes</p>
-            </div>
-            <div class="card-stats">
-                <div class="stat-number">6</div>
-                <div class="stat-label">2 sin grupo</div>
-            </div>
-        </div>
+        </a>
 
         <!-- Card: Grupos -->
-        <div class="dashboard-card">
-            <div class="card-icon groups">
-                <i class="fas fa-users"></i>
+        <a href="@Url.Action("GestionGrupos", "Home")" class="dashboard-card-link">
+            <div class="dashboard-card">
+                <div class="card-icon groups">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Grupos</h3>
+                    <p>Administrar formación de grupos</p>
+                </div>
+                <div class="card-stats">
+                    <div class="stat-number">2</div>
+                    <div class="stat-label">1 con tutor asignado</div>
+                </div>
             </div>
-            <div class="card-content">
-                <h3>Grupos</h3>
-                <p>Administrar formación de grupos</p>
-            </div>
-            <div class="card-stats">
-                <div class="stat-number">2</div>
-                <div class="stat-label">1 con tutor asignado</div>
-            </div>
-        </div>
+        </a>
 
         <!-- Card: Tutores -->
-        <div class="dashboard-card">
-            <div class="card-icon tutors">
-                <i class="fas fa-chalkboard-teacher"></i>
+        <a href="@Url.Action("AsignarTutores", "Home")" class="dashboard-card-link">
+            <div class="dashboard-card">
+                <div class="card-icon tutors">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Tutores</h3>
+                    <p>Asignar tutores a grupos</p>
+                </div>
+                <div class="card-stats">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">1 disponible</div>
+                </div>
             </div>
-            <div class="card-content">
-                <h3>Tutores</h3>
-                <p>Asignar tutores a grupos</p>
-            </div>
-            <div class="card-stats">
-                <div class="stat-number">3</div>
-                <div class="stat-label">1 disponible</div>
-            </div>
-        </div>
+        </a>
 
         <!-- Card: Progreso -->
         <div class="dashboard-card">
@@ -75,33 +81,21 @@
 
     <!-- Actions Section -->
     <div class="dashboard-actions">
-        <div class="actions-card">
-            <div class="actions-icon">
-                <i class="fas fa-upload"></i>
+        <a href="@Url.Action("Configuracion", "Home")" class="actions-card-link">
+            <div class="actions-card">
+                <div class="actions-icon">
+                    <i class="fas fa-cogs"></i>
+                </div>
+                <div class="actions-content">
+                    <h4>Configuración</h4>
+                    <p>Gestionar configuración del sistema, formularios y entregas</p>
+                    <button class="btn btn-action">
+                        <i class="fas fa-cog"></i>
+                        Configurar
+                    </button>
+                </div>
             </div>
-            <div class="actions-content">
-                <h4>Importación</h4>
-                <p>Importar datos desde Excel</p>
-                <button class="btn btn-action">
-                    <i class="fas fa-file-upload"></i>
-                    Importar archivo
-                </button>
-            </div>
-        </div>
-
-        <div class="actions-card">
-            <div class="actions-icon">
-                <i class="fas fa-cogs"></i>
-            </div>
-            <div class="actions-content">
-                <h4>Configuración</h4>
-                <p>Permisos, configurar reportes</p>
-                <button class="btn btn-action">
-                    <i class="fas fa-cog"></i>
-                    Configurar
-                </button>
-            </div>
-        </div>
+        </a>
     </div>
 
     <!-- Alerts Section -->
