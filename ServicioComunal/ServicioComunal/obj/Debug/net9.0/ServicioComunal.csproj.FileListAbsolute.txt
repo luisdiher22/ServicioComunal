@@ -151,7 +151,6 @@ C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\Serv
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\ServicioComunal.genruntimeconfig.cache
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\ref\ServicioComunal.dll
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\ServicioComunal.sourcelink.json
-C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\b4kx2f4z8i-cy2j2y12zh.gz
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\dv95rdpfju-hdxu9pkfut.gz
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\x1drzuj8fm-tdkvbpldx9.gz
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\bin\Debug\net9.0\EPPlus.dll
@@ -161,3 +160,5 @@ C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\bin\Debug\net9.0\Micr
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\bin\Debug\net9.0\runtimes\win\lib\net7.0\Microsoft.Win32.SystemEvents.dll
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\bin\Debug\net9.0\runtimes\win\lib\net7.0\System.Drawing.Common.dll
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\2objixxzfm-96vqaqe3xb.gz
+C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\b4kx2f4z8i-sme7w161ck.gz
+C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\9ys0p4f7fe-bu65lt95nd.gz
