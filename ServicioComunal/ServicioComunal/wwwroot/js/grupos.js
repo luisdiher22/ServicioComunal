@@ -15,11 +15,26 @@ function inicializarEventos() {
         limpiarFormulario();
     });
 
-    // Validación en tiempo real
-    const form = document.getElementById('formGrupo');
-    form.addEventListener('input', function(e) {
-        validarCampo(e.target);
+    modalGrupo.addEventListener('shown.bs.modal', function () {
+        limpiarValidacion();
     });
+
+    // Validación solo en blur después del primer intento
+    const form = document.getElementById('formGrupo');
+    let validacionActivada = false;
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        validacionActivada = true;
+        crearGrupo();
+    });
+
+    // Solo validar en blur después del primer intento de guardar
+    form.addEventListener('blur', function(e) {
+        if (validacionActivada && e.target.matches('input, select')) {
+            validarCampo(e.target);
+        }
+    }, true);
 }
 
 function inicializarFiltros() {
@@ -599,11 +614,21 @@ function validarFormulario(form) {
     let valido = true;
     const campos = form.querySelectorAll('input[required], select[required]');
     
+    // Activar validación visual para todos los campos
     campos.forEach(campo => {
         if (!validarCampo(campo)) {
             valido = false;
         }
     });
+    
+    // Si hay errores, hacer scroll al primer campo con error
+    if (!valido) {
+        const primerError = form.querySelector('.is-invalid');
+        if (primerError) {
+            primerError.focus();
+            primerError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
     
     return valido;
 }
@@ -628,11 +653,8 @@ function validarCampo(campo) {
             break;
     }
     
-    // Aplicar estilos de validación
-    if (valido) {
-        campo.classList.remove('is-invalid');
-        campo.classList.add('is-valid');
-    } else {
+    // Aplicar estilos de validación solo si hay errores
+    if (!valido) {
         campo.classList.remove('is-valid');
         campo.classList.add('is-invalid');
         
@@ -641,6 +663,9 @@ function validarCampo(campo) {
         if (feedback && feedback.classList.contains('invalid-feedback')) {
             feedback.textContent = mensaje;
         }
+    } else {
+        campo.classList.remove('is-invalid');
+        campo.classList.add('is-valid');
     }
     
     return valido;
@@ -651,10 +676,31 @@ function limpiarFormulario() {
     form.reset();
     
     // Limpiar clases de validación
+    limpiarValidacion();
+}
+
+function limpiarValidacion() {
+    const form = document.getElementById('formGrupo');
     const campos = form.querySelectorAll('.form-control, .form-select');
     campos.forEach(campo => {
         campo.classList.remove('is-valid', 'is-invalid');
+        
+        // Remover y agregar required para evitar validación HTML5 automática
+        if (campo.hasAttribute('required')) {
+            campo.removeAttribute('required');
+            campo.dataset.wasRequired = 'true';
+        }
     });
+    
+    // Restaurar required después de un momento
+    setTimeout(() => {
+        campos.forEach(campo => {
+            if (campo.dataset.wasRequired === 'true') {
+                campo.setAttribute('required', '');
+                campo.removeAttribute('data-was-required');
+            }
+        });
+    }, 100);
 }
 
 function actualizarEstadisticas() {

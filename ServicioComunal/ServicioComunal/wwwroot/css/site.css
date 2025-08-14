@@ -87,7 +87,7 @@ body {
     border-radius: 10px;
     font-size: 14px;
     transition: all 0.3s ease;
-    background-color: #f8f9fa;
+    background-color: white;
 }
 
 .form-control:focus {
@@ -1198,6 +1198,7 @@ body {
     padding: 10px 12px;
     font-size: 14px;
     transition: all 0.3s ease;
+    background-color: white;
 }
 
 .form-control:focus,
@@ -1225,11 +1226,15 @@ body {
 }
 
 .invalid-feedback {
-    display: block;
+    display: none;
     width: 100%;
     margin-top: 0.25rem;
     font-size: 0.875em;
     color: #dc3545;
+}
+
+.is-invalid ~ .invalid-feedback {
+    display: block;
 }
 
 .form-text {

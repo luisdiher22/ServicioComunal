@@ -303,71 +303,55 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Información:</strong> Al crear una nueva entrega, se generará automáticamente una tarea para cada grupo existente. 
+                    Los profesores evaluadores se asignarán según el tutor de cada grupo.
+                </div>
                 <form id="formEntrega">
                     <input type="hidden" id="entregaId" value="0">
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="form-label">Nombre de la Entrega</label>
+                                <label class="form-label">Nombre de la Entrega *</label>
                                 <input type="text" class="form-control" id="entregaNombre" required>
+                                <div class="invalid-feedback">
+                                    Por favor ingrese el nombre de la entrega.
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="form-label">Fecha Límite</label>
+                                <label class="form-label">Fecha Límite *</label>
                                 <input type="date" class="form-control" id="entregaFechaLimite" required>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label">Grupo</label>
-                                <select class="form-select" id="entregaGrupo" required>
-                                    <option value="">Seleccionar grupo</option>
-                                    @if (ViewBag.Grupos != null)
-                                    {
-                                        @foreach (var grupo in ViewBag.Grupos)
-                                        {
-                                            <option value="@grupo.Numero">Grupo @grupo.Numero (@grupo.GruposEstudiantes.Count estudiantes)</option>
-                                        }
-                                    }
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label">Profesor Evaluador</label>
-                                <select class="form-select" id="entregaProfesor" required>
-                                    <option value="">Seleccionar profesor</option>
-                                    @if (ViewBag.Profesores != null)
-                                    {
-                                        @foreach (var profesor in ViewBag.Profesores)
-                                        {
-                                            <option value="@profesor.Identificacion">@profesor.Nombre @profesor.Apellidos</option>
-                                        }
-                                    }
-                                </select>
+                                <div class="invalid-feedback">
+                                    Por favor seleccione la fecha límite.
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Descripción</label>
-                        <textarea class="form-control" id="entregaDescripcion" rows="3" required></textarea>
+                        <label class="form-label">Descripción *</label>
+                        <textarea class="form-control" id="entregaDescripcion" rows="4" required 
+                                  placeholder="Describa los objetivos y requisitos de esta entrega..."></textarea>
+                        <div class="invalid-feedback">
+                            Por favor ingrese la descripción de la entrega.
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Ruta del Archivo (opcional)</label>
-                        <input type="text" class="form-control" id="entregaArchivo" placeholder="Ej: /uploads/entrega.pdf">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Retroalimentación (opcional)</label>
-                        <textarea class="form-control" id="entregaRetroalimentacion" rows="2" placeholder="Comentarios sobre la entrega"></textarea>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Nota:</strong> Los archivos se cargarán posteriormente en la gestión de entregas, 
+                        y la retroalimentación será proporcionada por cada tutor.
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="guardarEntrega()">Guardar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" onclick="guardarEntrega()">
+                    <i class="fas fa-save me-2"></i>Crear Entrega para Todos los Grupos
+                </button>
             </div>
         </div>
     </div>

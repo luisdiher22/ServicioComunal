@@ -186,8 +186,9 @@ function mostrarModalEntrega(editar = false, id = 0) {
     const titulo = document.getElementById('modalEntregaTitulo');
     
     if (editar) {
-        titulo.textContent = 'Editar Entrega';
-        cargarDatosEntrega(id);
+        // Deshabilitar edición ya que las entregas se manejan automáticamente
+        showNotification('error', 'Las entregas no se pueden editar individualmente. Se crean automáticamente para todos los grupos.');
+        return;
     } else {
         titulo.textContent = 'Nueva Entrega';
         limpiarEntregaForm();
@@ -230,60 +231,81 @@ function limpiarEntregaForm() {
     document.getElementById('entregaId').value = '0';
     document.getElementById('entregaNombre').value = '';
     document.getElementById('entregaDescripcion').value = '';
-    document.getElementById('entregaArchivo').value = '';
-    document.getElementById('entregaRetroalimentacion').value = '';
-    document.getElementById('entregaGrupo').value = '';
-    document.getElementById('entregaProfesor').value = '';
     document.getElementById('entregaFechaLimite').value = '';
+    
+    // Limpiar clases de validación
+    const form = document.getElementById('formEntrega');
+    const campos = form.querySelectorAll('.form-control, .form-select');
+    campos.forEach(campo => {
+        campo.classList.remove('is-valid', 'is-invalid');
+    });
 }
 
 function guardarEntrega() {
     const id = document.getElementById('entregaId').value;
     const nombre = document.getElementById('entregaNombre').value.trim();
     const descripcion = document.getElementById('entregaDescripcion').value.trim();
-    const archivo = document.getElementById('entregaArchivo').value.trim();
-    const retroalimentacion = document.getElementById('entregaRetroalimentacion').value.trim();
-    const grupoNumero = document.getElementById('entregaGrupo').value;
-    const profesorId = document.getElementById('entregaProfesor').value;
     const fechaLimite = document.getElementById('entregaFechaLimite').value;
     
-    if (!nombre || !descripcion || !fechaLimite || !grupoNumero || !profesorId) {
-        showNotification('error', 'Todos los campos marcados son requeridos');
+    // Validar campos requeridos
+    let hayErrores = false;
+    
+    if (!nombre) {
+        document.getElementById('entregaNombre').classList.add('is-invalid');
+        hayErrores = true;
+    } else {
+        document.getElementById('entregaNombre').classList.remove('is-invalid');
+    }
+    
+    if (!descripcion) {
+        document.getElementById('entregaDescripcion').classList.add('is-invalid');
+        hayErrores = true;
+    } else {
+        document.getElementById('entregaDescripcion').classList.remove('is-invalid');
+    }
+    
+    if (!fechaLimite) {
+        document.getElementById('entregaFechaLimite').classList.add('is-invalid');
+        hayErrores = true;
+    } else {
+        document.getElementById('entregaFechaLimite').classList.remove('is-invalid');
+    }
+    
+    if (hayErrores) {
+        showNotification('error', 'Por favor complete todos los campos requeridos');
         return;
     }
     
-    const entrega = {
-        identificacion: parseInt(id) || 0,
+    // Crear objeto de entrega simplificado
+    const entregaDto = {
         nombre: nombre,
         descripcion: descripcion,
-        archivoRuta: archivo,
-        fechaLimite: fechaLimite,
-        retroalimentacion: retroalimentacion,
-        grupoNumero: parseInt(grupoNumero),
-        profesorIdentificacion: parseInt(profesorId),
-        fechaRetroalimentacion: new Date().toISOString()
+        fechaLimite: fechaLimite
     };
     
-    const url = isEditing ? '/Home/ActualizarEntrega' : '/Home/CrearEntrega';
-    const method = isEditing ? 'PUT' : 'POST';
+    // Solo permitir crear nuevas entregas (no editar)
+    if (isEditing) {
+        showNotification('error', 'La edición de entregas no está disponible. Las entregas se crean automáticamente para todos los grupos.');
+        return;
+    }
     
-    fetch(url, {
-        method: method,
+    fetch('/Home/CrearEntrega', {
+        method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(entrega)
+        body: JSON.stringify(entregaDto)
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showNotification('success', data.message);
+            showNotification('success', data.message + (data.cantidadGrupos ? ` (${data.cantidadGrupos} grupos)` : ''));
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalEntrega'));
             modal.hide();
             // Recargar la página para mostrar los cambios
             setTimeout(() => {
                 location.reload();
-            }, 1500);
+            }, 2000);
         } else {
             showNotification('error', data.message);
         }

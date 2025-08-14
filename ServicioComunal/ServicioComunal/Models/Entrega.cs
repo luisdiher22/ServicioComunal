@@ -36,13 +36,13 @@ namespace ServicioComunal.Models
         public int GrupoNumero { get; set; }
 
         [Column("PROFESOR_Identificacion")]
-        public int ProfesorIdentificacion { get; set; }
+        public int? ProfesorIdentificacion { get; set; }
 
         // Propiedades de navegación
         [ForeignKey("GrupoNumero")]
         public virtual Grupo Grupo { get; set; } = null!;
 
         [ForeignKey("ProfesorIdentificacion")]
-        public virtual Profesor Profesor { get; set; } = null!;
+        public virtual Profesor? Profesor { get; set; }
     }
 }

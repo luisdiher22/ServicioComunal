@@ -1220,25 +1220,71 @@ namespace ServicioComunal.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CrearEntrega([FromBody] Entrega entrega)
+        public async Task<IActionResult> CrearEntrega([FromBody] EntregaCreacionDto entregaDto)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(entrega.Nombre) || 
-                    string.IsNullOrWhiteSpace(entrega.Descripcion))
+                if (string.IsNullOrWhiteSpace(entregaDto.Nombre) || 
+                    string.IsNullOrWhiteSpace(entregaDto.Descripcion))
                 {
                     return Json(new { success = false, message = "Nombre y descripción son requeridos" });
                 }
 
-                if (entrega.ArchivoRuta == null)
-                    entrega.ArchivoRuta = "";
-                if (entrega.Retroalimentacion == null)
-                    entrega.Retroalimentacion = "";
+                // Obtener todos los grupos existentes con sus tutores
+                var grupos = await _context.Grupos
+                    .Include(g => g.GruposProfesores)
+                    .ThenInclude(gp => gp.Profesor)
+                    .ToListAsync();
 
-                _context.Entregas.Add(entrega);
+                if (!grupos.Any())
+                {
+                    return Json(new { success = false, message = "No hay grupos disponibles para crear entregas" });
+                }
+
+                // Crear una entrega por cada grupo
+                var entregas = new List<Entrega>();
+                var gruposSinTutor = new List<int>();
+                
+                foreach (var grupo in grupos)
+                {
+                    var tutor = grupo.GruposProfesores.FirstOrDefault()?.Profesor;
+                    
+                    var entrega = new Entrega
+                    {
+                        Nombre = entregaDto.Nombre,
+                        Descripcion = entregaDto.Descripcion,
+                        FechaLimite = entregaDto.FechaLimite,
+                        GrupoNumero = grupo.Numero,
+                        ProfesorIdentificacion = tutor?.Identificacion, // NULL si no tiene tutor
+                        ArchivoRuta = "", // Se llenará cuando se adjunte archivo
+                        Retroalimentacion = "", // Se llenará por el tutor
+                        FechaRetroalimentacion = DateTime.MinValue
+                    };
+                    
+                    entregas.Add(entrega);
+                    
+                    if (tutor == null)
+                    {
+                        gruposSinTutor.Add(grupo.Numero);
+                    }
+                }
+
+                _context.Entregas.AddRange(entregas);
                 await _context.SaveChangesAsync();
 
-                return Json(new { success = true, message = "Entrega creada exitosamente" });
+                string mensaje = $"Entrega creada exitosamente para {entregas.Count} grupos";
+                
+                if (gruposSinTutor.Any())
+                {
+                    mensaje += $". Advertencia: {gruposSinTutor.Count} grupos sin tutor asignado (Grupos: {string.Join(", ", gruposSinTutor)})";
+                }
+
+                return Json(new { 
+                    success = true, 
+                    message = mensaje,
+                    cantidadGrupos = entregas.Count,
+                    gruposSinTutor = gruposSinTutor.Count
+                });
             }
             catch (Exception ex)
             {
@@ -1266,8 +1312,9 @@ namespace ServicioComunal.Controllers
                 entregaExistente.Retroalimentacion = entrega.Retroalimentacion ?? "";
                 if (entrega.GrupoNumero > 0)
                     entregaExistente.GrupoNumero = entrega.GrupoNumero;
-                if (entrega.ProfesorIdentificacion > 0)
-                    entregaExistente.ProfesorIdentificacion = entrega.ProfesorIdentificacion;
+                
+                // Permitir asignar o quitar profesor (NULL permitido)
+                entregaExistente.ProfesorIdentificacion = entrega.ProfesorIdentificacion;
 
                 await _context.SaveChangesAsync();
 
