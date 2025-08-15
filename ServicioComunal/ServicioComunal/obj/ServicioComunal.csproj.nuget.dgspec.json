@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\luisd\\mi_proyecto\\ServicioComunal\\ServicioComunal\\ServicioComunal.csproj": {}
+    "C:\\Users\\Admin\\OneDrive\\Escritorio\\repos vsc\\ServicioComunal\\ServicioComunal\\ServicioComunal\\ServicioComunal\\ServicioComunal.csproj": {}
   },
   "projects": {
-    "C:\\Users\\luisd\\mi_proyecto\\ServicioComunal\\ServicioComunal\\ServicioComunal.csproj": {
+    "C:\\Users\\Admin\\OneDrive\\Escritorio\\repos vsc\\ServicioComunal\\ServicioComunal\\ServicioComunal\\ServicioComunal\\ServicioComunal.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\luisd\\mi_proyecto\\ServicioComunal\\ServicioComunal\\ServicioComunal.csproj",
+        "projectUniqueName": "C:\\Users\\Admin\\OneDrive\\Escritorio\\repos vsc\\ServicioComunal\\ServicioComunal\\ServicioComunal\\ServicioComunal\\ServicioComunal.csproj",
         "projectName": "ServicioComunal",
-        "projectPath": "C:\\Users\\luisd\\mi_proyecto\\ServicioComunal\\ServicioComunal\\ServicioComunal.csproj",
-        "packagesPath": "C:\\Users\\luisd\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\luisd\\mi_proyecto\\ServicioComunal\\ServicioComunal\\obj\\",
+        "projectPath": "C:\\Users\\Admin\\OneDrive\\Escritorio\\repos vsc\\ServicioComunal\\ServicioComunal\\ServicioComunal\\ServicioComunal\\ServicioComunal.csproj",
+        "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Admin\\OneDrive\\Escritorio\\repos vsc\\ServicioComunal\\ServicioComunal\\ServicioComunal\\ServicioComunal\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\luisd\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -90,7 +90,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.301/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
