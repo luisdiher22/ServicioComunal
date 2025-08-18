@@ -11,6 +11,15 @@ builder.Services.AddDbContext<ServicioComunalDbContext>(options =>
 // Agregar servicios de MVC
 builder.Services.AddControllersWithViews();
 
+// Agregar servicios de sesión
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
 // Registrar servicios personalizados
 builder.Services.AddScoped<DataSeederService>();
 builder.Services.AddScoped<UsuarioService>();
@@ -28,6 +37,9 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+// Usar sesiones
+app.UseSession();
 
 app.UseAuthorization();
 
