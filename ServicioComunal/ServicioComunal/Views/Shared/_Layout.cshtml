@@ -59,6 +59,14 @@
                         <i class="fas fa-chalkboard-teacher"></i>
                         <span>Asignar Tutores</span>
                     </a>
+                    <a href="@Url.Action("Formularios", "Home")" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Formularios" ? "active" : "")">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Formularios</span>
+                    </a>
+                    <a href="@Url.Action("Entregas", "Home")" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Entregas" ? "active" : "")">
+                        <i class="fas fa-tasks"></i>
+                        <span>Entregas</span>
+                    </a>
                     <a href="@Url.Action("Configuracion", "Home")" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Configuracion" ? "active" : "")">
                         <i class="fas fa-cog"></i>
                         <span>Configuración</span>

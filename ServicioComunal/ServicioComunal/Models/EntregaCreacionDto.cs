@@ -12,5 +12,7 @@ namespace ServicioComunal.Models
 
         [Required]
         public DateTime FechaLimite { get; set; }
+
+        public int? FormularioIdentificacion { get; set; }
     }
 }

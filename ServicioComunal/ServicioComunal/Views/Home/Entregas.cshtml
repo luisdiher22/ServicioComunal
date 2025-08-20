@@ -1,0 +1,210 @@
+@model List<ServicioComunal.Models.Entrega>
+
+@{
+    ViewData["Title"] = "Gestión de Entregas";
+}
+
+<div class="dashboard-header-content">
+    <h1 class="dashboard-title">
+        <i class="fas fa-tasks"></i>
+        Gestión de Entregas
+    </h1>
+    <p class="dashboard-subtitle">Administra las entregas del sistema</p>
+</div>
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger" role="alert">
+        <i class="fas fa-exclamation-triangle"></i>
+        @ViewBag.Error
+    </div>
+}
+
+<div class="content-section">
+    <div class="section-header">
+        <h2>Lista de Entregas</h2>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalEntrega">
+            <i class="fas fa-plus"></i>
+            Nueva Entrega
+        </button>
+    </div>
+
+    <div class="table-container">
+        <table class="table table-striped" id="tablaEntregas">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Fecha Límite</th>
+                    <th>Grupo</th>
+                    <th>Formulario</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var entrega in Model)
+                {
+                    var fechaVencida = entrega.FechaLimite < DateTime.Now;
+                    var tieneArchivo = !string.IsNullOrEmpty(entrega.ArchivoRuta);
+                    var tieneRetroalimentacion = !string.IsNullOrEmpty(entrega.Retroalimentacion);
+
+                    <tr class="@(fechaVencida ? "table-warning" : "")">
+                        <td>@entrega.Identificacion</td>
+                        <td>@entrega.Nombre</td>
+                        <td>@entrega.Descripcion</td>
+                        <td>
+                            @entrega.FechaLimite.ToString("dd/MM/yyyy HH:mm")
+                            @if (fechaVencida)
+                            {
+                                <br><small class="text-danger"><i class="fas fa-exclamation-triangle"></i> Vencida</small>
+                            }
+                        </td>
+                        <td>
+                            <span class="badge badge-info">Grupo @entrega.GrupoNumero</span>
+                        </td>
+                        <td>
+                            @if (entrega.Formulario != null)
+                            {
+                                <a href="@Url.Action("DescargarFormulario", "Home", new { id = entrega.Formulario.Identificacion })" 
+                                   class="btn btn-sm btn-outline-primary" title="Descargar formulario asociado">
+                                    <i class="fas fa-file-download"></i> @entrega.Formulario.Nombre
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="text-muted">
+                                    <i class="fas fa-minus"></i> Sin formulario
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            @if (tieneArchivo && tieneRetroalimentacion)
+                            {
+                                <span class="badge badge-success"><i class="fas fa-check"></i> Completada</span>
+                            }
+                            else if (tieneArchivo)
+                            {
+                                <span class="badge badge-info"><i class="fas fa-upload"></i> Entregada</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-secondary"><i class="fas fa-clock"></i> Pendiente</span>
+                            }
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-info" onclick="verEntrega(@entrega.Identificacion)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-warning" onclick="editarEntrega(@entrega.Identificacion)">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="eliminarEntrega(@entrega.Identificacion)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal para crear/editar entrega -->
+<div class="modal fade" id="modalEntrega" tabindex="-1" aria-labelledby="modalEntregaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEntregaLabel">Nueva Entrega</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEntrega">
+                    <input type="hidden" id="entregaId" name="identificacion">
+                    
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="entregaNombre" class="form-label">Nombre de la Entrega *</label>
+                            <input type="text" class="form-control" id="entregaNombre" name="nombre" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="entregaFechaLimite" class="form-label">Fecha Límite *</label>
+                            <input type="datetime-local" class="form-control" id="entregaFechaLimite" name="fechaLimite" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="entregaDescripcion" class="form-label">Descripción *</label>
+                            <textarea class="form-control" id="entregaDescripcion" name="descripcion" rows="3" required></textarea>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="entregaFormulario" class="form-label">Formulario Asociado</label>
+                            <select class="form-select" id="entregaFormulario" name="formularioIdentificacion">
+                                <option value="">-- Sin formulario --</option>
+                                @{
+                                    var formularios = ViewBag.Formularios as List<ServicioComunal.Models.Formulario> ?? new List<ServicioComunal.Models.Formulario>();
+                                }
+                                @foreach (var formulario in formularios)
+                                {
+                                    <option value="@formulario.Identificacion">@formulario.Nombre</option>
+                                }
+                            </select>
+                            <div class="form-text">Formulario que los estudiantes necesitarán para esta entrega</div>
+                        </div>
+                    </div>
+
+                    <!-- Solo mostrar selección de grupo en modo edición -->
+                    <div class="row" id="modoEdicion" style="display: none;">
+                        <div class="col-md-12 mb-3">
+                            <label for="entregaGrupo" class="form-label">Grupo</label>
+                            <select class="form-select" id="entregaGrupo" name="grupoNumero">
+                                <option value="">-- Seleccionar Grupo --</option>
+                                @{
+                                    var grupos = ViewBag.Grupos as List<ServicioComunal.Models.Grupo> ?? new List<ServicioComunal.Models.Grupo>();
+                                }
+                                @foreach (var grupo in grupos)
+                                {
+                                    <option value="@grupo.Numero">Grupo @grupo.Numero (@grupo.GruposEstudiantes.Count estudiantes)</option>
+                                }
+                            </select>
+                            <div class="form-text">En modo edición solo se puede modificar una entrega específica de un grupo</div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info" id="infoNuevaEntrega">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Nota:</strong> Al crear una nueva entrega, se generará automáticamente una tarea para cada grupo existente.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarEntrega()">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para ver detalles de entrega -->
+<div class="modal fade" id="modalVerEntrega" tabindex="-1" aria-labelledby="modalVerEntregaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalVerEntregaLabel">Detalles de la Entrega</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="detallesEntrega">
+                <!-- Contenido se llenará dinámicamente -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/entregas.js"></script>
+}

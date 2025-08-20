@@ -2009,6 +2009,194 @@ body {
     animation: fadeIn 0.3s ease-out;
 }
 
+/* ===== ESTILOS PARA FORMULARIOS Y ENTREGAS ===== */
+
+/* Badges con colores específicos */
+.badge {
+    padding: 0.5em 0.8em;
+    border-radius: 0.375rem;
+    font-size: 0.75em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.badge-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.badge-info {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.badge-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+/* Tabla con estados de entregas */
+.table-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
+.table-warning:hover {
+    background-color: rgba(255, 193, 7, 0.2);
+}
+
+/* Estados de entregas */
+.estado-completada {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.estado-entregada {
+    color: #17a2b8;
+    font-weight: 600;
+}
+
+.estado-pendiente {
+    color: #6c757d;
+    font-weight: 600;
+}
+
+.estado-vencida {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+/* Iconos de archivo */
+.fas.fa-file-download {
+    font-size: 1.2em;
+}
+
+.fas.fa-file-times {
+    font-size: 1.2em;
+}
+
+/* Alertas flotantes */
+.alert {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border: none;
+    border-radius: 8px;
+}
+
+.alert-dismissible .btn-close {
+    padding: 0.75rem 1rem;
+}
+
+/* Modales personalizados */
+.modal-content {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    border-bottom: 1px solid #e9ecef;
+    background-color: #f8f9fa;
+    border-radius: 12px 12px 0 0;
+}
+
+.modal-title {
+    font-weight: 600;
+    color: #495057;
+}
+
+.modal-footer {
+    border-top: 1px solid #e9ecef;
+    background-color: #f8f9fa;
+    border-radius: 0 0 12px 12px;
+}
+
+/* Formularios mejorados */
+.form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+/* Selector de archivos personalizado */
+.form-control[type="file"] {
+    padding: 0.375rem 0.75rem;
+    border: 2px dashed #ced4da;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.form-control[type="file"]:hover {
+    border-color: #28a745;
+    background-color: #e8f5e8;
+}
+
+.form-control[type="file"]:focus {
+    border-color: #28a745;
+    background-color: #e8f5e8;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+/* Información de archivo */
+.file-info {
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    background-color: #f8f9fa;
+    border-left: 4px solid #17a2b8;
+}
+
+/* Botones de descarga */
+.btn-outline-success:hover {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.download-link {
+    text-decoration: none;
+    color: #28a745;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.download-link:hover {
+    color: #1e7e34;
+    text-decoration: underline;
+}
+
+/* Información contextual */
+.alert-info {
+    background-color: #e7f3ff;
+    border-color: #b3d9ff;
+    color: #004085;
+}
+
+/* Detalles de entrega */
+#detallesEntrega h6 {
+    color: #495057;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+#detallesEntrega .alert-info {
+    margin-bottom: 0;
+    background-color: #f8f9fa;
+    border-left: 4px solid #17a2b8;
+    border-radius: 0 0.375rem 0.375rem 0;
+}
+
 /* Responsive para gestión de estudiantes */
 @media (max-width: 768px) {
     .modal-xl {
@@ -2027,5 +2215,19 @@ body {
     .btn-sm {
         padding: 0.25rem 0.5rem;
         font-size: 0.8rem;
+    }
+    
+    /* Responsive para tablas de formularios y entregas */
+    .table-container {
+        overflow-x: auto;
+    }
+    
+    .table {
+        min-width: 700px;
+    }
+    
+    .badge {
+        font-size: 0.6em;
+        padding: 0.3em 0.6em;
     }
 }

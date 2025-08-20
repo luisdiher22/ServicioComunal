@@ -38,11 +38,17 @@ namespace ServicioComunal.Models
         [Column("PROFESOR_Identificacion")]
         public int? ProfesorIdentificacion { get; set; }
 
+        [Column("FORMULARIO_Identificacion")]
+        public int? FormularioIdentificacion { get; set; }
+
         // Propiedades de navegación
         [ForeignKey("GrupoNumero")]
         public virtual Grupo Grupo { get; set; } = null!;
 
         [ForeignKey("ProfesorIdentificacion")]
         public virtual Profesor? Profesor { get; set; }
+
+        [ForeignKey("FormularioIdentificacion")]
+        public virtual Formulario? Formulario { get; set; }
     }
 }

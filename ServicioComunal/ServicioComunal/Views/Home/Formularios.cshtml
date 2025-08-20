@@ -1,0 +1,128 @@
+@model List<ServicioComunal.Models.Formulario>
+
+@{
+    ViewData["Title"] = "Gestión de Formularios";
+}
+
+<div class="dashboard-header-content">
+    <h1 class="dashboard-title">
+        <i class="fas fa-file-alt"></i>
+        Gestión de Formularios
+    </h1>
+    <p class="dashboard-subtitle">Administra los formularios del sistema</p>
+</div>
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger" role="alert">
+        <i class="fas fa-exclamation-triangle"></i>
+        @ViewBag.Error
+    </div>
+}
+
+<div class="content-section">
+    <div class="section-header">
+        <h2>Lista de Formularios</h2>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalFormulario">
+            <i class="fas fa-plus"></i>
+            Nuevo Formulario
+        </button>
+    </div>
+
+    <div class="table-container">
+        <table class="table table-striped" id="tablaFormularios">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Fecha Ingreso</th>
+                    <th>Archivo</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var formulario in Model)
+                {
+                    <tr>
+                        <td>@formulario.Identificacion</td>
+                        <td>@formulario.Nombre</td>
+                        <td>@formulario.Descripcion</td>
+                        <td>@formulario.FechaIngreso.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(formulario.ArchivoRuta))
+                            {
+                                <a href="@Url.Action("DescargarFormulario", "Home", new { id = formulario.Identificacion })" 
+                                   class="btn btn-sm btn-outline-success" title="Descargar archivo">
+                                    <i class="fas fa-download"></i> Descargar
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="text-muted">
+                                    <i class="fas fa-file-times"></i> Sin archivo
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-info" onclick="editarFormulario(@formulario.Identificacion)">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="eliminarFormulario(@formulario.Identificacion)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal para crear/editar formulario -->
+<div class="modal fade" id="modalFormulario" tabindex="-1" aria-labelledby="modalFormularioLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalFormularioLabel">Nuevo Formulario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formFormulario">
+                    <input type="hidden" id="formularioId" name="identificacion">
+                    
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="formularioNombre" class="form-label">Nombre del Formulario *</label>
+                            <input type="text" class="form-control" id="formularioNombre" name="nombre" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="formularioDescripcion" class="form-label">Descripción *</label>
+                            <textarea class="form-control" id="formularioDescripcion" name="descripcion" rows="3" required></textarea>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="formularioArchivoInput" class="form-label">Archivo (PDF o DOCX)</label>
+                            <input type="file" class="form-control" id="formularioArchivoInput" name="archivo" accept=".pdf,.docx,.doc">
+                            <div class="form-text">Seleccione un archivo PDF o DOCX (máximo 10MB)</div>
+                            <input type="hidden" id="formularioArchivo" name="archivoRuta">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarFormulario()">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/formularios.js"></script>
+}

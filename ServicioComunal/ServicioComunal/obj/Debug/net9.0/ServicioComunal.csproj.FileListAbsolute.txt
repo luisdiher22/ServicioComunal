@@ -157,8 +157,10 @@ C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\bin\Debug\net9.0\EPPl
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\bin\Debug\net9.0\Microsoft.IO.RecyclableMemoryStream.dll
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\bin\Debug\net9.0\runtimes\win\lib\net7.0\Microsoft.Win32.SystemEvents.dll
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\bin\Debug\net9.0\runtimes\win\lib\net7.0\System.Drawing.Common.dll
-C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\b4kx2f4z8i-4dxwjg2ujo.gz
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\2objixxzfm-p5cjcmjjxn.gz
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\dv95rdpfju-zunk012znp.gz
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\x1drzuj8fm-05kwz3psne.gz
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\9ys0p4f7fe-9f7ffutko8.gz
+C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\b4kx2f4z8i-hrat4c86og.gz
+C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\9n3u2t3lg9-5sa2gp9bq0.gz
+C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\0jtmnh8ld0-ovnjpd4s46.gz

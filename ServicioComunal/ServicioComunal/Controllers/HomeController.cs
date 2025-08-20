@@ -631,6 +631,53 @@ namespace ServicioComunal.Controllers
             }
         }
 
+        public async Task<IActionResult> Formularios()
+        {
+            try
+            {
+                var formularios = await _context.Formularios
+                    .Include(f => f.Profesor)
+                    .OrderByDescending(f => f.FechaIngreso)
+                    .ToListAsync();
+
+                return View(formularios);
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Error = $"Error al cargar formularios: {ex.Message}";
+                return View(new List<Formulario>());
+            }
+        }
+
+        public async Task<IActionResult> Entregas()
+        {
+            try
+            {
+                var entregas = await _context.Entregas
+                    .Include(e => e.Grupo)
+                    .Include(e => e.Profesor)
+                    .Include(e => e.Formulario)
+                    .OrderByDescending(e => e.FechaLimite)
+                    .ToListAsync();
+
+                ViewBag.Grupos = await _context.Grupos
+                    .Include(g => g.GruposEstudiantes)
+                    .OrderBy(g => g.Numero)
+                    .ToListAsync();
+
+                ViewBag.Formularios = await _context.Formularios
+                    .OrderBy(f => f.Nombre)
+                    .ToListAsync();
+
+                return View(entregas);
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Error = $"Error al cargar entregas: {ex.Message}";
+                return View(new List<Entrega>());
+            }
+        }
+
         public async Task<IActionResult> SeedData()
         {
             try
@@ -1166,6 +1213,80 @@ namespace ServicioComunal.Controllers
             }
         }
 
+        [HttpPost]
+        public async Task<IActionResult> CrearFormularioConArchivo()
+        {
+            try
+            {
+                var nombre = Request.Form["nombre"].ToString();
+                var descripcion = Request.Form["descripcion"].ToString();
+                var archivo = Request.Form.Files.GetFile("archivo");
+
+                if (string.IsNullOrWhiteSpace(nombre) || string.IsNullOrWhiteSpace(descripcion))
+                {
+                    return Json(new { success = false, message = "Nombre y descripción son requeridos" });
+                }
+
+                string archivoRuta = "";
+
+                // Procesar archivo si se subió uno
+                if (archivo != null && archivo.Length > 0)
+                {
+                    // Validar tipo de archivo
+                    var extensionesPermitidas = new[] { ".pdf", ".docx", ".doc" };
+                    var extension = Path.GetExtension(archivo.FileName).ToLowerInvariant();
+                    
+                    if (!extensionesPermitidas.Contains(extension))
+                    {
+                        return Json(new { success = false, message = "Solo se permiten archivos PDF, DOC o DOCX" });
+                    }
+
+                    // Validar tamaño (10MB máximo)
+                    if (archivo.Length > 10 * 1024 * 1024)
+                    {
+                        return Json(new { success = false, message = "El archivo no puede ser mayor a 10MB" });
+                    }
+
+                    // Crear directorio si no existe
+                    var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "formularios");
+                    if (!Directory.Exists(uploadsDir))
+                    {
+                        Directory.CreateDirectory(uploadsDir);
+                    }
+
+                    // Generar nombre único para el archivo
+                    var nombreArchivo = $"{Guid.NewGuid()}{extension}";
+                    var rutaCompleta = Path.Combine(uploadsDir, nombreArchivo);
+
+                    // Guardar archivo
+                    using (var stream = new FileStream(rutaCompleta, FileMode.Create))
+                    {
+                        await archivo.CopyToAsync(stream);
+                    }
+
+                    archivoRuta = $"uploads/formularios/{nombreArchivo}";
+                }
+
+                var formulario = new Formulario
+                {
+                    Nombre = nombre,
+                    Descripcion = descripcion,
+                    ArchivoRuta = archivoRuta,
+                    FechaIngreso = DateTime.Now,
+                    ProfesorIdentificacion = 1 // Valor por defecto
+                };
+
+                _context.Formularios.Add(formulario);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Formulario creado exitosamente" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error al crear formulario: {ex.Message}" });
+            }
+        }
+
         [HttpPut]
         public async Task<IActionResult> ActualizarFormulario([FromBody] Formulario formulario)
         {
@@ -1195,6 +1316,104 @@ namespace ServicioComunal.Controllers
             }
         }
 
+        [HttpPost]
+        public async Task<IActionResult> ActualizarFormularioConArchivo()
+        {
+            try
+            {
+                var idStr = Request.Form["identificacion"].ToString();
+                var nombre = Request.Form["nombre"].ToString();
+                var descripcion = Request.Form["descripcion"].ToString();
+                var mantenerArchivo = Request.Form["mantenerArchivo"].ToString();
+                var archivo = Request.Form.Files.GetFile("archivo");
+
+                if (!int.TryParse(idStr, out int id))
+                {
+                    return Json(new { success = false, message = "ID de formulario inválido" });
+                }
+
+                var formularioExistente = await _context.Formularios
+                    .FirstOrDefaultAsync(f => f.Identificacion == id);
+
+                if (formularioExistente == null)
+                {
+                    return Json(new { success = false, message = "Formulario no encontrado" });
+                }
+
+                formularioExistente.Nombre = nombre;
+                formularioExistente.Descripcion = descripcion;
+
+                // Procesar archivo si se subió uno nuevo
+                if (archivo != null && archivo.Length > 0)
+                {
+                    // Validar tipo de archivo
+                    var extensionesPermitidas = new[] { ".pdf", ".docx", ".doc" };
+                    var extension = Path.GetExtension(archivo.FileName).ToLowerInvariant();
+                    
+                    if (!extensionesPermitidas.Contains(extension))
+                    {
+                        return Json(new { success = false, message = "Solo se permiten archivos PDF, DOC o DOCX" });
+                    }
+
+                    // Validar tamaño (10MB máximo)
+                    if (archivo.Length > 10 * 1024 * 1024)
+                    {
+                        return Json(new { success = false, message = "El archivo no puede ser mayor a 10MB" });
+                    }
+
+                    // Eliminar archivo anterior si existe
+                    if (!string.IsNullOrEmpty(formularioExistente.ArchivoRuta))
+                    {
+                        var archivoAnterior = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", formularioExistente.ArchivoRuta);
+                        if (System.IO.File.Exists(archivoAnterior))
+                        {
+                            System.IO.File.Delete(archivoAnterior);
+                        }
+                    }
+
+                    // Crear directorio si no existe
+                    var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "formularios");
+                    if (!Directory.Exists(uploadsDir))
+                    {
+                        Directory.CreateDirectory(uploadsDir);
+                    }
+
+                    // Generar nombre único para el archivo
+                    var nombreArchivo = $"{Guid.NewGuid()}{extension}";
+                    var rutaCompleta = Path.Combine(uploadsDir, nombreArchivo);
+
+                    // Guardar archivo
+                    using (var stream = new FileStream(rutaCompleta, FileMode.Create))
+                    {
+                        await archivo.CopyToAsync(stream);
+                    }
+
+                    formularioExistente.ArchivoRuta = $"uploads/formularios/{nombreArchivo}";
+                }
+                else if (mantenerArchivo != "true")
+                {
+                    // Si no se mantiene el archivo y no se subió uno nuevo, eliminar el actual
+                    if (!string.IsNullOrEmpty(formularioExistente.ArchivoRuta))
+                    {
+                        var archivoAnterior = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", formularioExistente.ArchivoRuta);
+                        if (System.IO.File.Exists(archivoAnterior))
+                        {
+                            System.IO.File.Delete(archivoAnterior);
+                        }
+                        formularioExistente.ArchivoRuta = "";
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Formulario actualizado exitosamente" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error al actualizar formulario: {ex.Message}" });
+            }
+        }
+
         [HttpDelete]
         public async Task<IActionResult> EliminarFormulario(int id)
         {
@@ -1208,6 +1427,16 @@ namespace ServicioComunal.Controllers
                     return Json(new { success = false, message = "Formulario no encontrado" });
                 }
 
+                // Eliminar archivo físico si existe
+                if (!string.IsNullOrEmpty(formulario.ArchivoRuta))
+                {
+                    var rutaArchivo = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", formulario.ArchivoRuta);
+                    if (System.IO.File.Exists(rutaArchivo))
+                    {
+                        System.IO.File.Delete(rutaArchivo);
+                    }
+                }
+
                 _context.Formularios.Remove(formulario);
                 await _context.SaveChangesAsync();
 
@@ -1216,6 +1445,52 @@ namespace ServicioComunal.Controllers
             catch (Exception ex)
             {
                 return Json(new { success = false, message = $"Error al eliminar formulario: {ex.Message}" });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DescargarFormulario(int id)
+        {
+            try
+            {
+                var formulario = await _context.Formularios
+                    .FirstOrDefaultAsync(f => f.Identificacion == id);
+
+                if (formulario == null)
+                {
+                    return NotFound("Formulario no encontrado");
+                }
+
+                if (string.IsNullOrEmpty(formulario.ArchivoRuta))
+                {
+                    return NotFound("El formulario no tiene un archivo asociado");
+                }
+
+                var rutaArchivo = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", formulario.ArchivoRuta);
+                
+                if (!System.IO.File.Exists(rutaArchivo))
+                {
+                    return NotFound("El archivo no se encuentra en el servidor");
+                }
+
+                var bytes = await System.IO.File.ReadAllBytesAsync(rutaArchivo);
+                var extension = Path.GetExtension(rutaArchivo).ToLowerInvariant();
+                
+                string contentType = extension switch
+                {
+                    ".pdf" => "application/pdf",
+                    ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    ".doc" => "application/msword",
+                    _ => "application/octet-stream"
+                };
+
+                var nombreArchivo = $"{formulario.Nombre}{extension}";
+                
+                return File(bytes, contentType, nombreArchivo);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error al descargar el archivo: {ex.Message}");
             }
         }
 
@@ -1230,7 +1505,19 @@ namespace ServicioComunal.Controllers
                     return Json(new { success = false, message = "Nombre y descripción son requeridos" });
                 }
 
-                // Obtener todos los grupos existentes con sus tutores
+                // Verificar que el formulario existe si se especificó uno
+                if (entregaDto.FormularioIdentificacion.HasValue)
+                {
+                    var formularioExiste = await _context.Formularios
+                        .AnyAsync(f => f.Identificacion == entregaDto.FormularioIdentificacion);
+                    
+                    if (!formularioExiste)
+                    {
+                        return Json(new { success = false, message = "El formulario seleccionado no existe" });
+                    }
+                }
+
+                // Obtener todos los grupos existentes
                 var grupos = await _context.Grupos
                     .Include(g => g.GruposProfesores)
                     .ThenInclude(gp => gp.Profesor)
@@ -1243,30 +1530,23 @@ namespace ServicioComunal.Controllers
 
                 // Crear una entrega por cada grupo
                 var entregas = new List<Entrega>();
-                var gruposSinTutor = new List<int>();
                 
                 foreach (var grupo in grupos)
                 {
-                    var tutor = grupo.GruposProfesores.FirstOrDefault()?.Profesor;
-                    
                     var entrega = new Entrega
                     {
                         Nombre = entregaDto.Nombre,
                         Descripcion = entregaDto.Descripcion,
                         FechaLimite = entregaDto.FechaLimite,
                         GrupoNumero = grupo.Numero,
-                        ProfesorIdentificacion = tutor?.Identificacion, // NULL si no tiene tutor
+                        ProfesorIdentificacion = null, // Sin profesor asignado
+                        FormularioIdentificacion = entregaDto.FormularioIdentificacion,
                         ArchivoRuta = "", // Se llenará cuando se adjunte archivo
                         Retroalimentacion = "", // Se llenará por el tutor
                         FechaRetroalimentacion = DateTime.MinValue
                     };
                     
                     entregas.Add(entrega);
-                    
-                    if (tutor == null)
-                    {
-                        gruposSinTutor.Add(grupo.Numero);
-                    }
                 }
 
                 _context.Entregas.AddRange(entregas);
@@ -1274,16 +1554,17 @@ namespace ServicioComunal.Controllers
 
                 string mensaje = $"Entrega creada exitosamente para {entregas.Count} grupos";
                 
-                if (gruposSinTutor.Any())
+                if (entregaDto.FormularioIdentificacion.HasValue)
                 {
-                    mensaje += $". Advertencia: {gruposSinTutor.Count} grupos sin tutor asignado (Grupos: {string.Join(", ", gruposSinTutor)})";
+                    var formulario = await _context.Formularios
+                        .FirstOrDefaultAsync(f => f.Identificacion == entregaDto.FormularioIdentificacion);
+                    mensaje += $" con formulario asociado: {formulario?.Nombre}";
                 }
 
                 return Json(new { 
                     success = true, 
                     message = mensaje,
-                    cantidadGrupos = entregas.Count,
-                    gruposSinTutor = gruposSinTutor.Count
+                    cantidadGrupos = entregas.Count
                 });
             }
             catch (Exception ex)
@@ -1305,16 +1586,27 @@ namespace ServicioComunal.Controllers
                     return Json(new { success = false, message = "Entrega no encontrada" });
                 }
 
+                // Verificar que el formulario existe si se especificó uno
+                if (entrega.FormularioIdentificacion.HasValue)
+                {
+                    var formularioExiste = await _context.Formularios
+                        .AnyAsync(f => f.Identificacion == entrega.FormularioIdentificacion);
+                    
+                    if (!formularioExiste)
+                    {
+                        return Json(new { success = false, message = "El formulario seleccionado no existe" });
+                    }
+                }
+
                 entregaExistente.Nombre = entrega.Nombre;
                 entregaExistente.Descripcion = entrega.Descripcion;
                 entregaExistente.FechaLimite = entrega.FechaLimite;
                 entregaExistente.ArchivoRuta = entrega.ArchivoRuta ?? "";
                 entregaExistente.Retroalimentacion = entrega.Retroalimentacion ?? "";
+                entregaExistente.FormularioIdentificacion = entrega.FormularioIdentificacion;
+                
                 if (entrega.GrupoNumero > 0)
                     entregaExistente.GrupoNumero = entrega.GrupoNumero;
-                
-                // Permitir asignar o quitar profesor (NULL permitido)
-                entregaExistente.ProfesorIdentificacion = entrega.ProfesorIdentificacion;
 
                 await _context.SaveChangesAsync();
 
@@ -1371,10 +1663,7 @@ namespace ServicioComunal.Controllers
                         nombre = formulario.Nombre,
                         descripcion = formulario.Descripcion,
                         archivoRuta = formulario.ArchivoRuta,
-                        fechaIngreso = formulario.FechaIngreso,
-                        profesorIdentificacion = formulario.ProfesorIdentificacion,
-                        profesorNombre = formulario.Profesor != null ? 
-                            $"{formulario.Profesor.Nombre} {formulario.Profesor.Apellidos}" : ""
+                        fechaIngreso = formulario.FechaIngreso
                     }
                 });
             }
@@ -1391,7 +1680,7 @@ namespace ServicioComunal.Controllers
             {
                 var entrega = await _context.Entregas
                     .Include(e => e.Grupo)
-                    .Include(e => e.Profesor)
+                    .Include(e => e.Formulario) // Incluir información del formulario
                     .FirstOrDefaultAsync(e => e.Identificacion == id);
 
                 if (entrega == null)
@@ -1410,9 +1699,8 @@ namespace ServicioComunal.Controllers
                         retroalimentacion = entrega.Retroalimentacion,
                         fechaRetroalimentacion = entrega.FechaRetroalimentacion,
                         grupoNumero = entrega.GrupoNumero,
-                        profesorIdentificacion = entrega.ProfesorIdentificacion,
-                        profesorNombre = entrega.Profesor != null ? 
-                            $"{entrega.Profesor.Nombre} {entrega.Profesor.Apellidos}" : ""
+                        formularioIdentificacion = entrega.FormularioIdentificacion,
+                        formularioNombre = entrega.Formulario?.Nombre // Incluir nombre del formulario
                     }
                 });
             }
