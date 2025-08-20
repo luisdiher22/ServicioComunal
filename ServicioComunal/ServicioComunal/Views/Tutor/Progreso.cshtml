@@ -1,0 +1,572 @@
+@model List<ServicioComunal.Models.GrupoProfesor>
+@{
+    ViewData["Title"] = "Progreso";
+    ViewData["UserRole"] = "Tutor";
+    ViewData["UserCedula"] = "2-3456-7890";
+    ViewData["NotificationCount"] = "1";
+    Layout = "_Layout";
+}
+
+<div class="dashboard-content tutor-theme">
+    <div class="content-header">
+        <h1>Progreso</h1>
+        <p>Reporte de progreso de todos tus grupos asignados</p>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="progreso-resumen">
+            <div class="resumen-cards">
+                @{
+                    var totalGrupos = Model.Count;
+                    var totalEstudiantes = Model.Sum(gp => gp.Grupo.GruposEstudiantes.Count);
+                    var gruposAlDia = Model.Count(gp => gp.Grupo.Entregas.Any() && gp.Grupo.Entregas.All(e => !string.IsNullOrEmpty(e.Retroalimentacion)));
+                    var gruposAtrasados = totalGrupos - gruposAlDia;
+                    var progresoGeneral = Model.Any() ? Model.Average(gp => gp.Grupo.Entregas.Any() ? (gp.Grupo.Entregas.Count(e => !string.IsNullOrEmpty(e.Retroalimentacion)) * 100.0 / gp.Grupo.Entregas.Count) : 0) : 0;
+                }
+
+                <div class="resumen-card">
+                    <div class="card-icon total">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-number">@totalGrupos</div>
+                        <div class="card-label">Grupos Totales</div>
+                        <small>@totalEstudiantes estudiantes en total</small>
+                    </div>
+                </div>
+
+                <div class="resumen-card">
+                    <div class="card-icon aldia">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-number">@gruposAlDia</div>
+                        <div class="card-label">Al Día</div>
+                        <small>Sin entregas pendientes</small>
+                    </div>
+                </div>
+
+                <div class="resumen-card">
+                    <div class="card-icon atrasados">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-number">@gruposAtrasados</div>
+                        <div class="card-label">Atrasados</div>
+                        <small>Con entregas pendientes</small>
+                    </div>
+                </div>
+
+                <div class="resumen-card">
+                    <div class="card-icon promedio">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-number">@Math.Round(progresoGeneral, 0)%</div>
+                        <div class="card-label">Progreso General</div>
+                        <div class="progress-bar-small">
+                            <div class="progress-fill-small" style="width: @progresoGeneral%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tabla-progreso">
+            <div class="tabla-header">
+                <h3>Reporte de Progreso</h3>
+                <p>Estado detallado de todos tus grupos asignados</p>
+            </div>
+
+            <div class="tabla-container">
+                <table class="table progreso-table">
+                    <thead>
+                        <tr>
+                            <th>Grupo</th>
+                            <th>Integrantes</th>
+                            <th>Progreso</th>
+                            <th>Última Actividad</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var grupoProfesor in Model.OrderBy(gp => gp.Grupo.Numero))
+                        {
+                            var grupo = grupoProfesor.Grupo;
+                            var totalEntregas = grupo.Entregas.Count;
+                            var entregasCompletadas = grupo.Entregas.Count(e => !string.IsNullOrEmpty(e.Retroalimentacion));
+                            var progreso = totalEntregas > 0 ? (entregasCompletadas * 100 / totalEntregas) : 0;
+                            var ultimaActividad = grupo.Entregas.Any() ? grupo.Entregas.Max(e => e.FechaRetroalimentacion) : DateTime.MinValue;
+                            var entregasPendientes = grupo.Entregas.Count(e => string.IsNullOrEmpty(e.Retroalimentacion));
+                            var estado = entregasPendientes == 0 ? "aldia" : "atrasado";
+                            var estadoTexto = entregasPendientes == 0 ? "Al día" : $"{entregasPendientes} pendiente{(entregasPendientes > 1 ? "s" : "")}";
+
+                            <tr class="grupo-row" data-grupo="@grupo.Numero">
+                                <td>
+                                    <div class="grupo-info">
+                                        <div class="grupo-numero">Grupo @grupo.Numero</div>
+                                        <small class="grupo-fecha">Creado: @grupo.Numero/01/2024</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="integrantes-cell">
+                                        <div class="avatars-group">
+                                            @foreach (var ge in grupo.GruposEstudiantes.Take(3))
+                                            {
+                                                <div class="avatar-mini" title="@ge.Estudiante.Nombre @ge.Estudiante.Apellidos">
+                                                    @ge.Estudiante.Nombre.Substring(0, 1)@ge.Estudiante.Apellidos.Substring(0, 1)
+                                                </div>
+                                            }
+                                            @if (grupo.GruposEstudiantes.Count > 3)
+                                            {
+                                                <div class="avatar-more">+@(grupo.GruposEstudiantes.Count - 3)</div>
+                                            }
+                                        </div>
+                                        <div class="integrantes-count">@grupo.GruposEstudiantes.Count integrante@(grupo.GruposEstudiantes.Count != 1 ? "s" : "")</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="progreso-cell">
+                                        <div class="progreso-porcentaje">@progreso%</div>
+                                        <div class="progress-bar-table">
+                                            <div class="progress-fill-table" style="width: @progreso%"></div>
+                                        </div>
+                                        <small class="progreso-detalle">@entregasCompletadas de @totalEntregas entregables</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="actividad-cell">
+                                        @if (ultimaActividad != DateTime.MinValue)
+                                        {
+                                            <div class="fecha-actividad">@ultimaActividad.ToString("dd/MM/yyyy")</div>
+                                            <small class="tiempo-actividad">hace @((DateTime.Now - ultimaActividad).Days) días</small>
+                                        }
+                                        else
+                                        {
+                                            <div class="sin-actividad">Sin actividad</div>
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge badge-estado badge-@estado">@estadoTexto</span>
+                                </td>
+                                <td>
+                                    <div class="acciones-cell">
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="verDetallesGrupo(@grupo.Numero)" title="Ver detalles">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="contactarGrupo(@grupo.Numero)" title="Contactar">
+                                                <i class="fas fa-envelope"></i>
+                                            </button>
+                                            <a href="@Url.Action("Revisiones", "Tutor")" class="btn btn-sm btn-outline-success" title="Ver entregas">
+                                                <i class="fas fa-clipboard-check"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state-large">
+            <div class="empty-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h2>No hay datos de progreso</h2>
+            <p>No tienes grupos asignados para mostrar el progreso.</p>
+            <p>Contacta al administrador para que te asigne grupos de estudiantes.</p>
+            <div class="empty-actions">
+                <a href="@Url.Action("Dashboard", "Tutor")" class="btn btn-primary">
+                    <i class="fas fa-home"></i> Volver al Dashboard
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+/* Estilos específicos para Progreso */
+.progreso-resumen {
+    margin-bottom: 32px;
+}
+
+.resumen-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.resumen-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(139, 119, 101, 0.08);
+    border: 1px solid #e0d5c7;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.resumen-card .card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: white;
+    flex-shrink: 0;
+}
+
+.resumen-card .card-icon.total {
+    background: linear-gradient(135deg, #8b7765 0%, #6f5d4f 100%);
+}
+
+.resumen-card .card-icon.aldia {
+    background: linear-gradient(135deg, #7a8471 0%, #626b5a 100%);
+}
+
+.resumen-card .card-icon.atrasados {
+    background: linear-gradient(135deg, #c1666b 0%, #a85559 100%);
+}
+
+.resumen-card .card-icon.promedio {
+    background: linear-gradient(135deg, #d4a574 0%, #b8936a 100%);
+}
+
+.resumen-card .card-content {
+    flex: 1;
+}
+
+.resumen-card .card-number {
+    font-size: 24px;
+    font-weight: 700;
+    color: #2c3e50;
+    line-height: 1;
+}
+
+.resumen-card .card-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #6c757d;
+    margin: 4px 0 2px 0;
+}
+
+.resumen-card small {
+    font-size: 12px;
+    color: #8b7765;
+}
+
+.progress-bar-small {
+    width: 100%;
+    height: 4px;
+    background-color: #e9ecef;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+.progress-fill-small {
+    height: 100%;
+    background: linear-gradient(90deg, #d4a574 0%, #b8936a 100%);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+.tabla-progreso {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(139, 119, 101, 0.08);
+    border: 1px solid #e0d5c7;
+    overflow: hidden;
+}
+
+.tabla-header {
+    padding: 24px;
+    background: linear-gradient(135deg, #f5f1e8 0%, #ede4d3 100%);
+    border-bottom: 1px solid #e0d5c7;
+}
+
+.tabla-header h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0 0 4px 0;
+}
+
+.tabla-header p {
+    color: #6c757d;
+    font-size: 14px;
+    margin: 0;
+}
+
+.tabla-container {
+    overflow-x: auto;
+}
+
+.progreso-table {
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+}
+
+.progreso-table thead th {
+    background-color: #f8f9fa;
+    color: #2c3e50;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 16px 12px;
+    text-align: left;
+    border-bottom: 2px solid #e0d5c7;
+}
+
+.progreso-table tbody tr {
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s ease;
+}
+
+.progreso-table tbody tr:hover {
+    background-color: rgba(139, 119, 101, 0.02);
+}
+
+.progreso-table tbody td {
+    padding: 16px 12px;
+    vertical-align: middle;
+}
+
+.grupo-info .grupo-numero {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 14px;
+}
+
+.grupo-info .grupo-fecha {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+.integrantes-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.avatars-group {
+    display: flex;
+    align-items: center;
+    gap: -4px;
+}
+
+.avatar-mini {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #8b7765 0%, #6f5d4f 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    border: 2px solid white;
+    margin-left: -4px;
+}
+
+.avatar-mini:first-child {
+    margin-left: 0;
+}
+
+.avatar-more {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: #6c757d;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 600;
+    border: 2px solid white;
+    margin-left: -4px;
+}
+
+.integrantes-count {
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.progreso-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 120px;
+}
+
+.progreso-porcentaje {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 14px;
+}
+
+.progress-bar-table {
+    width: 100%;
+    height: 6px;
+    background-color: #e9ecef;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill-table {
+    height: 100%;
+    background: linear-gradient(90deg, #8b7765 0%, #6f5d4f 100%);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.progreso-detalle {
+    font-size: 11px;
+    color: #6c757d;
+}
+
+.actividad-cell .fecha-actividad {
+    font-weight: 500;
+    color: #2c3e50;
+    font-size: 14px;
+}
+
+.actividad-cell .tiempo-actividad {
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.actividad-cell .sin-actividad {
+    color: #c1666b;
+    font-style: italic;
+    font-size: 14px;
+}
+
+.badge-estado {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+    display: inline-block;
+    min-width: 80px;
+}
+
+.badge-aldia {
+    background-color: #7a8471;
+    color: white;
+}
+
+.badge-atrasado {
+    background-color: #c1666b;
+    color: white;
+}
+
+.acciones-cell .btn-group {
+    display: flex;
+    gap: 4px;
+}
+
+.acciones-cell .btn {
+    border-radius: 4px;
+}
+
+.empty-state-large {
+    text-align: center;
+    padding: 60px 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(139, 119, 101, 0.08);
+}
+
+.empty-icon {
+    margin-bottom: 24px;
+}
+
+.empty-icon i {
+    font-size: 64px;
+    color: #c4a484;
+    opacity: 0.6;
+}
+
+.empty-state-large h2 {
+    font-size: 24px;
+    color: #2c3e50;
+    margin-bottom: 12px;
+}
+
+.empty-state-large p {
+    color: #6c757d;
+    font-size: 16px;
+    margin-bottom: 8px;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.empty-actions {
+    margin-top: 24px;
+}
+
+/* Responsive */
+@@media (max-width: 768px) {
+    .resumen-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .tabla-container {
+        font-size: 12px;
+    }
+    
+    .progreso-table thead th,
+    .progreso-table tbody td {
+        padding: 8px;
+    }
+    
+    .acciones-cell .btn-group {
+        flex-direction: column;
+    }
+}
+</style>
+
+<script>
+function verDetallesGrupo(numeroGrupo) {
+    // Implementar modal o redirección con detalles del grupo
+    window.location.href = `@Url.Action("MisGrupos", "Tutor")#grupo-${numeroGrupo}`;
+}
+
+function contactarGrupo(numeroGrupo) {
+    // Implementar funcionalidad de contacto
+    alert(`Contactar Grupo ${numeroGrupo} (funcionalidad por implementar)`);
+}
+
+// Función para resaltar fila al hacer hover en acciones
+document.addEventListener('DOMContentLoaded', function() {
+    const filas = document.querySelectorAll('.grupo-row');
+    filas.forEach(fila => {
+        fila.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = 'rgba(139, 119, 101, 0.05)';
+        });
+        
+        fila.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '';
+        });
+    });
+});
+</script>
+
+<script src="~/js/tutor.js"></script>

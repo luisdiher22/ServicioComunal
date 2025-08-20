@@ -51,9 +51,29 @@ namespace ServicioComunal.Controllers
                 user.UltimoAcceso = DateTime.Now;
                 await _context.SaveChangesAsync();
 
-                // TODO: Implementar sesión/cookies aquí
-                // Por ahora redirigir al dashboard
-                return RedirectToAction("Dashboard", "Home");
+                // Establecer sesión del usuario
+                HttpContext.Session.SetInt32("UsuarioId", user.Identificacion);
+                HttpContext.Session.SetString("UsuarioNombre", user.NombreUsuario);
+                HttpContext.Session.SetString("UsuarioRol", user.Rol);
+
+                // TEMPORAL: Forzar redirección a tutor para debugging
+                Console.WriteLine($"Usuario autenticado: {user.NombreUsuario}, Rol: {user.Rol}");
+
+                if (user.Rol == "Profesor")
+                {
+                    Console.WriteLine("Redirigiendo a Dashboard de Tutor...");
+                    return RedirectToAction("Dashboard", "Tutor");
+                }
+                else if (user.Rol == "Administrador")
+                {
+                    Console.WriteLine("Redirigiendo a Dashboard de Administrador...");
+                    return RedirectToAction("Dashboard", "Home");
+                }
+                else
+                {
+                    ViewBag.Error = "Acceso no autorizado para este rol.";
+                    return View();
+                }
             }
             catch (Exception)
             {
@@ -70,7 +90,8 @@ namespace ServicioComunal.Controllers
 
         public IActionResult Logout()
         {
-            // TODO: Limpiar sesión/cookies
+            // Limpiar sesión
+            HttpContext.Session.Clear();
             return RedirectToAction("Login");
         }
     }
