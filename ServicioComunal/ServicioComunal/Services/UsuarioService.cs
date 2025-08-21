@@ -11,10 +11,27 @@ namespace ServicioComunal.Services
     public class UsuarioService
     {
         private readonly ServicioComunalDbContext _context;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public UsuarioService(ServicioComunalDbContext context)
+        public UsuarioService(ServicioComunalDbContext context, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
+            _httpContextAccessor = httpContextAccessor;
+        }
+
+        /// <summary>
+        /// Obtiene el usuario actualmente autenticado desde la sesión
+        /// </summary>
+        /// <returns>Usuario actual o null si no está autenticado</returns>
+        public Usuario? ObtenerUsuarioActual()
+        {
+            var session = _httpContextAccessor.HttpContext?.Session;
+            if (session == null) return null;
+
+            var identificacion = session.GetInt32("UsuarioIdentificacion");
+            if (!identificacion.HasValue) return null;
+
+            return _context.Usuarios.FirstOrDefault(u => u.Identificacion == identificacion.Value);
         }
 
         /// <summary>

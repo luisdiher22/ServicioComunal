@@ -23,6 +23,7 @@ builder.Services.AddSession(options =>
 // Registrar servicios personalizados
 builder.Services.AddScoped<DataSeederService>();
 builder.Services.AddScoped<UsuarioService>();
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 

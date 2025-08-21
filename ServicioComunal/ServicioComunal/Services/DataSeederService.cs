@@ -292,5 +292,151 @@ namespace ServicioComunal.Services
             var usuariosCreados = await _context.Usuarios.CountAsync();
             Console.WriteLine($"✅ {usuariosCreados} usuarios recreados exitosamente!");
         }
+
+        /// <summary>
+        /// Método para consultar el estado de estudiantes y grupos
+        /// </summary>
+        public async Task ConsultarEstadoEstudiantesAsync()
+        {
+            Console.WriteLine("🔍 VERIFICANDO ESTUDIANTES Y GRUPOS\n");
+
+            // Obtener todos los estudiantes
+            var estudiantes = await _context.Estudiantes.ToListAsync();
+            var usuarios = await _context.Usuarios.Where(u => u.Rol == "Estudiante").ToListAsync();
+            var gruposEstudiantes = await _context.GruposEstudiantes.ToListAsync();
+
+            Console.WriteLine("📋 LISTADO DE ESTUDIANTES:");
+            Console.WriteLine(new string('-', 100));
+            Console.WriteLine($"{"ID",-12} {"NOMBRE",-20} {"APELLIDOS",-20} {"CLASE",-8} {"USUARIO",-15} {"GRUPO",-6}");
+            Console.WriteLine(new string('-', 100));
+
+            foreach (var est in estudiantes)
+            {
+                var usuario = usuarios.FirstOrDefault(u => u.Identificacion == est.Identificacion);
+                var grupoAsignado = gruposEstudiantes.FirstOrDefault(ge => ge.EstudianteIdentificacion == est.Identificacion);
+                
+                var usuarioStr = usuario?.NombreUsuario ?? "NO TIENE";
+                var grupoStr = grupoAsignado?.GrupoNumero.ToString() ?? "NINGUNO";
+                
+                Console.WriteLine($"{est.Identificacion,-12} {est.Nombre,-20} {est.Apellidos,-20} {est.Clase,-8} {usuarioStr,-15} {grupoStr,-6}");
+            }
+
+            Console.WriteLine(new string('-', 100));
+
+            // Mostrar estadísticas
+            var conGrupo = gruposEstudiantes.Count;
+            var sinGrupo = estudiantes.Count - conGrupo;
+            var conUsuario = usuarios.Count;
+
+            Console.WriteLine("\n📊 ESTADÍSTICAS:");
+            Console.WriteLine($"   Total estudiantes: {estudiantes.Count}");
+            Console.WriteLine($"   Con usuario: {conUsuario}");
+            Console.WriteLine($"   Con grupo: {conGrupo}");
+            Console.WriteLine($"   Sin grupo: {sinGrupo}");
+
+            // Mostrar estudiantes sin grupo que tienen usuario
+            var estudiantesSinGrupo = estudiantes
+                .Where(e => usuarios.Any(u => u.Identificacion == e.Identificacion) && 
+                           !gruposEstudiantes.Any(ge => ge.EstudianteIdentificacion == e.Identificacion))
+                .ToList();
+
+            if (estudiantesSinGrupo.Any())
+            {
+                Console.WriteLine("\n🎯 ESTUDIANTES SIN GRUPO PARA PROBAR:");
+                Console.WriteLine("   (Estos pueden usar la funcionalidad de Gestión de Grupos)");
+                foreach (var est in estudiantesSinGrupo)
+                {
+                    var usuario = usuarios.First(u => u.Identificacion == est.Identificacion);
+                    Console.WriteLine($"   👤 {est.Nombre} {est.Apellidos}");
+                    Console.WriteLine($"      - Usuario: {usuario.NombreUsuario}");
+                    Console.WriteLine($"      - Contraseña: password123");
+                    Console.WriteLine($"      - ID: {est.Identificacion}");
+                    Console.WriteLine();
+                }
+            }
+            else
+            {
+                Console.WriteLine("\n⚠️  TODOS LOS ESTUDIANTES YA TIENEN GRUPO ASIGNADO");
+                Console.WriteLine("    Para probar la funcionalidad de gestión de grupos,");
+                Console.WriteLine("    necesitas crear más estudiantes o quitar algunos de sus grupos.");
+            }
+
+            Console.WriteLine("\n✅ Consulta completada.");
+        }
+
+        /// <summary>
+        /// Método para crear estudiantes adicionales sin grupo
+        /// </summary>
+        public async Task CrearEstudiantesSinGrupoAsync()
+        {
+            Console.WriteLine("👨‍🎓 Creando estudiantes adicionales sin grupo...");
+
+            var nuevosEstudiantes = new List<Estudiante>
+            {
+                new Estudiante { Identificacion = 202301234, Nombre = "María José", Apellidos = "López Herrera", Clase = "11-A" },
+                new Estudiante { Identificacion = 202301235, Nombre = "Carlos Eduardo", Apellidos = "Rojas Morales", Clase = "11-B" },
+                new Estudiante { Identificacion = 202301236, Nombre = "Ana Lucía", Apellidos = "Fernández Quesada", Clase = "10-A" },
+                new Estudiante { Identificacion = 202301237, Nombre = "José Miguel", Apellidos = "Salazar Castro", Clase = "10-B" },
+                new Estudiante { Identificacion = 202301238, Nombre = "Paola Andrea", Apellidos = "Méndez Villalobos", Clase = "11-A" }
+            };
+
+            // Verificar cuáles no existen ya
+            var estudiantesNuevos = new List<Estudiante>();
+            foreach (var est in nuevosEstudiantes)
+            {
+                var existe = await _context.Estudiantes.AnyAsync(e => e.Identificacion == est.Identificacion);
+                if (!existe)
+                {
+                    estudiantesNuevos.Add(est);
+                }
+            }
+
+            if (estudiantesNuevos.Any())
+            {
+                _context.Estudiantes.AddRange(estudiantesNuevos);
+                await _context.SaveChangesAsync();
+                Console.WriteLine($"   ✅ Se crearon {estudiantesNuevos.Count} nuevos estudiantes");
+
+                // Crear usuarios para estos estudiantes
+                string contraseñaComún = "password123";
+                var nuevosUsuarios = new List<Usuario>();
+
+                foreach (var est in estudiantesNuevos)
+                {
+                    var nombreUsuario = est.Nombre.ToLower().Replace(" ", ".") + "." + est.Apellidos.Split(' ')[0].ToLower();
+                    
+                    var usuario = new Usuario
+                    {
+                        Identificacion = est.Identificacion,
+                        NombreUsuario = nombreUsuario,
+                        Contraseña = PasswordHelper.HashPassword(contraseñaComún),
+                        Rol = "Estudiante",
+                        FechaCreacion = DateTime.Now,
+                        Activo = true
+                    };
+                    
+                    nuevosUsuarios.Add(usuario);
+                }
+
+                _context.Usuarios.AddRange(nuevosUsuarios);
+                await _context.SaveChangesAsync();
+
+                Console.WriteLine($"   🔐 Se crearon {nuevosUsuarios.Count} usuarios para los nuevos estudiantes");
+                Console.WriteLine("   📋 NUEVOS ESTUDIANTES DISPONIBLES PARA PROBAR:");
+                foreach (var usuario in nuevosUsuarios)
+                {
+                    var estudiante = estudiantesNuevos.First(e => e.Identificacion == usuario.Identificacion);
+                    Console.WriteLine($"      👤 {estudiante.Nombre} {estudiante.Apellidos}");
+                    Console.WriteLine($"         - Usuario: {usuario.NombreUsuario}");
+                    Console.WriteLine($"         - Contraseña: password123");
+                    Console.WriteLine($"         - ID: {usuario.Identificacion}");
+                    Console.WriteLine();
+                }
+            }
+            else
+            {
+                Console.WriteLine("   ℹ️ Todos los estudiantes ya existen");
+            }
+        }
     }
 }

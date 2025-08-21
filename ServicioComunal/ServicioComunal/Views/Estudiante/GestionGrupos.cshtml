@@ -1,0 +1,370 @@
+@{
+    ViewData["Title"] = "Gestión de Grupos";
+    var estudiante = ViewBag.Estudiante as ServicioComunal.Models.Estudiante;
+    var grupos = ViewBag.Grupos as List<ServicioComunal.Models.Grupo>;
+    var estudiantesSinGrupo = ViewBag.EstudiantesSinGrupo as List<ServicioComunal.Models.Estudiante>;
+    var solicitudesPendientes = ViewBag.SolicitudesPendientes as List<ServicioComunal.Models.Solicitud>;
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 sidebar bg-light p-3">
+            <div class="text-center mb-4">
+                <img src="~/images/logo-liceo.svg" alt="Logo" style="width: 60px; height: 60px;">
+                <h5 class="mt-2">@estudiante?.Nombre @estudiante?.Apellidos</h5>
+                <small class="text-muted">Estudiante - @estudiante?.Clase</small>
+            </div>
+
+            <nav class="nav flex-column">
+                <a class="nav-link" href="@Url.Action("Dashboard", "Estudiante")">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a class="nav-link active" href="@Url.Action("GestionGrupos", "Estudiante")">
+                    <i class="fas fa-users"></i> Gestión de Grupos
+                </a>
+                <a class="nav-link" href="@Url.Action("MisSolicitudes", "Estudiante")">
+                    <i class="fas fa-bell"></i> Solicitudes
+                </a>
+                <a class="nav-link" href="@Url.Action("MiPerfil", "Estudiante")">
+                    <i class="fas fa-user"></i> Mi Perfil
+                </a>
+                <hr>
+                <a class="nav-link text-danger" href="@Url.Action("Logout", "Auth")">
+                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                </a>
+            </nav>
+        </div>
+
+        <!-- Contenido principal -->
+        <div class="col-md-9 main-content p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Gestión de Grupos</h2>
+                <button class="btn btn-success" data-toggle="modal" data-target="#crearGrupoModal">
+                    <i class="fas fa-plus"></i> Crear Nuevo Grupo
+                </button>
+            </div>
+
+            <!-- Alertas para solicitudes pendientes -->
+            @if (solicitudesPendientes != null && solicitudesPendientes.Any())
+            {
+                <div class="alert alert-info mb-4">
+                    <h5><i class="fas fa-bell"></i> Tienes @solicitudesPendientes.Count solicitud(es) pendiente(s)</h5>
+                    <p>Revisa las solicitudes en la sección de abajo.</p>
+                </div>
+            }
+
+            <!-- Información importante -->
+            <div class="alert alert-warning mb-4">
+                <h5><i class="fas fa-info-circle"></i> ¡Necesitas unirte a un grupo!</h5>
+                <p class="mb-0">Para acceder al servicio comunal debes formar parte de un grupo. Puedes:</p>
+                <ul class="mb-0 mt-2">
+                    <li>Solicitar unirte a un grupo existente</li>
+                    <li>Crear tu propio grupo e invitar a otros estudiantes</li>
+                </ul>
+            </div>
+
+            <!-- Solicitudes pendientes -->
+            @if (solicitudesPendientes != null && solicitudesPendientes.Any())
+            {
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header bg-warning text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-bell"></i> Solicitudes Pendientes
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                @foreach (var solicitud in solicitudesPendientes)
+                                {
+                                    <div class="alert alert-light border">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-1">
+                                                    @if (solicitud.Tipo == "INVITACION_GRUPO")
+                                                    {
+                                                        <i class="fas fa-user-plus text-primary"></i>
+                                                        <strong>Invitación al Grupo @solicitud.GrupoNumero</strong>
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="fas fa-handshake text-info"></i>
+                                                        <strong>Solicitud de Ingreso</strong>
+                                                    }
+                                                </h6>
+                                                <p class="mb-1">De: @solicitud.EstudianteRemitente?.Nombre @solicitud.EstudianteRemitente?.Apellidos</p>
+                                                <small class="text-muted">@solicitud.Mensaje</small>
+                                                <br>
+                                                <small class="text-muted">Recibida: @solicitud.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</small>
+                                            </div>
+                                            <div>
+                                                <button class="btn btn-success btn-sm me-2" onclick="responderSolicitud(@solicitud.Id, true)">
+                                                    <i class="fas fa-check"></i> Aceptar
+                                                </button>
+                                                <button class="btn btn-danger btn-sm" onclick="responderSolicitud(@solicitud.Id, false)">
+                                                    <i class="fas fa-times"></i> Rechazar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Grupos existentes -->
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-users"></i> Grupos Existentes
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            @if (grupos != null && grupos.Any())
+                            {
+                                <div class="row">
+                                    @foreach (var grupo in grupos)
+                                    {
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card border-primary">
+                                                <div class="card-header bg-primary text-white">
+                                                    <h6 class="mb-0">Grupo @grupo.Numero</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <h6>Integrantes (@grupo.GruposEstudiantes.Count/4):</h6>
+                                                    <ul class="list-unstyled mb-3">
+                                                        @foreach (var grupoEstudiante in grupo.GruposEstudiantes)
+                                                        {
+                                                            <li><i class="fas fa-user text-primary"></i> @grupoEstudiante.Estudiante.Nombre @grupoEstudiante.Estudiante.Apellidos</li>
+                                                        }
+                                                    </ul>
+                                                    
+                                                    @if (grupo.GruposEstudiantes.Count < 4)
+                                                    {
+                                                        <button class="btn btn-outline-primary btn-sm" onclick="solicitarIngreso(@grupo.Numero)">
+                                                            <i class="fas fa-paper-plane"></i> Solicitar Ingreso
+                                                        </button>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge badge-warning">Grupo Completo</span>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-4">
+                                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">No hay grupos creados aún</h5>
+                                    <p class="text-muted">¡Sé el primero en crear un grupo!</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para crear grupo -->
+<div class="modal fade" id="crearGrupoModal" tabindex="-1" aria-labelledby="crearGrupoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="crearGrupoModalLabel">
+                    <i class="fas fa-plus-circle"></i> Crear Nuevo Grupo
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> 
+                    Selecciona los estudiantes que quieres invitar a tu grupo. Se les enviará una invitación que podrán aceptar o rechazar.
+                </div>
+
+                <h6>Estudiantes Disponibles:</h6>
+                <form id="crearGrupoForm">
+                    @if (estudiantesSinGrupo != null && estudiantesSinGrupo.Any())
+                    {
+                        <div class="row">
+                            @foreach (var est in estudiantesSinGrupo)
+                            {
+                                <div class="col-md-6 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="@est.Identificacion" id="estudiante_@est.Identificacion" name="estudiantesSeleccionados">
+                                        <label class="form-check-label" for="estudiante_@est.Identificacion">
+                                            @est.Nombre @est.Apellidos - @est.Clase
+                                        </label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i> 
+                            No hay estudiantes disponibles para invitar en este momento.
+                        </div>
+                    }
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="crearGrupo()">
+                    <i class="fas fa-check"></i> Crear Grupo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .sidebar {
+        min-height: 100vh;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    }
+
+    .nav-link {
+        color: #333;
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.25rem;
+        border-radius: 0.375rem;
+        transition: all 0.3s ease;
+    }
+
+    .nav-link:hover {
+        background-color: #f8f9fa;
+        color: #007bff;
+        transform: translateX(5px);
+    }
+
+    .nav-link.active {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border: 1px solid rgba(0, 0, 0, 0.125);
+    }
+
+    .main-content {
+        background-color: #f8f9fa;
+        min-height: 100vh;
+    }
+
+    .badge {
+        font-size: 0.75em;
+    }
+
+    .me-2 {
+        margin-right: 0.5rem;
+    }
+</style>
+
+<script>
+    function solicitarIngreso(grupoNumero) {
+        if (confirm('¿Estás seguro de que quieres solicitar ingresar al Grupo ' + grupoNumero + '?')) {
+            fetch('@Url.Action("SolicitarIngreso", "Estudiante")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                body: JSON.stringify({ grupoNumero: grupoNumero })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al enviar la solicitud');
+            });
+        }
+    }
+
+    function crearGrupo() {
+        const checkboxes = document.querySelectorAll('input[name="estudiantesSeleccionados"]:checked');
+        const estudiantesSeleccionados = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+        if (estudiantesSeleccionados.length === 0) {
+            alert('Debes seleccionar al menos un estudiante para invitar.');
+            return;
+        }
+
+        if (estudiantesSeleccionados.length > 3) {
+            alert('Solo puedes invitar hasta 3 estudiantes (el grupo máximo es de 4 incluyéndote).');
+            return;
+        }
+
+        fetch('@Url.Action("CrearGrupo", "Estudiante")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+            },
+            body: JSON.stringify({ estudiantesSeleccionados: estudiantesSeleccionados })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al crear el grupo');
+        });
+    }
+
+    function responderSolicitud(solicitudId, aceptar) {
+        const accion = aceptar ? 'aceptar' : 'rechazar';
+        if (confirm('¿Estás seguro de que quieres ' + accion + ' esta solicitud?')) {
+            fetch('@Url.Action("ResponderSolicitud", "Estudiante")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                body: JSON.stringify({ solicitudId: solicitudId, aceptar: aceptar })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al procesar la solicitud');
+            });
+        }
+    }
+</script>
+
+@Html.AntiForgeryToken()

@@ -43,36 +43,6 @@
             <!-- Sidebar -->
             <aside class="@((ViewData["UserRole"]?.ToString() == "Tutor") ? "sidebar tutor-theme" : "sidebar")">
                 <nav class="sidebar-nav">
-<<<<<<< HEAD
-                    <a href="@Url.Action("Dashboard", "Home")" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")">
-                        <i class="fas fa-home"></i>
-                        <span>Inicio</span>
-                    </a>
-                    <a href="@Url.Action("Estudiantes", "Home")" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Estudiantes" ? "active" : "")">
-                        <i class="fas fa-graduation-cap"></i>
-                        <span>Estudiantes</span>
-                    </a>
-                    <a href="@Url.Action("GestionGrupos", "Home")" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "GestionGrupos" ? "active" : "")">
-                        <i class="fas fa-users"></i>
-                        <span>Gestión Grupos</span>
-                    </a>
-                    <a href="@Url.Action("AsignarTutores", "Home")" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "AsignarTutores" ? "active" : "")">
-                        <i class="fas fa-chalkboard-teacher"></i>
-                        <span>Asignar Tutores</span>
-                    </a>
-                    <a href="@Url.Action("Formularios", "Home")" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Formularios" ? "active" : "")">
-                        <i class="fas fa-file-alt"></i>
-                        <span>Formularios</span>
-                    </a>
-                    <a href="@Url.Action("Entregas", "Home")" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Entregas" ? "active" : "")">
-                        <i class="fas fa-tasks"></i>
-                        <span>Entregas</span>
-                    </a>
-                    <a href="@Url.Action("Configuracion", "Home")" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Configuracion" ? "active" : "")">
-                        <i class="fas fa-cog"></i>
-                        <span>Configuración</span>
-                    </a>
-=======
                     @if ((ViewData["UserRole"]?.ToString() ?? "Administrador") == "Tutor")
                     {
                         <a href="@Url.Action("Dashboard", "Tutor")" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Tutor" && ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")">
@@ -110,12 +80,19 @@
                             <i class="fas fa-chalkboard-teacher"></i>
                             <span>Asignar Tutores</span>
                         </a>
+                        <a href="@Url.Action("Formularios", "Home")" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Formularios" ? "active" : "")">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Formularios</span>
+                        </a>
+                        <a href="@Url.Action("Entregas", "Home")" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Entregas" ? "active" : "")">
+                            <i class="fas fa-tasks"></i>
+                            <span>Entregas</span>
+                        </a>
                         <a href="@Url.Action("Configuracion", "Home")" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Configuracion" ? "active" : "")">
                             <i class="fas fa-cog"></i>
                             <span>Configuración</span>
                         </a>
                     }
->>>>>>> 7f0d93a49733db631441e086e50a2b195e201a01
                 </nav>
                 <div class="sidebar-footer">
                     @if ((ViewData["UserRole"]?.ToString() ?? "Administrador") == "Tutor")

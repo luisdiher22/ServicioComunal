@@ -1,0 +1,526 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using ServicioComunal.Data;
+using ServicioComunal.Models;
+using ServicioComunal.Services;
+
+namespace ServicioComunal.Controllers
+{
+    public class EstudianteController : Controller
+    {
+        private readonly ServicioComunalDbContext _context;
+        private readonly UsuarioService _usuarioService;
+
+        public EstudianteController(ServicioComunalDbContext context, UsuarioService usuarioService)
+        {
+            _context = context;
+            _usuarioService = usuarioService;
+        }
+
+        public async Task<IActionResult> Dashboard()
+        {
+            var usuarioActual = _usuarioService.ObtenerUsuarioActual();
+            if (usuarioActual == null)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            // Verificar si el usuario es un estudiante
+            var estudiante = await _context.Estudiantes
+                .FirstOrDefaultAsync(e => e.Identificacion == usuarioActual.Identificacion);
+
+            if (estudiante == null)
+            {
+                return Forbid();
+            }
+
+            // Verificar si el estudiante está en algún grupo
+            var grupoEstudiante = await _context.GruposEstudiantes
+                .Include(ge => ge.Grupo)
+                .FirstOrDefaultAsync(ge => ge.EstudianteIdentificacion == estudiante.Identificacion);
+
+            if (grupoEstudiante == null)
+            {
+                // Si no está en ningún grupo, redirigir a gestión de grupos
+                return RedirectToAction("GestionGrupos");
+            }
+
+            // Si está en un grupo, mostrar el dashboard
+            ViewBag.Estudiante = estudiante;
+            ViewBag.Grupo = grupoEstudiante.Grupo;
+
+            // Obtener entregas del grupo
+            var entregas = await _context.Entregas
+                .Include(e => e.Formulario)
+                .Where(e => e.GrupoNumero == grupoEstudiante.GrupoNumero)
+                .OrderByDescending(e => e.FechaRetroalimentacion)
+                .ToListAsync();
+
+            ViewBag.Entregas = entregas;
+
+            // Obtener compañeros de grupo
+            var companeros = await _context.GruposEstudiantes
+                .Include(ge => ge.Estudiante)
+                .Where(ge => ge.GrupoNumero == grupoEstudiante.GrupoNumero && 
+                            ge.EstudianteIdentificacion != estudiante.Identificacion)
+                .Select(ge => ge.Estudiante)
+                .ToListAsync();
+
+            ViewBag.Companeros = companeros;
+
+            // Obtener tutor asignado
+            var tutor = await _context.GruposProfesores
+                .Include(gp => gp.Profesor)
+                .Where(gp => gp.GrupoNumero == grupoEstudiante.GrupoNumero)
+                .Select(gp => gp.Profesor)
+                .FirstOrDefaultAsync();
+
+            ViewBag.Tutor = tutor;
+
+            return View();
+        }
+
+        public async Task<IActionResult> GestionGrupos()
+        {
+            var usuarioActual = _usuarioService.ObtenerUsuarioActual();
+            if (usuarioActual == null)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var estudiante = await _context.Estudiantes
+                .FirstOrDefaultAsync(e => e.Identificacion == usuarioActual.Identificacion);
+
+            if (estudiante == null)
+            {
+                return Forbid();
+            }
+
+            ViewBag.Estudiante = estudiante;
+
+            // Obtener grupos existentes con sus integrantes
+            var grupos = await _context.Grupos
+                .Include(g => g.GruposEstudiantes)
+                    .ThenInclude(ge => ge.Estudiante)
+                .ToListAsync();
+
+            ViewBag.Grupos = grupos;
+
+            // Obtener estudiantes sin grupo
+            var estudiantesEnGrupo = await _context.GruposEstudiantes
+                .Select(ge => ge.EstudianteIdentificacion)
+                .ToListAsync();
+
+            var estudiantesSinGrupo = await _context.Estudiantes
+                .Where(e => !estudiantesEnGrupo.Contains(e.Identificacion) && 
+                           e.Identificacion != estudiante.Identificacion)
+                .ToListAsync();
+
+            ViewBag.EstudiantesSinGrupo = estudiantesSinGrupo;
+
+            // Obtener solicitudes pendientes del estudiante
+            var solicitudesPendientes = await _context.Solicitudes
+                .Include(s => s.EstudianteRemitente)
+                .Include(s => s.EstudianteDestinatario)
+                .Include(s => s.Grupo)
+                .Where(s => s.EstudianteDestinatarioId == estudiante.Identificacion && 
+                           s.Estado == "PENDIENTE")
+                .ToListAsync();
+
+            ViewBag.SolicitudesPendientes = solicitudesPendientes;
+
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CrearGrupo(List<int> estudiantesSeleccionados)
+        {
+            var usuarioActual = _usuarioService.ObtenerUsuarioActual();
+            if (usuarioActual == null)
+            {
+                return Json(new { success = false, message = "Usuario no autenticado" });
+            }
+
+            var estudiante = await _context.Estudiantes
+                .FirstOrDefaultAsync(e => e.Identificacion == usuarioActual.Identificacion);
+
+            if (estudiante == null)
+            {
+                return Json(new { success = false, message = "Estudiante no encontrado" });
+            }
+
+            try
+            {
+                // Verificar que el estudiante no esté ya en un grupo
+                var yaEnGrupo = await _context.GruposEstudiantes
+                    .AnyAsync(ge => ge.EstudianteIdentificacion == estudiante.Identificacion);
+
+                if (yaEnGrupo)
+                {
+                    return Json(new { success = false, message = "Ya perteneces a un grupo" });
+                }
+
+                // Crear nuevo grupo con el siguiente número disponible
+                var ultimoNumero = await _context.Grupos
+                    .MaxAsync(g => (int?)g.Numero) ?? 0;
+
+                var nuevoGrupo = new Grupo
+                {
+                    Numero = ultimoNumero + 1
+                };
+
+                _context.Grupos.Add(nuevoGrupo);
+                await _context.SaveChangesAsync();
+
+                // Agregar al estudiante actual al grupo
+                var grupoEstudiante = new GrupoEstudiante
+                {
+                    EstudianteIdentificacion = estudiante.Identificacion,
+                    GrupoNumero = nuevoGrupo.Numero
+                };
+
+                _context.GruposEstudiantes.Add(grupoEstudiante);
+
+                // Enviar solicitudes a los estudiantes seleccionados
+                foreach (var estudianteId in estudiantesSeleccionados)
+                {
+                    var solicitud = new Solicitud
+                    {
+                        EstudianteRemitenteId = estudiante.Identificacion,
+                        EstudianteDestinatarioId = estudianteId,
+                        GrupoNumero = nuevoGrupo.Numero,
+                        Tipo = "INVITACION_GRUPO",
+                        Estado = "PENDIENTE",
+                        Mensaje = $"{estudiante.Nombre} {estudiante.Apellidos} te ha invitado a unirte al grupo {nuevoGrupo.Numero}."
+                    };
+
+                    _context.Solicitudes.Add(solicitud);
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = $"Grupo {nuevoGrupo.Numero} creado exitosamente. Se han enviado las invitaciones." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al crear el grupo: " + ex.Message });
+            }
+        }
+
+        [HttpPost]
+        [IgnoreAntiforgeryToken] // Para debugging
+        public async Task<IActionResult> SolicitarIngreso(int grupoNumero)
+        {
+            Console.WriteLine($"🔍 SOLICITAR INGRESO - Iniciando para grupo {grupoNumero}");
+            
+            var usuarioActual = _usuarioService.ObtenerUsuarioActual();
+            if (usuarioActual == null)
+            {
+                Console.WriteLine("❌ SOLICITAR INGRESO - Usuario no autenticado");
+                return Json(new { success = false, message = "Usuario no autenticado" });
+            }
+
+            Console.WriteLine($"🔍 SOLICITAR INGRESO - Usuario autenticado: {usuarioActual.NombreUsuario} (ID: {usuarioActual.Identificacion})");
+
+            var estudiante = await _context.Estudiantes
+                .FirstOrDefaultAsync(e => e.Identificacion == usuarioActual.Identificacion);
+
+            if (estudiante == null)
+            {
+                Console.WriteLine($"❌ SOLICITAR INGRESO - Estudiante no encontrado para ID: {usuarioActual.Identificacion}");
+                return Json(new { success = false, message = "Estudiante no encontrado" });
+            }
+
+            Console.WriteLine($"🔍 SOLICITAR INGRESO - Estudiante encontrado: {estudiante.Nombre} {estudiante.Apellidos}");
+
+            try
+            {
+                // Verificar que el estudiante no esté ya en un grupo
+                var yaEnGrupo = await _context.GruposEstudiantes
+                    .AnyAsync(ge => ge.EstudianteIdentificacion == estudiante.Identificacion);
+
+                Console.WriteLine($"🔍 SOLICITAR INGRESO - ¿Ya en grupo?: {yaEnGrupo}");
+
+                if (yaEnGrupo)
+                {
+                    Console.WriteLine("❌ SOLICITAR INGRESO - El estudiante ya pertenece a un grupo");
+                    return Json(new { success = false, message = "Ya perteneces a un grupo" });
+                }
+
+                // Verificar que el grupo existe
+                var grupo = await _context.Grupos
+                    .Include(g => g.GruposEstudiantes)
+                    .FirstOrDefaultAsync(g => g.Numero == grupoNumero);
+
+                if (grupo == null)
+                {
+                    Console.WriteLine($"❌ SOLICITAR INGRESO - Grupo {grupoNumero} no encontrado");
+                    return Json(new { success = false, message = "Grupo no encontrado" });
+                }
+
+                Console.WriteLine($"🔍 SOLICITAR INGRESO - Grupo {grupoNumero} encontrado con {grupo.GruposEstudiantes.Count} miembros");
+
+                // Verificar que el grupo no esté lleno (máximo 4 estudiantes)
+                if (grupo.GruposEstudiantes.Count >= 4)
+                {
+                    Console.WriteLine("❌ SOLICITAR INGRESO - El grupo está lleno");
+                    return Json(new { success = false, message = "El grupo está lleno" });
+                }
+
+                // Verificar que no haya una solicitud pendiente ya
+                var solicitudExistente = await _context.Solicitudes
+                    .AnyAsync(s => s.EstudianteRemitenteId == estudiante.Identificacion &&
+                                  s.GrupoNumero == grupoNumero &&
+                                  s.Estado == "PENDIENTE");
+
+                Console.WriteLine($"🔍 SOLICITAR INGRESO - ¿Solicitud existente?: {solicitudExistente}");
+
+                if (solicitudExistente)
+                {
+                    Console.WriteLine("❌ SOLICITAR INGRESO - Ya existe una solicitud pendiente");
+                    return Json(new { success = false, message = "Ya tienes una solicitud pendiente para este grupo" });
+                }
+
+                Console.WriteLine($"🔍 SOLICITAR INGRESO - Creando solicitudes para los {grupo.GruposEstudiantes.Count} miembros del grupo");
+
+                // Enviar solicitud a todos los miembros del grupo
+                int solicitudesCreadas = 0;
+                foreach (var miembro in grupo.GruposEstudiantes)
+                {
+                    var solicitud = new Solicitud
+                    {
+                        EstudianteRemitenteId = estudiante.Identificacion,
+                        EstudianteDestinatarioId = miembro.EstudianteIdentificacion,
+                        GrupoNumero = grupoNumero,
+                        Tipo = "SOLICITUD_INGRESO",
+                        Estado = "PENDIENTE",
+                        Mensaje = $"{estudiante.Nombre} {estudiante.Apellidos} solicita unirse al grupo {grupoNumero}."
+                    };
+
+                    _context.Solicitudes.Add(solicitud);
+                    solicitudesCreadas++;
+                    Console.WriteLine($"🔍 SOLICITAR INGRESO - Solicitud creada para destinatario ID: {miembro.EstudianteIdentificacion}");
+                }
+
+                Console.WriteLine($"🔍 SOLICITAR INGRESO - Guardando {solicitudesCreadas} solicitudes en la base de datos");
+                await _context.SaveChangesAsync();
+                Console.WriteLine("✅ SOLICITAR INGRESO - Solicitudes guardadas exitosamente");
+
+                return Json(new { success = true, message = "Solicitud enviada exitosamente" });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ SOLICITAR INGRESO - Error: {ex.Message}");
+                return Json(new { success = false, message = "Error al enviar solicitud: " + ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EliminarSolicitud([FromBody] EliminarSolicitudRequest request)
+    {
+        try
+        {
+            var usuario = HttpContext.Session.GetString("Usuario");
+            if (string.IsNullOrEmpty(usuario))
+            {
+                return Json(new { success = false, message = "Usuario no autenticado" });
+            }
+
+            Console.WriteLine($"🗑️ [Eliminar] Usuario: {usuario}, SolicitudId: {request.SolicitudId}");
+
+            // Obtener el usuario actual
+            var usuarioActual = await _context.Usuarios.FirstOrDefaultAsync(u => u.Usuario == usuario);
+            if (usuarioActual == null)
+            {
+                return Json(new { success = false, message = "Usuario no encontrado" });
+            }
+
+            // Buscar la solicitud
+            var solicitud = await _context.Solicitudes
+                .Include(s => s.EstudianteRemitente)
+                .Include(s => s.EstudianteDestinatario)
+                .FirstOrDefaultAsync(s => s.Id == request.SolicitudId);
+
+            if (solicitud == null)
+            {
+                return Json(new { success = false, message = "Solicitud no encontrada" });
+            }
+
+            // Verificar que la solicitud pertenece al usuario actual (remitente)
+            if (solicitud.EstudianteRemitenteId != usuarioActual.Identificacion)
+            {
+                Console.WriteLine($"❌ [Eliminar] Usuario {usuarioActual.Identificacion} no es el remitente {solicitud.EstudianteRemitenteId}");
+                return Json(new { success = false, message = "No tienes permiso para eliminar esta solicitud" });
+            }
+
+            // Solo permitir eliminar solicitudes pendientes
+            if (solicitud.Estado != "PENDIENTE")
+            {
+                Console.WriteLine($"❌ [Eliminar] Solicitud en estado: {solicitud.Estado}");
+                return Json(new { success = false, message = "Solo se pueden eliminar solicitudes pendientes" });
+            }
+
+            // Eliminar la solicitud
+            _context.Solicitudes.Remove(solicitud);
+            await _context.SaveChangesAsync();
+
+            Console.WriteLine($"✅ [Eliminar] Solicitud {request.SolicitudId} eliminada exitosamente");
+            return Json(new { success = true, message = "Solicitud eliminada exitosamente" });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ [Eliminar] Error: {ex.Message}");
+            return Json(new { success = false, message = "Error al eliminar la solicitud" });
+        }
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ResponderSolicitud([FromBody] ResponderSolicitudRequest request)
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ SOLICITAR INGRESO - Error: {ex.Message}");
+                Console.WriteLine($"❌ SOLICITAR INGRESO - Stack trace: {ex.StackTrace}");
+                return Json(new { success = false, message = "Error al enviar solicitud: " + ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ResponderSolicitud(int solicitudId, bool aceptar)
+        {
+            var usuarioActual = _usuarioService.ObtenerUsuarioActual();
+            if (usuarioActual == null)
+            {
+                return Json(new { success = false, message = "Usuario no autenticado" });
+            }
+
+            try
+            {
+                var solicitud = await _context.Solicitudes
+                    .Include(s => s.EstudianteRemitente)
+                    .Include(s => s.Grupo)
+                    .FirstOrDefaultAsync(s => s.Id == solicitudId &&
+                                            s.EstudianteDestinatarioId == usuarioActual.Identificacion &&
+                                            s.Estado == "PENDIENTE");
+
+                if (solicitud == null)
+                {
+                    return Json(new { success = false, message = "Solicitud no encontrada" });
+                }
+
+                solicitud.Estado = aceptar ? "ACEPTADA" : "RECHAZADA";
+                solicitud.FechaRespuesta = DateTime.Now;
+
+                if (aceptar && solicitud.Grupo != null)
+                {
+                    // Agregar estudiante al grupo
+                    var grupoEstudiante = new GrupoEstudiante
+                    {
+                        EstudianteIdentificacion = solicitud.EstudianteRemitenteId,
+                        GrupoNumero = solicitud.GrupoNumero!.Value
+                    };
+
+                    _context.GruposEstudiantes.Add(grupoEstudiante);
+
+                    // Si es una solicitud de ingreso, marcar todas las solicitudes relacionadas como procesadas
+                    if (solicitud.Tipo == "SOLICITUD_INGRESO")
+                    {
+                        var solicitudesRelacionadas = await _context.Solicitudes
+                            .Where(s => s.EstudianteRemitenteId == solicitud.EstudianteRemitenteId &&
+                                       s.GrupoNumero == solicitud.GrupoNumero &&
+                                       s.Estado == "PENDIENTE" &&
+                                       s.Id != solicitudId)
+                            .ToListAsync();
+
+                        foreach (var sol in solicitudesRelacionadas)
+                        {
+                            sol.Estado = "ACEPTADA";
+                            sol.FechaRespuesta = DateTime.Now;
+                        }
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                string mensaje = aceptar ? "Solicitud aceptada" : "Solicitud rechazada";
+                return Json(new { success = true, message = mensaje });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al procesar solicitud: " + ex.Message });
+            }
+        }
+
+        public async Task<IActionResult> MisSolicitudes()
+        {
+            var usuarioActual = _usuarioService.ObtenerUsuarioActual();
+            if (usuarioActual == null)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var solicitudesEnviadas = await _context.Solicitudes
+                .Include(s => s.EstudianteDestinatario)
+                .Include(s => s.Grupo)
+                .Where(s => s.EstudianteRemitenteId == usuarioActual.Identificacion)
+                .OrderByDescending(s => s.FechaCreacion)
+                .ToListAsync();
+
+            var solicitudesRecibidas = await _context.Solicitudes
+                .Include(s => s.EstudianteRemitente)
+                .Include(s => s.Grupo)
+                .Where(s => s.EstudianteDestinatarioId == usuarioActual.Identificacion)
+                .OrderByDescending(s => s.FechaCreacion)
+                .ToListAsync();
+
+            ViewBag.SolicitudesEnviadas = solicitudesEnviadas;
+            ViewBag.SolicitudesRecibidas = solicitudesRecibidas;
+
+            return View();
+        }
+
+        /// <summary>
+        /// Método de prueba para solicitar ingreso - SOLO PARA DEBUG
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> TestSolicitarIngreso(int grupoNumero = 1, string usuario = "carlos.eduardo.rojas")
+        {
+            var timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
+            Console.WriteLine($"🧪 [{timestamp}] TEST SOLICITAR INGRESO - Grupo: {grupoNumero}, Usuario: {usuario}");
+            
+            // Simular login
+            var user = await _context.Usuarios.FirstOrDefaultAsync(u => u.NombreUsuario == usuario);
+            if (user != null)
+            {
+                HttpContext.Session.SetInt32("UsuarioId", user.Identificacion);
+                HttpContext.Session.SetInt32("UsuarioIdentificacion", user.Identificacion);
+                HttpContext.Session.SetString("UsuarioNombre", user.NombreUsuario);
+                HttpContext.Session.SetString("UsuarioRol", user.Rol);
+                Console.WriteLine($"🧪 [{timestamp}] TEST - Sesión establecida para {usuario}");
+            }
+            else
+            {
+                Console.WriteLine($"❌ [{timestamp}] TEST - Usuario {usuario} no encontrado");
+                return Json(new { error = "Usuario no encontrado" });
+            }
+            
+            // Llamar al método de solicitar ingreso
+            var result = await SolicitarIngreso(grupoNumero);
+            
+            // Verificar el resultado
+            if (result is JsonResult jsonResult)
+            {
+                var data = jsonResult.Value;
+                Console.WriteLine($"🧪 [{timestamp}] TEST RESULTADO: {System.Text.Json.JsonSerializer.Serialize(data)}");
+                
+                return Json(new { 
+                    testResult = data,
+                    message = $"Test completado a las {timestamp}. Revisa la consola para detalles.",
+                    timestamp = timestamp
+                });
+            }
+            
+            return Json(new { error = "Resultado inesperado", timestamp = timestamp });
+        }
+    }
+}

@@ -4,6 +4,7 @@ using ServicioComunal.Data;
 using ServicioComunal.Services;
 using ServicioComunal.Models;
 using OfficeOpenXml;
+using System.Text;
 
 namespace ServicioComunal.Controllers
 {
@@ -731,11 +732,22 @@ namespace ServicioComunal.Controllers
             try
             {
                 var usuarios = await _context.Usuarios.ToListAsync();
-                var mensaje = $"Usuarios en BD: {usuarios.Count}\n\n";
+                var estudiantes = await _context.Estudiantes.ToListAsync();
+                var gruposEstudiantes = await _context.GruposEstudiantes.ToListAsync();
                 
-                foreach (var user in usuarios)
+                var mensaje = $"=== USUARIOS EN BD: {usuarios.Count} ===\n\n";
+                
+                foreach (var user in usuarios.Where(u => u.Rol == "Estudiante"))
                 {
-                    mensaje += $"- ID: {user.Identificacion}, Usuario: {user.NombreUsuario}, Rol: {user.Rol}, Activo: {user.Activo}\n";
+                    var estudiante = estudiantes.FirstOrDefault(e => e.Identificacion == user.Identificacion);
+                    var tieneGrupo = gruposEstudiantes.Any(ge => ge.EstudianteIdentificacion == user.Identificacion);
+                    
+                    mensaje += $"ID: {user.Identificacion}\n";
+                    mensaje += $"Usuario: {user.NombreUsuario}\n";
+                    mensaje += $"Nombre: {estudiante?.Nombre} {estudiante?.Apellidos}\n";
+                    mensaje += $"Activo: {user.Activo}\n";
+                    mensaje += $"Tiene Grupo: {(tieneGrupo ? "SÍ" : "NO")}\n";
+                    mensaje += $"Contraseña Hash: {user.Contraseña[..20]}...\n\n";
                 }
                 
                 ViewBag.Message = mensaje;
@@ -1708,6 +1720,156 @@ namespace ServicioComunal.Controllers
             {
                 return Json(new { success = false, message = $"Error al obtener entrega: {ex.Message}" });
             }
+        }
+
+        // ===== MÉTODO TEMPORAL PARA CONSULTAR ESTUDIANTES =====
+        
+        [HttpGet]
+        public async Task<IActionResult> ConsultarEstudiantes()
+        {
+            try
+            {
+                await _seeder.ConsultarEstadoEstudiantesAsync();
+                ViewBag.Message = "Consulta ejecutada. Revisa la consola para ver los resultados.";
+                ViewBag.Success = true;
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Message = $"Error en consulta: {ex.Message}";
+                ViewBag.Success = false;
+            }
+            return View("Dashboard");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> CrearEstudiantesSinGrupo()
+        {
+            try
+            {
+                await _seeder.CrearEstudiantesSinGrupoAsync();
+                ViewBag.Message = "Estudiantes sin grupo creados. Revisa la consola para ver los resultados.";
+                ViewBag.Success = true;
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Message = $"Error al crear estudiantes: {ex.Message}";
+                ViewBag.Success = false;
+            }
+            return View("Dashboard");
+        }
+
+        /// <summary>
+        /// Consultar estado detallado de estudiantes y grupos
+        /// </summary>
+        public async Task<IActionResult> ConsultarEstadoEstudiantes()
+        {
+            var dataSeeder = new DataSeederService(_context);
+            await dataSeeder.ConsultarEstadoEstudiantesAsync();
+            
+            ViewBag.Message = "✅ Consulta completada. Revisa la consola para ver los detalles.";
+            ViewBag.Success = true;
+            return View("Dashboard");
+        }
+
+        /// <summary>
+        /// Recrear todos los usuarios de prueba
+        /// </summary>
+        public async Task<IActionResult> RecrearUsuarios()
+        {
+            var dataSeeder = new DataSeederService(_context);
+            await dataSeeder.ReseedUsuariosAsync();
+            
+            ViewBag.Message = "✅ Usuarios recreados exitosamente.";
+            ViewBag.Success = true;
+            return View("Dashboard");
+        }
+
+        /// <summary>
+        /// Verificar solicitudes en la base de datos
+        /// </summary>
+        public async Task<IActionResult> VerificarSolicitudes()
+        {
+            var solicitudes = await _context.Solicitudes
+                .Include(s => s.EstudianteRemitente)
+                .Include(s => s.EstudianteDestinatario)
+                .Include(s => s.Grupo)
+                .OrderByDescending(s => s.FechaCreacion)
+                .ToListAsync();
+
+            var result = new StringBuilder();
+            result.AppendLine("=== SOLICITUDES EN LA BASE DE DATOS ===\n");
+            
+            if (!solicitudes.Any())
+            {
+                result.AppendLine("❌ NO HAY SOLICITUDES EN LA BASE DE DATOS");
+            }
+            else
+            {
+                result.AppendLine($"✅ Total de solicitudes: {solicitudes.Count}\n");
+                
+                foreach (var solicitud in solicitudes)
+                {
+                    result.AppendLine($"🔸 ID: {solicitud.Id}");
+                    result.AppendLine($"   Tipo: {solicitud.Tipo}");
+                    result.AppendLine($"   Estado: {solicitud.Estado}");
+                    result.AppendLine($"   Remitente: {solicitud.EstudianteRemitente?.Nombre} {solicitud.EstudianteRemitente?.Apellidos} (ID: {solicitud.EstudianteRemitenteId})");
+                    result.AppendLine($"   Destinatario: {solicitud.EstudianteDestinatario?.Nombre} {solicitud.EstudianteDestinatario?.Apellidos} (ID: {solicitud.EstudianteDestinatarioId})");
+                    result.AppendLine($"   Grupo: {solicitud.GrupoNumero}");
+                    result.AppendLine($"   Mensaje: {solicitud.Mensaje}");
+                    result.AppendLine($"   Fecha: {solicitud.FechaCreacion:dd/MM/yyyy HH:mm:ss}");
+                    result.AppendLine();
+                }
+            }
+            
+            ViewBag.Resultado = result.ToString();
+            return View("VerificarUsuarios");
+        }
+
+        /// <summary>
+        /// Verificar información de grupos y sus miembros
+        /// </summary>
+        public async Task<IActionResult> VerificarGrupos()
+        {
+            var grupos = await _context.Grupos
+                .Include(g => g.GruposEstudiantes)
+                    .ThenInclude(ge => ge.Estudiante)
+                .OrderBy(g => g.Numero)
+                .ToListAsync();
+
+            var result = new StringBuilder();
+            result.AppendLine("=== GRUPOS Y SUS MIEMBROS ===\n");
+            
+            if (!grupos.Any())
+            {
+                result.AppendLine("❌ NO HAY GRUPOS EN LA BASE DE DATOS");
+            }
+            else
+            {
+                result.AppendLine($"✅ Total de grupos: {grupos.Count}\n");
+                
+                foreach (var grupo in grupos)
+                {
+                    result.AppendLine($"🏛️ GRUPO {grupo.Numero}");
+                    result.AppendLine($"   Miembros: {grupo.GruposEstudiantes.Count}");
+                    
+                    if (grupo.GruposEstudiantes.Any())
+                    {
+                        result.AppendLine("   📋 Lista de estudiantes:");
+                        foreach (var miembro in grupo.GruposEstudiantes)
+                        {
+                            result.AppendLine($"      👤 {miembro.Estudiante.Nombre} {miembro.Estudiante.Apellidos} (ID: {miembro.EstudianteIdentificacion})");
+                        }
+                    }
+                    else
+                    {
+                        result.AppendLine("   ⚠️ Grupo vacío - sin estudiantes");
+                    }
+                    result.AppendLine();
+                }
+            }
+            
+            ViewBag.Resultado = result.ToString();
+            return View("VerificarUsuarios");
         }
     }
 }

@@ -19,6 +19,7 @@ namespace ServicioComunal.Data
         public DbSet<Formulario> Formularios { get; set; }
         public DbSet<Notificacion> Notificaciones { get; set; }
         public DbSet<Usuario> Usuarios { get; set; }
+        public DbSet<Solicitud> Solicitudes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -106,6 +107,25 @@ namespace ServicioComunal.Data
                 .HasOne(n => n.Profesor)
                 .WithMany(p => p.Notificaciones)
                 .HasForeignKey(n => n.ProfesorIdentificacion)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configuración de relaciones para Solicitud
+            modelBuilder.Entity<Solicitud>()
+                .HasOne(s => s.EstudianteRemitente)
+                .WithMany()
+                .HasForeignKey(s => s.EstudianteRemitenteId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Solicitud>()
+                .HasOne(s => s.EstudianteDestinatario)
+                .WithMany()
+                .HasForeignKey(s => s.EstudianteDestinatarioId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Solicitud>()
+                .HasOne(s => s.Grupo)
+                .WithMany()
+                .HasForeignKey(s => s.GrupoNumero)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Configuración adicional para Usuario (tabla independiente)

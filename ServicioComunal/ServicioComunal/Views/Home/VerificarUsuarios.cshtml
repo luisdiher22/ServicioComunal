@@ -1,0 +1,38 @@
+@{
+    ViewData["Title"] = "Verificar Usuarios";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users"></i> Verificación de Usuarios y Solicitudes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(ViewBag.Resultado))
+                    {
+                        <pre style="white-space: pre-wrap; font-family: monospace; background-color: #f8f9fa; padding: 15px; border-radius: 5px; font-size: 13px;">@ViewBag.Resultado</pre>
+                    }
+                    
+                    <div class="mt-3">
+                        <a href="@Url.Action("VerificarUsuarios", "Home")" class="btn btn-primary me-2">
+                            <i class="fas fa-sync"></i> Actualizar
+                        </a>
+                        <a href="@Url.Action("VerificarSolicitudes", "Home")" class="btn btn-info me-2">
+                            <i class="fas fa-envelope"></i> Ver Solicitudes
+                        </a>
+                        <a href="@Url.Action("ConsultarEstadoEstudiantes", "Home")" class="btn btn-success me-2">
+                            <i class="fas fa-graduation-cap"></i> Estado Estudiantes
+                        </a>
+                        <a href="@Url.Action("CrearEstudiantesSinGrupo", "Home")" class="btn btn-warning">
+                            <i class="fas fa-plus"></i> Crear Estudiantes
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
