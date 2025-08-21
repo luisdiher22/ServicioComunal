@@ -303,11 +303,14 @@
 <script>
     function eliminarSolicitud(solicitudId) {
         if (confirm('¿Estás seguro de que quieres eliminar esta solicitud? Esta acción no se puede deshacer.')) {
+            // Obtener token CSRF
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            
             fetch('@Url.Action("EliminarSolicitud", "Estudiante")', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    'RequestVerificationToken': token
                 },
                 body: JSON.stringify({ solicitudId: solicitudId })
             })
@@ -330,11 +333,14 @@
     function responderSolicitud(solicitudId, aceptar) {
         const accion = aceptar ? 'aceptar' : 'rechazar';
         if (confirm('¿Estás seguro de que quieres ' + accion + ' esta solicitud?')) {
+            // Obtener token CSRF
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            
             fetch('@Url.Action("ResponderSolicitud", "Estudiante")', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    'RequestVerificationToken': token
                 },
                 body: JSON.stringify({ solicitudId: solicitudId, aceptar: aceptar })
             })
