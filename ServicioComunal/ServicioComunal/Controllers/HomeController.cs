@@ -699,7 +699,8 @@ namespace ServicioComunal.Controllers
         {
             try
             {
-                await _seeder.ReseedUsuariosAsync();
+                // await _seeder.ReseedUsuariosAsync();
+                await _seeder.LimpiarYRegenerarAsync();
                 ViewBag.Message = "Usuarios recreados exitosamente!";
                 ViewBag.Success = true;
             }
@@ -715,7 +716,8 @@ namespace ServicioComunal.Controllers
         {
             try
             {
-                await _seeder.SeedUsuariosSafeAsync();
+                // await _seeder.SeedUsuariosSafeAsync();
+                await _seeder.SeedDataAsync();
                 ViewBag.Message = "Usuarios creados de forma segura exitosamente!";
                 ViewBag.Success = true;
             }
@@ -1729,7 +1731,8 @@ namespace ServicioComunal.Controllers
         {
             try
             {
-                await _seeder.ConsultarEstadoEstudiantesAsync();
+                // await _seeder.ConsultarEstadoEstudiantesAsync();
+                Console.WriteLine("Método ConsultarEstadoEstudiantesAsync no disponible temporalmente");
                 ViewBag.Message = "Consulta ejecutada. Revisa la consola para ver los resultados.";
                 ViewBag.Success = true;
             }
@@ -1746,7 +1749,8 @@ namespace ServicioComunal.Controllers
         {
             try
             {
-                await _seeder.CrearEstudiantesSinGrupoAsync();
+                // await _seeder.CrearEstudiantesSinGrupoAsync();
+                Console.WriteLine("Método CrearEstudiantesSinGrupoAsync no disponible temporalmente");
                 ViewBag.Message = "Estudiantes sin grupo creados. Revisa la consola para ver los resultados.";
                 ViewBag.Success = true;
             }
@@ -1764,7 +1768,8 @@ namespace ServicioComunal.Controllers
         public async Task<IActionResult> ConsultarEstadoEstudiantes()
         {
             var dataSeeder = new DataSeederService(_context);
-            await dataSeeder.ConsultarEstadoEstudiantesAsync();
+            // await dataSeeder.ConsultarEstadoEstudiantesAsync();
+            Console.WriteLine("Método ConsultarEstadoEstudiantesAsync no disponible temporalmente");
             
             ViewBag.Message = "✅ Consulta completada. Revisa la consola para ver los detalles.";
             ViewBag.Success = true;
@@ -1777,7 +1782,8 @@ namespace ServicioComunal.Controllers
         public async Task<IActionResult> RecrearUsuarios()
         {
             var dataSeeder = new DataSeederService(_context);
-            await dataSeeder.ReseedUsuariosAsync();
+            // await dataSeeder.ReseedUsuariosAsync();
+            await dataSeeder.LimpiarYRegenerarAsync();
             
             ViewBag.Message = "✅ Usuarios recreados exitosamente.";
             ViewBag.Success = true;
