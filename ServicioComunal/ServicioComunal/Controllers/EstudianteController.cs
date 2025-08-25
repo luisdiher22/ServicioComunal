@@ -104,10 +104,35 @@ namespace ServicioComunal.Controllers
                     .ThenInclude(ge => ge.Estudiante)
                 .Include(g => g.GruposProfesores)
                     .ThenInclude(gp => gp.Profesor)
+                .Include(g => g.Lider)
                 .OrderBy(g => g.Numero)
                 .ToListAsync();
 
             ViewBag.Grupos = grupos;
+
+            // Obtener estudiantes sin grupo (excluyendo al estudiante actual)
+            var estudiantesConGrupo = await _context.GruposEstudiantes
+                .Select(ge => ge.EstudianteIdentificacion)
+                .ToListAsync();
+
+            var estudiantesSinGrupo = await _context.Estudiantes
+                .Where(e => !estudiantesConGrupo.Contains(e.Identificacion) && 
+                           e.Identificacion != estudiante.Identificacion)
+                .OrderBy(e => e.Nombre)
+                .ToListAsync();
+
+            ViewBag.EstudiantesSinGrupo = estudiantesSinGrupo;
+
+            // Obtener solicitudes pendientes dirigidas al estudiante actual
+            var solicitudesPendientes = await _context.Solicitudes
+                .Include(s => s.EstudianteRemitente)
+                .Include(s => s.Grupo)
+                .Where(s => s.EstudianteDestinatarioId == estudiante.Identificacion && 
+                           s.Estado == "PENDIENTE")
+                .OrderByDescending(s => s.FechaCreacion)
+                .ToListAsync();
+
+            ViewBag.SolicitudesPendientes = solicitudesPendientes;
 
             // Verificar si el estudiante ya está en un grupo
             var grupoActual = await _context.GruposEstudiantes
@@ -220,9 +245,10 @@ namespace ServicioComunal.Controllers
                     return Json(new { success = false, message = "Ya perteneces a un grupo" });
                 }
 
-                // Verificar que el grupo existe y obtener sus miembros
+                // Verificar que el grupo existe y obtener al líder
                 var grupo = await _context.Grupos
                     .Include(g => g.GruposEstudiantes)
+                    .Include(g => g.Lider)
                     .FirstOrDefaultAsync(g => g.Numero == grupoNumero);
 
                 if (grupo == null)
@@ -231,6 +257,12 @@ namespace ServicioComunal.Controllers
                 }
 
                 Console.WriteLine($"🔍 SOLICITAR INGRESO - Grupo {grupoNumero} encontrado con {grupo.GruposEstudiantes.Count} miembros");
+
+                // Verificar que el grupo tenga líder
+                if (grupo.LiderIdentificacion == null)
+                {
+                    return Json(new { success = false, message = "Este grupo no tiene líder asignado" });
+                }
 
                 // Verificar que no haya una solicitud pendiente ya
                 var solicitudExistente = await _context.Solicitudes
@@ -246,30 +278,25 @@ namespace ServicioComunal.Controllers
                     return Json(new { success = false, message = "Ya tienes una solicitud pendiente para este grupo" });
                 }
 
-                Console.WriteLine($"🔍 SOLICITAR INGRESO - Creando solicitudes para los {grupo.GruposEstudiantes.Count} miembros del grupo");
+                Console.WriteLine($"🔍 SOLICITAR INGRESO - Creando solicitud para el líder del grupo (ID: {grupo.LiderIdentificacion})");
 
-                // Enviar solicitud a todos los miembros del grupo
-                int solicitudesCreadas = 0;
-                foreach (var miembro in grupo.GruposEstudiantes)
+                // Enviar solicitud solo al líder del grupo
+                var solicitud = new Solicitud
                 {
-                    var solicitud = new Solicitud
-                    {
-                        EstudianteRemitenteId = estudiante.Identificacion,
-                        EstudianteDestinatarioId = miembro.EstudianteIdentificacion,
-                        GrupoNumero = grupoNumero,
-                        Tipo = "SOLICITUD_INGRESO",
-                        Estado = "PENDIENTE",
-                        Mensaje = $"{estudiante.Nombre} {estudiante.Apellidos} solicita unirse al grupo {grupoNumero}."
-                    };
+                    EstudianteRemitenteId = estudiante.Identificacion,
+                    EstudianteDestinatarioId = grupo.LiderIdentificacion.Value,
+                    GrupoNumero = grupoNumero,
+                    Tipo = "SOLICITUD_INGRESO",
+                    Estado = "PENDIENTE",
+                    Mensaje = $"{estudiante.Nombre} {estudiante.Apellidos} solicita unirse al grupo {grupoNumero}."
+                };
 
-                    _context.Solicitudes.Add(solicitud);
-                    solicitudesCreadas++;
-                    Console.WriteLine($"🔍 SOLICITAR INGRESO - Solicitud creada para destinatario ID: {miembro.EstudianteIdentificacion}");
-                }
+                _context.Solicitudes.Add(solicitud);
 
-                Console.WriteLine($"🔍 SOLICITAR INGRESO - Guardando {solicitudesCreadas} solicitudes en la base de datos");
+                Console.WriteLine($"🔍 SOLICITAR INGRESO - Solicitud creada para el líder (ID: {grupo.LiderIdentificacion})");
+                Console.WriteLine("🔍 SOLICITAR INGRESO - Guardando solicitud en la base de datos");
                 await _context.SaveChangesAsync();
-                Console.WriteLine("✅ SOLICITAR INGRESO - Solicitudes guardadas exitosamente");
+                Console.WriteLine("✅ SOLICITAR INGRESO - Solicitud guardada exitosamente");
 
                 return Json(new { success = true, message = "Solicitud enviada exitosamente" });
             }
@@ -367,6 +394,18 @@ namespace ServicioComunal.Controllers
                     return Json(new { success = false, message = "No tienes permiso para responder esta solicitud" });
                 }
 
+                // Para solicitudes de ingreso, verificar que el usuario es el líder del grupo
+                if (solicitud.Tipo == "SOLICITUD_INGRESO")
+                {
+                    var grupo = await _context.Grupos
+                        .FirstOrDefaultAsync(g => g.Numero == solicitud.GrupoNumero);
+                    
+                    if (grupo == null || grupo.LiderIdentificacion != usuarioActual.Identificacion)
+                    {
+                        return Json(new { success = false, message = "Solo el líder del grupo puede responder solicitudes de ingreso" });
+                    }
+                }
+
                 // Verificar que la solicitud está pendiente
                 if (solicitud.Estado != "PENDIENTE")
                 {
@@ -452,6 +491,260 @@ namespace ServicioComunal.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
+
+        [HttpPost]
+        public async Task<IActionResult> CrearGrupo([FromBody] CrearGrupoRequest request)
+        {
+            try
+            {
+                var usuarioActual = _usuarioService.ObtenerUsuarioActual();
+                if (usuarioActual == null)
+                {
+                    return Json(new { success = false, message = "Usuario no autenticado" });
+                }
+
+                var estudiante = await _context.Estudiantes
+                    .FirstOrDefaultAsync(e => e.Identificacion == usuarioActual.Identificacion);
+
+                if (estudiante == null)
+                {
+                    return Json(new { success = false, message = "Estudiante no encontrado" });
+                }
+
+                // Verificar que el estudiante no esté ya en un grupo
+                var yaEnGrupo = await _context.GruposEstudiantes
+                    .AnyAsync(ge => ge.EstudianteIdentificacion == estudiante.Identificacion);
+
+                if (yaEnGrupo)
+                {
+                    return Json(new { success = false, message = "Ya perteneces a un grupo" });
+                }
+
+                // Verificar que los estudiantes seleccionados existan y no estén en grupo
+                var estudiantesInvalidos = new List<int>();
+                foreach (var estId in request.EstudiantesSeleccionados)
+                {
+                    var estudianteSeleccionado = await _context.Estudiantes
+                        .FirstOrDefaultAsync(e => e.Identificacion == estId);
+                    
+                    if (estudianteSeleccionado == null)
+                    {
+                        estudiantesInvalidos.Add(estId);
+                        continue;
+                    }
+
+                    var yaEnGrupoSeleccionado = await _context.GruposEstudiantes
+                        .AnyAsync(ge => ge.EstudianteIdentificacion == estId);
+
+                    if (yaEnGrupoSeleccionado)
+                    {
+                        estudiantesInvalidos.Add(estId);
+                    }
+                }
+
+                if (estudiantesInvalidos.Any())
+                {
+                    return Json(new { success = false, message = "Algunos estudiantes seleccionados ya pertenecen a un grupo o no existen" });
+                }
+
+                // Obtener el próximo número de grupo disponible
+                var ultimoGrupo = await _context.Grupos
+                    .OrderByDescending(g => g.Numero)
+                    .FirstOrDefaultAsync();
+
+                int nuevoNumeroGrupo = (ultimoGrupo?.Numero ?? 0) + 1;
+
+                // Crear el nuevo grupo con el estudiante actual como líder
+                var nuevoGrupo = new Grupo
+                {
+                    Numero = nuevoNumeroGrupo,
+                    LiderIdentificacion = estudiante.Identificacion
+                };
+
+                _context.Grupos.Add(nuevoGrupo);
+
+                // Agregar al creador como miembro del grupo
+                var grupoEstudianteLider = new GrupoEstudiante
+                {
+                    GrupoNumero = nuevoNumeroGrupo,
+                    EstudianteIdentificacion = estudiante.Identificacion
+                };
+
+                _context.GruposEstudiantes.Add(grupoEstudianteLider);
+
+                // Crear invitaciones para los estudiantes seleccionados
+                foreach (var estId in request.EstudiantesSeleccionados)
+                {
+                    var invitacion = new Solicitud
+                    {
+                        EstudianteRemitenteId = estudiante.Identificacion,
+                        EstudianteDestinatarioId = estId,
+                        GrupoNumero = nuevoNumeroGrupo,
+                        Tipo = "INVITACION_GRUPO",
+                        Estado = "PENDIENTE",
+                        Mensaje = $"{estudiante.Nombre} {estudiante.Apellidos} te invita a unirte al Grupo {nuevoNumeroGrupo}."
+                    };
+
+                    _context.Solicitudes.Add(invitacion);
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { 
+                    success = true, 
+                    message = $"Grupo {nuevoNumeroGrupo} creado exitosamente. Se han enviado las invitaciones."
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al crear el grupo: " + ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> InvitarEstudiante([FromBody] InvitarEstudianteRequest request)
+        {
+            try
+            {
+                var usuarioActual = _usuarioService.ObtenerUsuarioActual();
+                if (usuarioActual == null)
+                {
+                    return Json(new { success = false, message = "Usuario no autenticado" });
+                }
+
+                var estudiante = await _context.Estudiantes
+                    .FirstOrDefaultAsync(e => e.Identificacion == usuarioActual.Identificacion);
+
+                if (estudiante == null)
+                {
+                    return Json(new { success = false, message = "Estudiante no encontrado" });
+                }
+
+                // Verificar que el estudiante actual es líder de un grupo
+                var grupo = await _context.Grupos
+                    .Include(g => g.GruposEstudiantes)
+                    .FirstOrDefaultAsync(g => g.LiderIdentificacion == estudiante.Identificacion);
+
+                if (grupo == null)
+                {
+                    return Json(new { success = false, message = "No eres líder de ningún grupo" });
+                }
+
+                // Verificar que el grupo no esté lleno (máximo 4 miembros)
+                if (grupo.GruposEstudiantes.Count >= 4)
+                {
+                    return Json(new { success = false, message = "El grupo ya tiene el máximo de miembros (4)" });
+                }
+
+                // Verificar que el estudiante a invitar existe y no está en un grupo
+                var estudianteInvitado = await _context.Estudiantes
+                    .FirstOrDefaultAsync(e => e.Identificacion == request.EstudianteId);
+
+                if (estudianteInvitado == null)
+                {
+                    return Json(new { success = false, message = "Estudiante no encontrado" });
+                }
+
+                var yaEnGrupo = await _context.GruposEstudiantes
+                    .AnyAsync(ge => ge.EstudianteIdentificacion == request.EstudianteId);
+
+                if (yaEnGrupo)
+                {
+                    return Json(new { success = false, message = "El estudiante ya pertenece a un grupo" });
+                }
+
+                // Verificar que no haya una invitación pendiente ya
+                var invitacionExistente = await _context.Solicitudes
+                    .AnyAsync(s => s.EstudianteRemitenteId == estudiante.Identificacion &&
+                                  s.EstudianteDestinatarioId == request.EstudianteId &&
+                                  s.Estado == "PENDIENTE" &&
+                                  s.Tipo == "INVITACION_GRUPO");
+
+                if (invitacionExistente)
+                {
+                    return Json(new { success = false, message = "Ya existe una invitación pendiente para este estudiante" });
+                }
+
+                // Crear la invitación
+                var invitacion = new Solicitud
+                {
+                    EstudianteRemitenteId = estudiante.Identificacion,
+                    EstudianteDestinatarioId = request.EstudianteId,
+                    GrupoNumero = grupo.Numero,
+                    Tipo = "INVITACION_GRUPO",
+                    Estado = "PENDIENTE",
+                    Mensaje = $"{estudiante.Nombre} {estudiante.Apellidos} te invita a unirte al Grupo {grupo.Numero}."
+                };
+
+                _context.Solicitudes.Add(invitacion);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Invitación enviada exitosamente" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al enviar la invitación: " + ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> LimpiarGruposSinLider()
+        {
+            try
+            {
+                // Solo permitir esta acción a usuarios autenticados
+                var usuarioActual = _usuarioService.ObtenerUsuarioActual();
+                if (usuarioActual == null)
+                {
+                    return Json(new { success = false, message = "Usuario no autenticado" });
+                }
+
+                // Buscar grupos sin líder
+                var gruposSinLider = await _context.Grupos
+                    .Where(g => g.LiderIdentificacion == null)
+                    .Include(g => g.GruposEstudiantes)
+                    .Include(g => g.Entregas)
+                    .Include(g => g.GruposProfesores)
+                    .Include(g => g.Notificaciones)
+                    .ToListAsync();
+
+                if (!gruposSinLider.Any())
+                {
+                    return Json(new { success = true, message = "No hay grupos sin líder para eliminar" });
+                }
+
+                int gruposEliminados = 0;
+                foreach (var grupo in gruposSinLider)
+                {
+                    // Eliminar todas las relaciones primero
+                    _context.GruposEstudiantes.RemoveRange(grupo.GruposEstudiantes);
+                    _context.Entregas.RemoveRange(grupo.Entregas);
+                    _context.GruposProfesores.RemoveRange(grupo.GruposProfesores);
+                    _context.Notificaciones.RemoveRange(grupo.Notificaciones);
+
+                    // Eliminar solicitudes relacionadas con el grupo
+                    var solicitudesGrupo = await _context.Solicitudes
+                        .Where(s => s.GrupoNumero == grupo.Numero)
+                        .ToListAsync();
+                    _context.Solicitudes.RemoveRange(solicitudesGrupo);
+
+                    // Eliminar el grupo
+                    _context.Grupos.Remove(grupo);
+                    gruposEliminados++;
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { 
+                    success = true, 
+                    message = $"Se eliminaron {gruposEliminados} grupos sin líder"
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al limpiar grupos: " + ex.Message });
+            }
+        }
     }
 
     public class ResponderSolicitudRequest
@@ -463,5 +756,15 @@ namespace ServicioComunal.Controllers
     public class EliminarSolicitudRequest
     {
         public int SolicitudId { get; set; }
+    }
+
+    public class CrearGrupoRequest
+    {
+        public List<int> EstudiantesSeleccionados { get; set; } = new List<int>();
+    }
+
+    public class InvitarEstudianteRequest
+    {
+        public int EstudianteId { get; set; }
     }
 }

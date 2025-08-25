@@ -2,8 +2,12 @@
 let grupoAEliminar = null;
 let grupoEnEdicion = null;
 
+// Debug function
+console.log('grupos.js cargado correctamente');
+
 // Inicialización
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM cargado, inicializando eventos');
     inicializarEventos();
     inicializarFiltros();
 });
@@ -284,7 +288,7 @@ async function cargarEstudiantesParaGestion(numeroGrupo) {
         
     } catch (error) {
         console.error('Error cargando estudiantes:', error);
-        mostrarToast('Error al cargar estudiantes: ' + error.message, 'error');
+        mostrarError('Error al cargar estudiantes: ' + error.message);
     }
 }
 
@@ -495,8 +499,62 @@ function configurarEventListenersGestion() {
     if (btnGuardar) btnGuardar.onclick = guardarAsignaciones;
 }
 
+// Función dedicada para cerrar el modal de gestión de estudiantes
+function cerrarModalGestionEstudiantes() {
+    console.log('Intentando cerrar modal...');
+    
+    const modalId = 'modalGestionarEstudiantes';
+    const modalElement = document.getElementById(modalId);
+    
+    if (!modalElement) {
+        console.log('Modal no encontrado');
+        return;
+    }
+    
+    // Método 1: jQuery (si está disponible)
+    if (typeof $ !== 'undefined') {
+        console.log('Cerrando con jQuery...');
+        $(`#${modalId}`).modal('hide');
+    }
+    
+    // Método 2: Bootstrap 5 nativo
+    try {
+        console.log('Cerrando con Bootstrap 5...');
+        const modal = bootstrap.Modal.getInstance(modalElement);
+        if (modal) {
+            console.log('Instancia encontrada, cerrando...');
+            modal.hide();
+        } else {
+            console.log('Creando nueva instancia...');
+            const newModal = new bootstrap.Modal(modalElement);
+            newModal.hide();
+        }
+    } catch (e) {
+        console.error('Error con Bootstrap modal:', e);
+    }
+    
+    // Método 3: Fallback manual
+    setTimeout(() => {
+        console.log('Aplicando fallback manual...');
+        modalElement.classList.remove('show');
+        modalElement.style.display = 'none';
+        modalElement.setAttribute('aria-hidden', 'true');
+        modalElement.removeAttribute('aria-modal');
+        
+        // Remover backdrop
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(backdrop => backdrop.remove());
+        
+        // Remover clase del body
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }, 500);
+}
+
 // Guardar asignaciones en la base de datos
 async function guardarAsignaciones() {
+    console.log('guardarAsignaciones iniciado');
     try {
         const btnGuardar = document.getElementById('guardarAsignaciones');
         const textoOriginal = btnGuardar.innerHTML;
@@ -511,6 +569,8 @@ async function guardarAsignaciones() {
             estudiantesIds: estudiantesGrupoData.map(e => e.identificacion)
         };
 
+        console.log('Enviando asignaciones:', asignaciones);
+
         // Enviar al servidor
         const response = await fetch('/Home/ActualizarAsignacionesGrupo', {
             method: 'POST',
@@ -521,23 +581,34 @@ async function guardarAsignaciones() {
         });
 
         const data = await response.json();
+        console.log('Respuesta del servidor:', data);
         
         if (data.success) {
-            mostrarToast('Asignaciones guardadas correctamente', 'success');
+            console.log('Guardado exitoso, cerrando modal...');
+            mostrarExito('Asignaciones guardadas correctamente');
             
-            // Cerrar modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('modalGestionarEstudiantes'));
-            modal.hide();
+            // Restaurar botón inmediatamente
+            const btnGuardar = document.getElementById('guardarAsignaciones');
+            if (btnGuardar) {
+                btnGuardar.innerHTML = '<i class="fas fa-save me-2"></i>Guardar Cambios';
+                btnGuardar.disabled = false;
+            }
             
-            // Recargar tabla
-            location.reload();
+            // Cerrar modal con función dedicada
+            cerrarModalGestionEstudiantes();
+            
+            // Recargar tabla después de un pequeño delay
+            setTimeout(() => {
+                console.log('Recargando página...');
+                location.reload();
+            }, 2000);
         } else {
             throw new Error(data.message);
         }
         
     } catch (error) {
         console.error('Error guardando asignaciones:', error);
-        mostrarToast('Error al guardar asignaciones: ' + error.message, 'error');
+        mostrarError('Error al guardar asignaciones: ' + error.message);
     } finally {
         // Restaurar botón
         const btnGuardar = document.getElementById('guardarAsignaciones');
@@ -765,3 +836,282 @@ function mostrarNotificacion(mensaje, tipo) {
         }
     }, 5000);
 }
+
+// ===== NUEVAS FUNCIONES PARA GESTIÓN AVANZADA =====
+
+function verDetallesAvanzados(grupoNumero) {
+    console.log('verDetallesAvanzados llamado para grupo:', grupoNumero);
+    
+    // Limpiar contenido y mostrar spinner
+    const contenidoDiv = document.getElementById('contenidoGestionAvanzada');
+    contenidoDiv.innerHTML = '<div class="d-flex justify-content-center"><div class="spinner-border" role="status"></div></div>';
+    
+    // Mostrar modal usando Bootstrap 5
+    const modal = new bootstrap.Modal(document.getElementById('modalGestionAvanzada'));
+    modal.show();
+    
+    fetch(`/Home/ObtenerDetallesGrupoCompleto?grupoNumero=${grupoNumero}`)
+        .then(response => {
+            console.log('Respuesta recibida:', response);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Datos recibidos:', data);
+            if (!data.success) {
+                contenidoDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-times"></i> Error: ${data.message}
+                    </div>
+                `;
+                return;
+            }
+
+            const grupo = data.grupo;
+            let liderActual = grupo.miembros.find(m => m.esLider);
+            
+            let html = `
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-users"></i> Grupo ${grupo.numero}
+                            ${grupo.liderIdentificacion ? `<small class="float-end">👑 Líder: ${grupo.nombreLider}</small>` : '<small class="float-end text-warning">⚠️ Sin líder</small>'}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <strong>Miembros:</strong> ${grupo.cantidadMiembros}/4
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Entregas:</strong> ${grupo.cantidadEntregas}
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Tutor:</strong> ${grupo.tieneTutor ? 'Sí' : 'No'}
+                            </div>
+                        </div>
+            `;
+
+            if (grupo.miembros && grupo.miembros.length > 0) {
+                html += `
+                    <h6><i class="fas fa-users"></i> Miembros del Grupo:</h6>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Estudiante</th>
+                                    <th>Clase</th>
+                                    <th>Rol</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                grupo.miembros.forEach(miembro => {
+                    let iconoRol = miembro.esLider ? '👑' : '👤';
+                    let textoRol = miembro.esLider ? 'Líder' : 'Miembro';
+                    let badgeClass = miembro.esLider ? 'bg-warning' : 'bg-secondary';
+                    
+                    html += `
+                        <tr>
+                            <td>
+                                ${iconoRol} <strong>${miembro.nombreCompleto}</strong>
+                            </td>
+                            <td>${miembro.clase}</td>
+                            <td>
+                                <span class="badge ${badgeClass}">${textoRol}</span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                    `;
+                    
+                    if (!miembro.esLider) {
+                        html += `
+                            <button class="btn btn-outline-warning" onclick="cambiarLiderGrupo(${grupo.numero}, ${miembro.estudianteId}, '${miembro.nombreCompleto}')" title="Hacer líder">
+                                <i class="fas fa-crown"></i>
+                            </button>
+                        `;
+                    }
+                    
+                    html += `
+                            <button class="btn btn-outline-danger" onclick="eliminarEstudianteDeGrupo(${grupo.numero}, ${miembro.estudianteId}, '${miembro.nombreCompleto}', ${miembro.esLider})" title="Eliminar del grupo">
+                                <i class="fas fa-user-times"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                    `;
+                });
+
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> Este grupo no tiene miembros.
+                    </div>
+                `;
+            }
+
+            html += `
+                    </div>
+                </div>
+            `;
+
+            contenidoDiv.innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error en fetch:', error);
+            contenidoDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-times"></i> Error al cargar detalles: ${error.message}
+                </div>
+            `;
+        });
+}
+
+function eliminarEstudianteDeGrupo(grupoNumero, estudianteId, nombreEstudiante, esLider) {
+    let mensaje = `¿Estás seguro de que quieres eliminar a "${nombreEstudiante}" del Grupo ${grupoNumero}?`;
+    
+    if (esLider) {
+        mensaje += '\n\n⚠️ ATENCIÓN: Este estudiante es el líder del grupo. Si lo eliminas, el liderazgo se asignará automáticamente a otro miembro (si los hay).';
+    }
+    
+    if (!confirm(mensaje)) {
+        return;
+    }
+
+    fetch('/Home/EliminarEstudianteDeGrupo', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            grupoNumero: grupoNumero,
+            estudianteId: estudianteId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            mostrarExito(data.message);
+            // Recargar detalles del grupo
+            verDetallesAvanzados(grupoNumero);
+        } else {
+            mostrarError('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        mostrarError('Error de conexión: ' + error.message);
+    });
+}
+
+function cambiarLiderGrupo(grupoNumero, nuevoLiderId, nombreNuevoLider) {
+    if (!confirm(`¿Estás seguro de que quieres hacer a "${nombreNuevoLider}" el nuevo líder del Grupo ${grupoNumero}?`)) {
+        return;
+    }
+
+    fetch('/Home/CambiarLiderGrupo', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            grupoNumero: grupoNumero,
+            nuevoLiderId: nuevoLiderId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            mostrarExito(data.message);
+            // Recargar detalles del grupo
+            verDetallesAvanzados(grupoNumero);
+        } else {
+            mostrarError('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        mostrarError('Error de conexión: ' + error.message);
+    });
+}
+
+function limpiarYReiniciarGrupos() {
+    $('#modalLimpiarGrupos').modal('show');
+}
+
+function confirmarLimpiezaGrupos() {
+    if (!confirm('¿Estás COMPLETAMENTE SEGURO de que quieres eliminar todos los grupos y solicitudes existentes y crear nuevos grupos con líderes? Esta acción NO se puede deshacer.')) {
+        return;
+    }
+
+    if (!confirm('Esta es tu última oportunidad para cancelar. ¿Proceder con la limpieza completa?')) {
+        return;
+    }
+
+    // Cerrar modal
+    $('#modalLimpiarGrupos').modal('hide');
+
+    // Mostrar indicador de carga
+    const loadingHtml = `
+        <div class="alert alert-warning">
+            <div class="d-flex align-items-center">
+                <div class="spinner-border spinner-border-sm me-3" role="status"></div>
+                <span>Procesando limpieza y recreación de grupos... Esto puede tardar unos momentos.</span>
+            </div>
+        </div>
+    `;
+    
+    // Mostrar en la página
+    const mainContent = document.querySelector('.dashboard-content');
+    mainContent.insertAdjacentHTML('afterbegin', loadingHtml);
+
+    fetch('/Home/LimpiarYReiniciarGrupos', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Remover indicador de carga
+        const loadingAlert = document.querySelector('.alert-warning');
+        if (loadingAlert) loadingAlert.remove();
+
+        if (data.success) {
+            mostrarExito('✅ ' + data.message + ' La página se recargará automáticamente.');
+            // Recargar página después de 3 segundos
+            setTimeout(() => {
+                location.reload();
+            }, 3000);
+        } else {
+            mostrarError('❌ Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        // Remover indicador de carga
+        const loadingAlert = document.querySelector('.alert-warning');
+        if (loadingAlert) loadingAlert.remove();
+        
+        mostrarError('❌ Error de conexión: ' + error.message);
+    });
+}
+
+// Hacer funciones disponibles globalmente
+window.verDetallesAvanzados = verDetallesAvanzados;
+window.eliminarEstudianteDeGrupo = eliminarEstudianteDeGrupo;
+window.cambiarLiderGrupo = cambiarLiderGrupo;
+window.limpiarYReiniciarGrupos = limpiarYReiniciarGrupos;
+window.confirmarLimpiezaGrupos = confirmarLimpiezaGrupos;
+window.cerrarModalGestionEstudiantes = cerrarModalGestionEstudiantes;
+
+console.log('Funciones avanzadas registradas globalmente:', {
+    verDetallesAvanzados: typeof window.verDetallesAvanzados,
+    eliminarEstudianteDeGrupo: typeof window.eliminarEstudianteDeGrupo,
+    cambiarLiderGrupo: typeof window.cambiarLiderGrupo,
+    limpiarYReiniciarGrupos: typeof window.limpiarYReiniciarGrupos,
+    cerrarModalGestionEstudiantes: typeof window.cerrarModalGestionEstudiantes
+});

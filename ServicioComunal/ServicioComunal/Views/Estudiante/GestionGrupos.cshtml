@@ -40,9 +40,15 @@
         <div class="col-md-9 main-content p-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2>Gestión de Grupos</h2>
-                <button class="btn btn-success" data-toggle="modal" data-target="#crearGrupoModal">
-                    <i class="fas fa-plus"></i> Crear Nuevo Grupo
-                </button>
+                <div>
+                    <button class="btn btn-success" data-toggle="modal" data-target="#crearGrupoModal">
+                        <i class="fas fa-plus"></i> Crear Nuevo Grupo
+                    </button>
+                    @* Solo mostrar el botón de limpiar grupos a usuarios específicos *@
+                    <button class="btn btn-warning ml-2" onclick="limpiarGruposSinLider()" title="Eliminar grupos sin líder">
+                        <i class="fas fa-broom"></i> Limpiar Grupos
+                    </button>
+                </div>
             </div>
 
             <!-- Alertas para solicitudes pendientes -->
@@ -133,26 +139,55 @@
                                         <div class="col-md-6 mb-3">
                                             <div class="card border-primary">
                                                 <div class="card-header bg-primary text-white">
-                                                    <h6 class="mb-0">Grupo @grupo.Numero</h6>
+                                                    <h6 class="mb-0">
+                                                        Grupo @grupo.Numero
+                                                        @if (grupo.LiderIdentificacion != null)
+                                                        {
+                                                            <small class="float-right">
+                                                                <i class="fas fa-crown text-warning"></i> 
+                                                                Líder: @grupo.Lider?.Nombre @grupo.Lider?.Apellidos
+                                                            </small>
+                                                        }
+                                                        else
+                                                        {
+                                                            <small class="float-right text-warning">
+                                                                <i class="fas fa-exclamation-triangle"></i> Sin líder
+                                                            </small>
+                                                        }
+                                                    </h6>
                                                 </div>
                                                 <div class="card-body">
                                                     <h6>Integrantes (@grupo.GruposEstudiantes.Count/4):</h6>
                                                     <ul class="list-unstyled mb-3">
                                                         @foreach (var grupoEstudiante in grupo.GruposEstudiantes)
                                                         {
-                                                            <li><i class="fas fa-user text-primary"></i> @grupoEstudiante.Estudiante.Nombre @grupoEstudiante.Estudiante.Apellidos</li>
+                                                            <li>
+                                                                @if (grupo.LiderIdentificacion == grupoEstudiante.EstudianteIdentificacion)
+                                                                {
+                                                                    <i class="fas fa-crown text-warning"></i>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <i class="fas fa-user text-primary"></i>
+                                                                }
+                                                                @grupoEstudiante.Estudiante.Nombre @grupoEstudiante.Estudiante.Apellidos
+                                                            </li>
                                                         }
                                                     </ul>
                                                     
-                                                    @if (grupo.GruposEstudiantes.Count < 4)
+                                                    @if (grupo.GruposEstudiantes.Count < 4 && grupo.LiderIdentificacion != null)
                                                     {
                                                         <button class="btn btn-outline-primary btn-sm" onclick="solicitarIngreso(@grupo.Numero)">
                                                             <i class="fas fa-paper-plane"></i> Solicitar Ingreso
                                                         </button>
                                                     }
-                                                    else
+                                                    else if (grupo.GruposEstudiantes.Count >= 4)
                                                     {
                                                         <span class="badge badge-warning">Grupo Completo</span>
+                                                    }
+                                                    else if (grupo.LiderIdentificacion == null)
+                                                    {
+                                                        <span class="badge badge-danger">Sin líder - No disponible</span>
                                                     }
                                                 </div>
                                             </div>
@@ -362,6 +397,29 @@
             .catch(error => {
                 console.error('Error:', error);
                 alert('Error al procesar la solicitud');
+            });
+        }
+    }
+
+    function limpiarGruposSinLider() {
+        if (confirm('¿Estás seguro de que quieres eliminar todos los grupos sin líder? Esta acción no se puede deshacer.')) {
+            fetch('@Url.Action("LimpiarGruposSinLider", "Estudiante")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                if (data.success) {
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al limpiar grupos');
             });
         }
     }

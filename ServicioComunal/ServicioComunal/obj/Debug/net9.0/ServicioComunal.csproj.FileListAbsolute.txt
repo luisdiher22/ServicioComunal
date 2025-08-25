@@ -145,14 +145,12 @@ C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\rjim
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\rjsmrazor.dswa.cache.json
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\rjsmcshtml.dswa.cache.json
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\scopedcss\bundle\ServicioComunal.styles.css
-C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\b4kx2f4z8i-a2aw93t9dc.gz
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\ful9djivkc-s5pko4ze0c.gz
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\ce1x5duqkr-ldbyzf4wx3.gz
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\9ys0p4f7fe-9f7ffutko8.gz
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\0jtmnh8ld0-ovnjpd4s46.gz
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\2objixxzfm-p5cjcmjjxn.gz
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\9n3u2t3lg9-5sa2gp9bq0.gz
-C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\dv95rdpfju-zunk012znp.gz
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\kt1r5zl0oc-jn4kor0tmr.gz
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\x1drzuj8fm-05kwz3psne.gz
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\staticwebassets.build.json
@@ -165,3 +163,5 @@ C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\refi
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\ServicioComunal.pdb
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\ServicioComunal.genruntimeconfig.cache
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\ref\ServicioComunal.dll
+C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\dv95rdpfju-w5pjypw94b.gz
+C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\b4kx2f4z8i-fcjme8m8zr.gz

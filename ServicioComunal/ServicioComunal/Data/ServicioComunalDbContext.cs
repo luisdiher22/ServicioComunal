@@ -63,6 +63,13 @@ namespace ServicioComunal.Data
                 .HasForeignKey(ge => ge.GrupoNumero)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Configuración de relación para Líder de Grupo
+            modelBuilder.Entity<Grupo>()
+                .HasOne(g => g.Lider)
+                .WithMany()
+                .HasForeignKey(g => g.LiderIdentificacion)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // Configuración de relaciones para GrupoProfesor
             modelBuilder.Entity<GrupoProfesor>()
                 .HasOne(gp => gp.Grupo)
