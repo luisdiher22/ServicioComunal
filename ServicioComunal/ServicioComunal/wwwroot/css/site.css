@@ -1,6 +1,31 @@
 /* Estilos generales */
-*, *::before, *::after {
+body, p, div, span, a, button, input, textarea, select, label, 
+h1, h2, h3, h4, h5, h6, .card, .modal, .table, .form-control,
+.btn, .nav-link, .navbar-brand, .dropdown-item {
     font-family: 'Fira Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Preservar fuente de iconos Font Awesome */
+.fas, .far, .fab, .fal, .fad, .fa,
+i.fas, i.far, i.fab, i.fal, i.fad, i.fa,
+[class^="fa-"], [class*=" fa-"] {
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 900 !important;
+    font-style: normal !important;
+    font-variant: normal !important;
+    text-rendering: auto !important;
+    line-height: 1 !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* Específicamente para los pseudo-elementos de Font Awesome */
+.fas::before, .far::before, .fab::before, .fal::before, .fad::before, .fa::before,
+i.fas::before, i.far::before, i.fab::before, i.fal::before, i.fad::before, i.fa::before,
+[class^="fa-"]::before, [class*=" fa-"]::before {
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 900 !important;
+    font-style: normal !important;
 }
 
 body {
@@ -2612,4 +2637,23 @@ body.tutor-theme {
         padding: 0.2rem 0.3rem;
         font-size: 0.7rem;
     }
+}
+
+/* ===== FONT AWESOME ICONS FIX ===== */
+/* Esta regla debe ir al final para tener máxima prioridad */
+.fas, .far, .fab, .fal, .fad, .fa,
+i.fas, i.far, i.fab, i.fal, i.fad, i.fa,
+[class^="fa-"], [class*=" fa-"],
+.fas::before, .far::before, .fab::before, .fal::before, .fad::before, .fa::before,
+i.fas::before, i.far::before, i.fab::before, i.fal::before, i.fad::before, i.fa::before,
+[class^="fa-"]::before, [class*=" fa-"]::before {
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 900 !important;
+    font-style: normal !important;
+    font-variant: normal !important;
+    text-rendering: auto !important;
+    line-height: 1 !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    display: inline-block !important;
 }
