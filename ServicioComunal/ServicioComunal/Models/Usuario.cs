@@ -35,6 +35,9 @@ namespace ServicioComunal.Models
         [Column("Activo")]
         public bool Activo { get; set; } = true;
 
+        [Column("RequiereCambioContraseña")]
+        public bool RequiereCambioContraseña { get; set; } = false;
+
         // Sin propiedades de navegación - tabla independiente
     }
 }

@@ -2,6 +2,7 @@ using ServicioComunal.Data;
 using ServicioComunal.Models;
 using ServicioComunal.Utilities;
 using Microsoft.EntityFrameworkCore;
+using System.Text;
 
 namespace ServicioComunal.Services
 {
@@ -12,6 +13,27 @@ namespace ServicioComunal.Services
         public DataSeederService(ServicioComunalDbContext context)
         {
             _context = context;
+        }
+
+        // Función para eliminar tildes y caracteres especiales
+        private string EliminarTildes(string texto)
+        {
+            if (string.IsNullOrEmpty(texto))
+                return texto;
+
+            var normalizedString = texto.Normalize(NormalizationForm.FormD);
+            var stringBuilder = new StringBuilder();
+
+            foreach (var c in normalizedString)
+            {
+                var unicodeCategory = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c);
+                if (unicodeCategory != System.Globalization.UnicodeCategory.NonSpacingMark)
+                {
+                    stringBuilder.Append(c);
+                }
+            }
+
+            return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
         }
 
         public ServicioComunalDbContext Context => _context;
@@ -72,24 +94,134 @@ namespace ServicioComunal.Services
                 await _context.SaveChangesAsync();
             }
 
-            // Crear usuarios con contraseña password123
+            // Crear usuarios
             Console.WriteLine("🔐 Creando usuarios...");
-            string contraseñaComún = "password123";
-            var usuarios = new List<Usuario>
+            
+            // Crear usuario administrador usando el nuevo sistema
+            Console.WriteLine("👨‍💼 Creando usuario administrador con nuevo sistema...");
+            try
             {
-                new Usuario { Identificacion = 123456789, NombreUsuario = "admin", Contraseña = PasswordHelper.HashPassword(contraseñaComún), Rol = "Administrador", FechaCreacion = DateTime.Now, Activo = true },
-                new Usuario { Identificacion = 987654321, NombreUsuario = "carlos.jimenez", Contraseña = PasswordHelper.HashPassword(contraseñaComún), Rol = "Profesor", FechaCreacion = DateTime.Now, Activo = true },
-                new Usuario { Identificacion = 456789123, NombreUsuario = "ana.mora", Contraseña = PasswordHelper.HashPassword(contraseñaComún), Rol = "Profesor", FechaCreacion = DateTime.Now, Activo = true },
-                new Usuario { Identificacion = 234567890, NombreUsuario = "patricia.rodriguez", Contraseña = PasswordHelper.HashPassword(contraseñaComún), Rol = "Profesor", FechaCreacion = DateTime.Now, Activo = true },
-                new Usuario { Identificacion = 345678901, NombreUsuario = "miguel.sanchez", Contraseña = PasswordHelper.HashPassword(contraseñaComún), Rol = "Profesor", FechaCreacion = DateTime.Now, Activo = true },
-                new Usuario { Identificacion = 567890123, NombreUsuario = "elena.castro", Contraseña = PasswordHelper.HashPassword(contraseñaComún), Rol = "Profesor", FechaCreacion = DateTime.Now, Activo = true },
-                new Usuario { Identificacion = 111222333, NombreUsuario = "luis.perez", Contraseña = PasswordHelper.HashPassword(contraseñaComún), Rol = "Estudiante", FechaCreacion = DateTime.Now, Activo = true },
-                new Usuario { Identificacion = 444555666, NombreUsuario = "sofia.ramirez", Contraseña = PasswordHelper.HashPassword(contraseñaComún), Rol = "Estudiante", FechaCreacion = DateTime.Now, Activo = true },
-                new Usuario { Identificacion = 777888999, NombreUsuario = "diego.hernandez", Contraseña = PasswordHelper.HashPassword(contraseñaComún), Rol = "Estudiante", FechaCreacion = DateTime.Now, Activo = true },
-                new Usuario { Identificacion = 101112131, NombreUsuario = "camila.vargas", Contraseña = PasswordHelper.HashPassword(contraseñaComún), Rol = "Estudiante", FechaCreacion = DateTime.Now, Activo = true }
-            };
+                var adminProfesor = await _context.Profesores.FirstOrDefaultAsync(p => p.Identificacion == 123456789);
+                if (adminProfesor != null)
+                {
+                    string nombreUsuarioAdmin = EliminarTildes($"{adminProfesor.Nombre.Split(' ')[0]}.{adminProfesor.Apellidos.Split(' ')[0]}".ToLower());
+                    
+                    var usuarioAdmin = new Usuario 
+                    { 
+                        Identificacion = 123456789, 
+                        NombreUsuario = nombreUsuarioAdmin, 
+                        Contraseña = PasswordHelper.HashPassword("123456789"), // Usar cédula como contraseña inicial
+                        Rol = "Administrador", 
+                        FechaCreacion = DateTime.Now, 
+                        Activo = true, 
+                        RequiereCambioContraseña = true 
+                    };
+                    
+                    _context.Usuarios.Add(usuarioAdmin);
+                    Console.WriteLine($"   ✅ Usuario admin creado: {nombreUsuarioAdmin} (contraseña: 123456789)");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"   ❌ Error creando usuario admin: {ex.Message}");
+            }
 
-            _context.Usuarios.AddRange(usuarios);
+            // Crear usuarios para profesores usando el nuevo sistema
+            Console.WriteLine("👨‍🏫 Creando usuarios para profesores con nuevo sistema...");
+            var profesoresParaUsuario = await _context.Profesores
+                .Where(p => p.Identificacion != 123456789) // Excluir al admin
+                .ToListAsync();
+                
+            foreach (var profesor in profesoresParaUsuario)
+            {
+                try
+                {
+                    string primerNombre = EliminarTildes(profesor.Nombre.Split(' ')[0].ToLower());
+                    string[] apellidosArray = profesor.Apellidos.Split(' ');
+                    string primerApellido = EliminarTildes(apellidosArray[0].ToLower());
+                    
+                    string nombreUsuario = $"{primerNombre}.{primerApellido}";
+                    
+                    // Verificar si ya existe
+                    var existeUsuario = await _context.Usuarios.AnyAsync(u => u.NombreUsuario == nombreUsuario);
+                    
+                    // Si existe, agregar segundo apellido
+                    if (existeUsuario && apellidosArray.Length > 1)
+                    {
+                        string segundoApellido = EliminarTildes(apellidosArray[1].ToLower());
+                        nombreUsuario = $"{primerNombre}.{primerApellido}.{segundoApellido}";
+                    }
+                    
+                    // Crear usuario con cédula como contraseña inicial
+                    string contraseñaInicial = profesor.Identificacion.ToString();
+                    var usuarioProfesor = new Usuario
+                    {
+                        Identificacion = profesor.Identificacion,
+                        NombreUsuario = nombreUsuario,
+                        Contraseña = PasswordHelper.HashPassword(contraseñaInicial),
+                        Rol = "Profesor",
+                        FechaCreacion = DateTime.Now,
+                        Activo = true,
+                        RequiereCambioContraseña = true // Profesores también deben cambiar contraseña
+                    };
+                    
+                    _context.Usuarios.Add(usuarioProfesor);
+                    Console.WriteLine($"   ✅ Usuario profesor creado: {nombreUsuario} (contraseña: {contraseñaInicial})");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"   ❌ Error creando usuario para profesor {profesor.Nombre}: {ex.Message}");
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            
+            // Crear usuarios para estudiantes usando el nuevo sistema
+            Console.WriteLine("👨‍🎓 Creando usuarios para estudiantes con nuevo sistema...");
+            var estudiantesExistentes = await _context.Estudiantes.ToListAsync();
+            foreach (var estudiante in estudiantesExistentes)
+            {
+                try
+                {
+                    // Generar nombre de usuario automáticamente sin tildes
+                    string primerNombre = EliminarTildes(estudiante.Nombre.Split(' ')[0].ToLower());
+                    string[] apellidosArray = estudiante.Apellidos.Split(' ');
+                    string primerApellido = EliminarTildes(apellidosArray[0].ToLower());
+                    
+                    string nombreUsuario = $"{primerNombre}.{primerApellido}";
+                    
+                    // Verificar si ya existe
+                    var existeUsuario = await _context.Usuarios.AnyAsync(u => u.NombreUsuario == nombreUsuario);
+                    
+                    // Si existe, agregar segundo apellido
+                    if (existeUsuario && apellidosArray.Length > 1)
+                    {
+                        string segundoApellido = EliminarTildes(apellidosArray[1].ToLower());
+                        nombreUsuario = $"{primerNombre}.{primerApellido}.{segundoApellido}";
+                    }
+                    
+                    // Crear usuario con cédula como contraseña inicial
+                    string contraseñaInicial = estudiante.Identificacion.ToString();
+                    var usuarioEstudiante = new Usuario
+                    {
+                        Identificacion = estudiante.Identificacion,
+                        NombreUsuario = nombreUsuario,
+                        Contraseña = PasswordHelper.HashPassword(contraseñaInicial),
+                        Rol = "Estudiante",
+                        FechaCreacion = DateTime.Now,
+                        Activo = true,
+                        RequiereCambioContraseña = true // Requerirán cambio en primer login
+                    };
+                    
+                    _context.Usuarios.Add(usuarioEstudiante);
+                    Console.WriteLine($"   ✅ Usuario creado: {nombreUsuario} (contraseña: {contraseñaInicial})");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"   ❌ Error creando usuario para {estudiante.Nombre}: {ex.Message}");
+                }
+            }
+
             await _context.SaveChangesAsync();
 
             // Asignar grupos a tutores
@@ -108,9 +240,11 @@ namespace ServicioComunal.Services
 
             var usuariosCreados = await _context.Usuarios.CountAsync();
             Console.WriteLine($"✅ {usuariosCreados} usuarios creados exitosamente!");
-            Console.WriteLine("🔑 Usuarios creados con contraseña: password123");
-            Console.WriteLine("   🎓 TUTORES: patricia.rodriguez, miguel.sanchez, elena.castro");
-            Console.WriteLine("   👨‍🎓 ESTUDIANTES: luis.perez, sofia.ramirez, diego.hernandez, camila.vargas");
+            Console.WriteLine("🔑 Sistema de usuarios implementado:");
+            Console.WriteLine("   👤 Administradores y Profesores: maria.gonzalez, patricia.rodriguez, miguel.sanchez, ana.mora, elena.castro, carlos.jimenez");
+            Console.WriteLine("   👨‍🎓 Estudiantes: camila.vargas, luis.perez, sofia.ramirez, diego.hernandez");
+            Console.WriteLine("   🔐 Contraseña inicial: número de cédula de cada usuario");
+            Console.WriteLine("   🔄 Todos los usuarios deben cambiar contraseña en primer login");
         }
 
         public async Task LimpiarYRegenerarAsync()

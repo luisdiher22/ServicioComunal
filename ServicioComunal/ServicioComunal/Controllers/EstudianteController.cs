@@ -6,6 +6,10 @@ using ServicioComunal.Services;
 
 namespace ServicioComunal.Controllers
 {
+    /// <summary>
+    /// Controlador que maneja las funcionalidades específicas de los estudiantes.
+    /// Incluye gestión de grupos, solicitudes de ingreso y dashboards.
+    /// </summary>
     public class EstudianteController : Controller
     {
         private readonly ServicioComunalDbContext _context;
@@ -206,8 +210,6 @@ namespace ServicioComunal.Controllers
         {
             try
             {
-                Console.WriteLine($"🔍 SOLICITAR INGRESO - Iniciando para grupo {grupoNumero}");
-
                 var usuario = HttpContext.Session.GetString("Usuario");
                 if (string.IsNullOrEmpty(usuario))
                 {
@@ -221,8 +223,6 @@ namespace ServicioComunal.Controllers
                     return Json(new { success = false, message = "Usuario no encontrado" });
                 }
 
-                Console.WriteLine($"🔍 SOLICITAR INGRESO - Usuario autenticado: {usuarioActual.NombreUsuario} (ID: {usuarioActual.Identificacion})");
-
                 // Obtener el estudiante
                 var estudiante = await _context.Estudiantes
                     .FirstOrDefaultAsync(e => e.Identificacion == usuarioActual.Identificacion);
@@ -232,13 +232,9 @@ namespace ServicioComunal.Controllers
                     return Json(new { success = false, message = "Estudiante no encontrado" });
                 }
 
-                Console.WriteLine($"🔍 SOLICITAR INGRESO - Estudiante encontrado: {estudiante.Nombre} {estudiante.Apellidos}");
-
                 // Verificar que el estudiante no esté ya en un grupo
                 var yaEnGrupo = await _context.GruposEstudiantes
                     .AnyAsync(ge => ge.EstudianteIdentificacion == estudiante.Identificacion);
-
-                Console.WriteLine($"🔍 SOLICITAR INGRESO - ¿Ya en grupo?: {yaEnGrupo}");
 
                 if (yaEnGrupo)
                 {
@@ -256,8 +252,6 @@ namespace ServicioComunal.Controllers
                     return Json(new { success = false, message = "Grupo no encontrado" });
                 }
 
-                Console.WriteLine($"🔍 SOLICITAR INGRESO - Grupo {grupoNumero} encontrado con {grupo.GruposEstudiantes.Count} miembros");
-
                 // Verificar que el grupo tenga líder
                 if (grupo.LiderIdentificacion == null)
                 {
@@ -270,15 +264,10 @@ namespace ServicioComunal.Controllers
                                   s.GrupoNumero == grupoNumero &&
                                   s.Estado == "PENDIENTE");
 
-                Console.WriteLine($"🔍 SOLICITAR INGRESO - ¿Solicitud existente?: {solicitudExistente}");
-
                 if (solicitudExistente)
                 {
-                    Console.WriteLine("❌ SOLICITAR INGRESO - Ya existe una solicitud pendiente");
                     return Json(new { success = false, message = "Ya tienes una solicitud pendiente para este grupo" });
                 }
-
-                Console.WriteLine($"🔍 SOLICITAR INGRESO - Creando solicitud para el líder del grupo (ID: {grupo.LiderIdentificacion})");
 
                 // Enviar solicitud solo al líder del grupo
                 var solicitud = new Solicitud
@@ -292,17 +281,12 @@ namespace ServicioComunal.Controllers
                 };
 
                 _context.Solicitudes.Add(solicitud);
-
-                Console.WriteLine($"🔍 SOLICITAR INGRESO - Solicitud creada para el líder (ID: {grupo.LiderIdentificacion})");
-                Console.WriteLine("🔍 SOLICITAR INGRESO - Guardando solicitud en la base de datos");
                 await _context.SaveChangesAsync();
-                Console.WriteLine("✅ SOLICITAR INGRESO - Solicitud guardada exitosamente");
 
                 return Json(new { success = true, message = "Solicitud enviada exitosamente" });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ SOLICITAR INGRESO - Error: {ex.Message}");
                 return Json(new { success = false, message = "Error al enviar solicitud: " + ex.Message });
             }
         }
@@ -317,8 +301,6 @@ namespace ServicioComunal.Controllers
                 {
                     return Json(new { success = false, message = "Usuario no autenticado" });
                 }
-
-                Console.WriteLine($"🗑️ [Eliminar] Usuario: {usuario}, SolicitudId: {request.SolicitudId}");
 
                 // Obtener el usuario actual
                 var usuarioActual = await _context.Usuarios.FirstOrDefaultAsync(u => u.NombreUsuario == usuario);
@@ -341,14 +323,12 @@ namespace ServicioComunal.Controllers
                 // Verificar que la solicitud pertenece al usuario actual (remitente)
                 if (solicitud.EstudianteRemitenteId != usuarioActual.Identificacion)
                 {
-                    Console.WriteLine($"❌ [Eliminar] Usuario {usuarioActual.Identificacion} no es el remitente {solicitud.EstudianteRemitenteId}");
                     return Json(new { success = false, message = "No tienes permiso para eliminar esta solicitud" });
                 }
 
                 // Solo permitir eliminar solicitudes pendientes
                 if (solicitud.Estado != "PENDIENTE")
                 {
-                    Console.WriteLine($"❌ [Eliminar] Solicitud en estado: {solicitud.Estado}");
                     return Json(new { success = false, message = "Solo se pueden eliminar solicitudes pendientes" });
                 }
 
@@ -356,12 +336,10 @@ namespace ServicioComunal.Controllers
                 _context.Solicitudes.Remove(solicitud);
                 await _context.SaveChangesAsync();
 
-                Console.WriteLine($"✅ [Eliminar] Solicitud {request.SolicitudId} eliminada exitosamente");
                 return Json(new { success = true, message = "Solicitud eliminada exitosamente" });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.WriteLine($"❌ [Eliminar] Error: {ex.Message}");
                 return Json(new { success = false, message = "Error al eliminar la solicitud" });
             }
         }
@@ -462,33 +440,6 @@ namespace ServicioComunal.Controllers
             catch (Exception ex)
             {
                 return Json(new { success = false, message = "Error al procesar la solicitud: " + ex.Message });
-            }
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> TestSolicitarIngreso(int grupoNumero, string usuario)
-        {
-            try
-            {
-                Console.WriteLine($"🧪 [{DateTime.Now:HH:mm:ss.fff}] TEST SOLICITAR INGRESO - Grupo: {grupoNumero}, Usuario: {usuario}");
-
-                // Establecer la sesión para simular el login
-                HttpContext.Session.SetString("Usuario", usuario);
-                Console.WriteLine($"🧪 [{DateTime.Now:HH:mm:ss.fff}] TEST - Sesión establecida para {usuario}");
-
-                // Llamar al método real
-                var resultado = await SolicitarIngreso(grupoNumero);
-                var jsonResult = resultado as JsonResult;
-                var value = jsonResult?.Value;
-
-                Console.WriteLine($"🧪 [{DateTime.Now:HH:mm:ss.fff}] TEST RESULTADO: {System.Text.Json.JsonSerializer.Serialize(value)}");
-
-                return resultado;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"❌ TEST ERROR: {ex.Message}");
-                return Json(new { success = false, message = ex.Message });
             }
         }
 

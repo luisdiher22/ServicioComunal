@@ -68,41 +68,32 @@ namespace ServicioComunal.Controllers
         {
             try
             {
-                Console.WriteLine("🧹 Iniciando limpieza completa de grupos y solicitudes...");
-
                 // 1. Eliminar todas las solicitudes existentes
                 var todasLasSolicitudes = await _context.Solicitudes.ToListAsync();
                 _context.Solicitudes.RemoveRange(todasLasSolicitudes);
-                Console.WriteLine($"🗑️ Eliminando {todasLasSolicitudes.Count} solicitudes...");
 
                 // 2. Eliminar todas las relaciones GrupoEstudiante
                 var todasLasRelaciones = await _context.GruposEstudiantes.ToListAsync();
                 _context.GruposEstudiantes.RemoveRange(todasLasRelaciones);
-                Console.WriteLine($"🗑️ Eliminando {todasLasRelaciones.Count} relaciones grupo-estudiante...");
 
                 // 3. Eliminar todas las entregas
                 var todasLasEntregas = await _context.Entregas.ToListAsync();
                 _context.Entregas.RemoveRange(todasLasEntregas);
-                Console.WriteLine($"🗑️ Eliminando {todasLasEntregas.Count} entregas...");
 
                 // 4. Eliminar todas las relaciones GrupoProfesor
                 var todasLasRelacionesProfesores = await _context.GruposProfesores.ToListAsync();
                 _context.GruposProfesores.RemoveRange(todasLasRelacionesProfesores);
-                Console.WriteLine($"🗑️ Eliminando {todasLasRelacionesProfesores.Count} relaciones grupo-profesor...");
 
                 // 5. Eliminar todas las notificaciones
                 var todasLasNotificaciones = await _context.Notificaciones.ToListAsync();
                 _context.Notificaciones.RemoveRange(todasLasNotificaciones);
-                Console.WriteLine($"🗑️ Eliminando {todasLasNotificaciones.Count} notificaciones...");
 
                 // 6. Eliminar todos los grupos
                 var todosLosGrupos = await _context.Grupos.ToListAsync();
                 _context.Grupos.RemoveRange(todosLosGrupos);
-                Console.WriteLine($"🗑️ Eliminando {todosLosGrupos.Count} grupos...");
 
                 // Guardar cambios de eliminación
                 await _context.SaveChangesAsync();
-                Console.WriteLine("✅ Limpieza completada exitosamente");
 
                 // 7. Crear grupos nuevos con líderes
                 await CrearGruposConLideres();
@@ -114,25 +105,19 @@ namespace ServicioComunal.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error durante la limpieza: {ex.Message}");
                 return Json(new { success = false, message = "Error durante la limpieza: " + ex.Message });
             }
         }
 
         private async Task CrearGruposConLideres()
         {
-            Console.WriteLine("🏗️ Iniciando creación de nuevos grupos con líderes...");
-
             // Obtener todos los estudiantes
             var todosLosEstudiantes = await _context.Estudiantes
                 .OrderBy(e => e.Nombre)
                 .ToListAsync();
 
-            Console.WriteLine($"👥 Encontrados {todosLosEstudiantes.Count} estudiantes");
-
             if (!todosLosEstudiantes.Any())
             {
-                Console.WriteLine("⚠️ No hay estudiantes para crear grupos");
                 return;
             }
 
@@ -162,8 +147,6 @@ namespace ServicioComunal.Controllers
                 };
 
                 _context.Grupos.Add(nuevoGrupo);
-                Console.WriteLine($"🏗️ Creando Grupo {numeroGrupo} con líder: {lider.Nombre} {lider.Apellidos}");
-
                 // Agregar todos los estudiantes al grupo
                 foreach (var estudiante in estudiantesParaGrupo)
                 {
@@ -175,9 +158,6 @@ namespace ServicioComunal.Controllers
 
                     _context.GruposEstudiantes.Add(grupoEstudiante);
                     estudiantesUsados.Add(estudiante.Identificacion);
-
-                    string rolDescripcion = estudiante.Identificacion == lider.Identificacion ? "👑 LÍDER" : "👤 Miembro";
-                    Console.WriteLine($"   - {estudiante.Nombre} {estudiante.Apellidos} ({rolDescripcion})");
                 }
 
                 numeroGrupo++;
@@ -185,10 +165,6 @@ namespace ServicioComunal.Controllers
 
             // Guardar todos los cambios
             await _context.SaveChangesAsync();
-            Console.WriteLine($"✅ Se crearon {numeroGrupo - 1} grupos nuevos con líderes asignados");
-
-            // Mostrar resumen
-            await MostrarResumenGrupos();
         }
 
         private async Task MostrarResumenGrupos()
