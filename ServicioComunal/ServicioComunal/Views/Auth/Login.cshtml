@@ -5,23 +5,32 @@
 }
 
 <div class="login-container">
+    <!-- Elementos flotantes decorativos -->
+    <div class="floating-elements">
+        <div class="floating-shape"></div>
+        <div class="floating-shape"></div>
+        <div class="floating-shape"></div>
+        <div class="floating-shape"></div>
+    </div>
+
     <div class="login-card">
         <!-- Logo -->
         <div class="logo-container">
-            <img src="~/images/logo-liceo.svg" alt="Logo Liceo Carrillos de Poás" class="logo" />
+            <img src="~/images/logo.png" alt="Logo Liceo Carrillos de Poás" class="logo" />
         </div>
 
         <!-- Título -->
         <h1 class="login-title">Servicio Comunal</h1>
         <p class="login-subtitle">
-            Ingresa para consultar tu proceso de Servicio Comunal
+            Bienvenido al sistema de gestión de Servicio Comunal<br>
+            <strong>Liceo Carlos Eduardo Vasco</strong>
         </p>
 
         <!-- Formulario de Login -->
-        <form asp-action="Login" method="post" class="login-form">
+        <form asp-action="Login" method="post" class="login-form" id="loginForm">
             @if (ViewBag.Error != null)
             {
-                <div class="alert-error">
+                <div class="alert-error" id="errorAlert">
                     @ViewBag.Error
                 </div>
             }
@@ -34,6 +43,7 @@
                        id="usuario" 
                        name="usuario" 
                        placeholder="Ingresa tu usuario o cédula"
+                       autocomplete="username"
                        required />
             </div>
 
@@ -45,27 +55,13 @@
                        id="contraseña" 
                        name="contraseña" 
                        placeholder="Ingresa tu contraseña"
+                       autocomplete="current-password"
                        required />
             </div>
 
-            <!-- Opciones del formulario -->
-            <div class="form-options">
-                <div class="form-check">
-                    <input type="checkbox" 
-                           class="form-check-input" 
-                           id="recordarme" 
-                           name="recordarme" 
-                           value="true" />
-                    <label class="form-check-label" for="recordarme">
-                        Recordarme
-                    </label>
-                </div>
-                <a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
-            </div>
-
             <!-- Botón de login -->
-            <button type="submit" class="btn-login">
-                Iniciar Sesión
+            <button type="submit" class="btn-login" id="loginBtn">
+                <span>Iniciar Sesión</span>
             </button>
         </form>
 
@@ -76,17 +72,86 @@
                 ¿Necesitas ayuda?
             </div>
             <p class="help-text">
-                Contacta a la coordinación de Servicio Comunal al 
-                servicocomunal@liceocarrillos.ed.cr o al teléfono 2494-1234
+                Para problemas de acceso, contacta a la coordinación de Servicio Comunal:<br>
+                📧 <strong>servicocomunal@liceocarrillos.ed.cr</strong><br>
+                📞 <strong>2494-1234</strong> (Ext. 205)
             </p>
         </div>
 
         <!-- Footer -->
         <div class="login-footer">
-            <p class="footer-title">¿Problemas para acceder a tu cuenta? Contactar Coordinación</p>
+            <p class="footer-title">Sistema desarrollado para el Liceo Carlos Eduardo Vasco</p>
             <div class="footer-links">
-                <a href="https://www.licapo.ed.cr/" target="_blank" class="footer-link">Liceo Carrillos de Poás</a>
+                <a href="https://www.licapo.ed.cr/" target="_blank" class="footer-link">
+                    🌐 Sitio Web Oficial
+                </a>
+                <a href="#" onclick="mostrarAcercaDe()" class="footer-link">
+                    ℹ️ Acerca del Sistema
+                </a>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    // Agregar efectos interactivos
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const inputs = form.querySelectorAll('.form-control');
+        
+        // Validación en tiempo real
+        inputs.forEach(input => {
+            input.addEventListener('input', function() {
+                if (this.value.trim().length > 0 && this.checkValidity()) {
+                    this.classList.add('valid');
+                } else {
+                    this.classList.remove('valid');
+                }
+            });
+            
+            // Efectos de focus mejorados
+            input.addEventListener('focus', function() {
+                this.parentElement.querySelector('.form-label').style.color = '#6c8d47';
+                this.style.backgroundColor = 'rgba(255, 255, 255, 0.98)';
+            });
+            
+            input.addEventListener('blur', function() {
+                // Mantener color del label si el campo tiene contenido
+                if (this.value.trim().length > 0) {
+                    this.parentElement.querySelector('.form-label').style.color = '#495057';
+                    this.style.backgroundColor = 'rgba(255, 255, 255, 0.98)';
+                } else {
+                    this.parentElement.querySelector('.form-label').style.color = '#2c3e50';
+                    this.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+                }
+            });
+        });
+        
+        // Efecto de loading en el botón
+        form.addEventListener('submit', function(e) {
+            loginBtn.classList.add('loading');
+            loginBtn.innerHTML = '<span style="opacity: 0;">Iniciando sesión...</span>';
+        });
+        
+        // Ocultar alertas de error después de un tiempo
+        const errorAlert = document.getElementById('errorAlert');
+        if (errorAlert) {
+            setTimeout(() => {
+                errorAlert.style.opacity = '0';
+                errorAlert.style.transform = 'translateX(-20px)';
+                setTimeout(() => {
+                    errorAlert.style.display = 'none';
+                }, 300);
+            }, 5000);
+        }
+    });
+    
+    function mostrarAyuda() {
+        alert('Para recuperar tu contraseña, contacta a la coordinación de Servicio Comunal:\n\n📧 servicocomunal@liceocarrillos.ed.cr\n📞 2494-1234 (Ext. 205)\n\nDeberás proporcionar tu número de cédula para verificar tu identidad.');
+    }
+    
+    function mostrarAcercaDe() {
+        alert('Sistema de Gestión de Servicio Comunal\nLiceo Carlos Eduardo Vasco\n\nVersión 1.0.0\nDesarrollado con ❤️ para la comunidad educativa\n\n© 2025 - Todos los derechos reservados');
+    }
+</script>

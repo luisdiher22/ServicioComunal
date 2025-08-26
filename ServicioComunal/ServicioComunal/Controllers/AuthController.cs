@@ -51,10 +51,35 @@ namespace ServicioComunal.Controllers
                 user.UltimoAcceso = DateTime.Now;
                 await _context.SaveChangesAsync();
 
+                // Obtener el nombre real del usuario según su rol
+                string nombreCompleto = user.NombreUsuario; // Fallback al nombre de usuario
+                string cedula = user.Identificacion.ToString();
+
+                if (user.Rol == "Estudiante")
+                {
+                    var estudiante = await _context.Estudiantes
+                        .FirstOrDefaultAsync(e => e.Identificacion == user.Identificacion);
+                    if (estudiante != null)
+                    {
+                        nombreCompleto = $"{estudiante.Nombre} {estudiante.Apellidos}";
+                    }
+                }
+                else if (user.Rol == "Profesor" || user.Rol == "Administrador")
+                {
+                    var profesor = await _context.Profesores
+                        .FirstOrDefaultAsync(p => p.Identificacion == user.Identificacion);
+                    if (profesor != null)
+                    {
+                        nombreCompleto = $"{profesor.Nombre} {profesor.Apellidos}";
+                    }
+                }
+
                 // Establecer sesión del usuario
                 HttpContext.Session.SetInt32("UsuarioId", user.Identificacion);
                 HttpContext.Session.SetInt32("UsuarioIdentificacion", user.Identificacion);
                 HttpContext.Session.SetString("UsuarioNombre", user.NombreUsuario);
+                HttpContext.Session.SetString("UsuarioNombreCompleto", nombreCompleto);
+                HttpContext.Session.SetString("UsuarioCedula", cedula);
                 HttpContext.Session.SetString("UsuarioRol", user.Rol);
 
                 // Redireccionar según el rol
@@ -127,10 +152,35 @@ namespace ServicioComunal.Controllers
                 user.UltimoAcceso = DateTime.Now;
                 await _context.SaveChangesAsync();
 
+                // Obtener el nombre real del usuario según su rol
+                string nombreCompleto = user.NombreUsuario; // Fallback al nombre de usuario
+                string cedula = user.Identificacion.ToString();
+
+                if (user.Rol == "Estudiante")
+                {
+                    var estudiante = await _context.Estudiantes
+                        .FirstOrDefaultAsync(e => e.Identificacion == user.Identificacion);
+                    if (estudiante != null)
+                    {
+                        nombreCompleto = $"{estudiante.Nombre} {estudiante.Apellidos}";
+                    }
+                }
+                else if (user.Rol == "Profesor" || user.Rol == "Administrador")
+                {
+                    var profesor = await _context.Profesores
+                        .FirstOrDefaultAsync(p => p.Identificacion == user.Identificacion);
+                    if (profesor != null)
+                    {
+                        nombreCompleto = $"{profesor.Nombre} {profesor.Apellidos}";
+                    }
+                }
+
                 // Establecer sesión del usuario
                 HttpContext.Session.SetInt32("UsuarioId", user.Identificacion);
                 HttpContext.Session.SetInt32("UsuarioIdentificacion", user.Identificacion);
                 HttpContext.Session.SetString("UsuarioNombre", user.NombreUsuario);
+                HttpContext.Session.SetString("UsuarioNombreCompleto", nombreCompleto);
+                HttpContext.Session.SetString("UsuarioCedula", cedula);
                 HttpContext.Session.SetString("UsuarioRol", user.Rol);
 
                 Console.WriteLine($"LOGIN TEST: Usuario autenticado: {user.NombreUsuario}, Rol: {user.Rol}, ID: {user.Identificacion}");
@@ -172,10 +222,35 @@ namespace ServicioComunal.Controllers
                     return Json(new { success = false, message = "Usuario no encontrado: " + usuario });
                 }
 
+                // Obtener el nombre real del usuario según su rol
+                string nombreCompleto = user.NombreUsuario; // Fallback al nombre de usuario
+                string cedula = user.Identificacion.ToString();
+
+                if (user.Rol == "Estudiante")
+                {
+                    var estudiante = await _context.Estudiantes
+                        .FirstOrDefaultAsync(e => e.Identificacion == user.Identificacion);
+                    if (estudiante != null)
+                    {
+                        nombreCompleto = $"{estudiante.Nombre} {estudiante.Apellidos}";
+                    }
+                }
+                else if (user.Rol == "Profesor" || user.Rol == "Administrador")
+                {
+                    var profesor = await _context.Profesores
+                        .FirstOrDefaultAsync(p => p.Identificacion == user.Identificacion);
+                    if (profesor != null)
+                    {
+                        nombreCompleto = $"{profesor.Nombre} {profesor.Apellidos}";
+                    }
+                }
+
                 // Establecer sesión del usuario
                 HttpContext.Session.SetInt32("UsuarioId", user.Identificacion);
                 HttpContext.Session.SetInt32("UsuarioIdentificacion", user.Identificacion);
                 HttpContext.Session.SetString("UsuarioNombre", user.NombreUsuario);
+                HttpContext.Session.SetString("UsuarioNombreCompleto", nombreCompleto);
+                HttpContext.Session.SetString("UsuarioCedula", cedula);
                 HttpContext.Session.SetString("UsuarioRol", user.Rol);
 
                 return Json(new { 

@@ -1,3 +1,4 @@
+@using Microsoft.AspNetCore.Http
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -27,18 +28,17 @@
     else
     {
         <!-- Header -->
-        <header class="@((ViewData["UserRole"]?.ToString() == "Tutor") ? "dashboard-header tutor-theme" : "dashboard-header")">
+        <header class="@((Context.Session.GetString("UsuarioRol") == "Profesor") ? "dashboard-header tutor-theme" : "dashboard-header")">
             <div class="header-content">
                 <div class="header-left">
                     <img src="~/images/logo-liceo.svg" alt="Logo" class="header-logo">
                     <span class="header-title">Servicio Comunal</span>
-                    <span class="header-subtitle">Lic. Carlos Eduardo Vasco</span>
+                    <span class="header-subtitle">@(Context.Session.GetString("UsuarioNombreCompleto") ?? "Usuario")</span>
                 </div>
                 <div class="header-right">
-                    <span class="header-session">Cédula: @(ViewData["UserCedula"] ?? "2-3456-7890")</span>
                     <div class="header-user">
                         <i class="fas fa-user-circle"></i>
-                        <span>@(ViewData["UserRole"]?.ToString() ?? "Administrador")</span>
+                        <span>@(Context.Session.GetString("UsuarioRol") ?? "Administrador")</span>
                     </div>
                     <div class="header-notifications">
                         <i class="fas fa-bell"></i>
@@ -50,9 +50,9 @@
 
         <div class="dashboard-container">
             <!-- Sidebar -->
-            <aside class="@((ViewData["UserRole"]?.ToString() == "Tutor") ? "sidebar tutor-theme" : "sidebar")">
+            <aside class="@((Context.Session.GetString("UsuarioRol") == "Profesor") ? "sidebar tutor-theme" : "sidebar")">
                 <nav class="sidebar-nav">
-                    @if ((ViewData["UserRole"]?.ToString() ?? "Administrador") == "Tutor")
+                    @if (Context.Session.GetString("UsuarioRol") == "Profesor")
                     {
                         <a href="@Url.Action("Dashboard", "Tutor")" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Tutor" && ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")">
                             <i class="fas fa-home"></i>
@@ -104,7 +104,7 @@
                     }
                 </nav>
                 <div class="sidebar-footer">
-                    @if ((ViewData["UserRole"]?.ToString() ?? "Administrador") == "Tutor")
+                    @if (Context.Session.GetString("UsuarioRol") == "Profesor")
                     {
                         <div class="mode-demo">
                             <i class="fas fa-info-circle"></i>
