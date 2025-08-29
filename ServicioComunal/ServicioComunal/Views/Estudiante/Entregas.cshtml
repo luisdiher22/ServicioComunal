@@ -1,10 +1,8 @@
 @{
-    ViewData["Title"] = "Dashboard - Estudiante";
+    ViewData["Title"] = "Entregas - Estudiante";
     var estudiante = ViewBag.Estudiante as ServicioComunal.Models.Estudiante;
     var grupo = ViewBag.Grupo as ServicioComunal.Models.Grupo;
     var entregas = ViewBag.Entregas as List<ServicioComunal.Models.Entrega>;
-    var companeros = ViewBag.Companeros as List<ServicioComunal.Models.Estudiante>;
-    var tutor = ViewBag.Tutor as ServicioComunal.Models.Profesor;
 }
 
 <div class="container-fluid">
@@ -18,13 +16,13 @@
             </div>
 
             <nav class="nav flex-column">
-                <a class="nav-link active" href="@Url.Action("Dashboard", "Estudiante")">
+                <a class="nav-link" href="@Url.Action("Dashboard", "Estudiante")">
                     <i class="fas fa-tachometer-alt"></i> Dashboard
                 </a>
                 <a class="nav-link" href="@Url.Action("MiGrupo", "Estudiante")">
                     <i class="fas fa-users"></i> Mi Grupo
                 </a>
-                <a class="nav-link" href="@Url.Action("Entregas", "Estudiante")">
+                <a class="nav-link active" href="@Url.Action("Entregas", "Estudiante")">
                     <i class="fas fa-file-upload"></i> Entregas
                 </a>
                 <a class="nav-link" href="@Url.Action("MisSolicitudes", "Estudiante")">
@@ -43,61 +41,20 @@
         <!-- Contenido principal -->
         <div class="col-md-9 main-content p-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2>Dashboard de Estudiante</h2>
+                <h2>Entregas del Grupo</h2>
                 <div class="text-muted">
-                    <i class="fas fa-calendar"></i> @DateTime.Now.ToString("dd/MM/yyyy")
+                    <i class="fas fa-users"></i> Grupo @grupo?.Numero
                 </div>
             </div>
 
-            <!-- Información del grupo -->
-            <div class="row mb-4">
-                <div class="col-md-12">
-                    <div class="card">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0">
-                                <i class="fas fa-users"></i> Información del Grupo @grupo?.Numero
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h6>Integrantes del Grupo:</h6>
-                                    <ul class="list-unstyled">
-                                        <li><i class="fas fa-user text-primary"></i> @estudiante?.Nombre @estudiante?.Apellidos (Yo)</li>
-                                        @if (companeros != null)
-                                        {
-                                            foreach (var companero in companeros)
-                                            {
-                                                <li><i class="fas fa-user text-secondary"></i> @companero.Nombre @companero.Apellidos</li>
-                                            }
-                                        }
-                                    </ul>
-                                </div>
-                                <div class="col-md-6">
-                                    <h6>Tutor Asignado:</h6>
-                                    @if (tutor != null)
-                                    {
-                                        <p><i class="fas fa-chalkboard-teacher text-success"></i> @tutor.Nombre @tutor.Apellidos</p>
-                                    }
-                                    else
-                                    {
-                                        <p class="text-muted"><i class="fas fa-clock"></i> Sin tutor asignado aún</p>
-                                    }
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Estadísticas rápidas -->
+            <!-- Estadísticas de entregas -->
             <div class="row mb-4">
                 <div class="col-md-3">
-                    <div class="card bg-info text-white">
+                    <div class="card bg-primary text-white">
                         <div class="card-body text-center">
                             <i class="fas fa-file-upload fa-2x mb-2"></i>
                             <h4>@(entregas?.Count ?? 0)</h4>
-                            <p>Entregas Realizadas</p>
+                            <p>Total Entregas</p>
                         </div>
                     </div>
                 </div>
@@ -106,7 +63,7 @@
                         <div class="card-body text-center">
                             <i class="fas fa-check-circle fa-2x mb-2"></i>
                             <h4>@(entregas?.Count(e => !string.IsNullOrEmpty(e.Retroalimentacion)) ?? 0)</h4>
-                            <p>Entregas Revisadas</p>
+                            <p>Revisadas</p>
                         </div>
                     </div>
                 </div>
@@ -138,23 +95,23 @@
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card bg-primary text-white">
+                    <div class="card bg-info text-white">
                         <div class="card-body text-center">
-                            <i class="fas fa-users fa-2x mb-2"></i>
-                            <h4>@((companeros?.Count ?? 0) + 1)</h4>
-                            <p>Miembros del Grupo</p>
+                            <i class="fas fa-calendar-alt fa-2x mb-2"></i>
+                            <h4>@(entregas?.Count(e => e.FechaLimite > DateTime.Now) ?? 0)</h4>
+                            <p>En Plazo</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Entregas recientes -->
+            <!-- Lista de entregas -->
             <div class="row">
                 <div class="col-md-12">
                     <div class="card">
                         <div class="card-header">
                             <h5 class="mb-0">
-                                <i class="fas fa-history"></i> Entregas Recientes
+                                <i class="fas fa-list"></i> Lista de Entregas Asignadas
                             </h5>
                         </div>
                         <div class="card-body">
@@ -162,61 +119,102 @@
                             {
                                 <div class="table-responsive">
                                     <table class="table table-hover">
-                                        <thead>
+                                        <thead class="thead-light">
                                             <tr>
-                                                <th>Nombre</th>
-                                                <th>Descripción</th>
-                                                <th>Fecha Límite</th>
-                                                <th>Estado</th>
-                                                <th>Acciones</th>
+                                                <th><i class="fas fa-file"></i> Nombre</th>
+                                                <th><i class="fas fa-info-circle"></i> Descripción</th>
+                                                <th><i class="fas fa-calendar"></i> Fecha Límite</th>
+                                                <th><i class="fas fa-user"></i> Asignado por</th>
+                                                <th><i class="fas fa-flag"></i> Estado</th>
+                                                <th><i class="fas fa-cogs"></i> Acciones</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach (var entrega in entregas.Take(5))
+                                            @foreach (var entrega in entregas)
                                             {
                                                 <tr>
-                                                    <td>@entrega.Nombre</td>
-                                                    <td>@(entrega.Descripcion.Length > 50 ? entrega.Descripcion.Substring(0, 50) + "..." : entrega.Descripcion)</td>
-                                                    <td>@entrega.FechaLimite.ToString("dd/MM/yyyy")</td>
+                                                    <td>
+                                                        <strong>@entrega.Nombre</strong>
+                                                    </td>
+                                                    <td>
+                                                        @(entrega.Descripcion.Length > 80 ? entrega.Descripcion.Substring(0, 80) + "..." : entrega.Descripcion)
+                                                    </td>
+                                                    <td>
+                                                        @entrega.FechaLimite.ToString("dd/MM/yyyy HH:mm")
+                                                        @if (entrega.FechaLimite < DateTime.Now)
+                                                        {
+                                                            <br><small class="text-danger"><i class="fas fa-exclamation-triangle"></i> Vencida</small>
+                                                        }
+                                                        else if (entrega.FechaLimite <= DateTime.Now.AddDays(2))
+                                                        {
+                                                            <br><small class="text-warning"><i class="fas fa-clock"></i> Próxima a vencer</small>
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        @if (entrega.Profesor != null)
+                                                        {
+                                                            <span>@entrega.Profesor.Nombre @entrega.Profesor.Apellidos</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-muted">Sin asignar</span>
+                                                        }
+                                                    </td>
                                                     <td>
                                                         @if (!string.IsNullOrEmpty(entrega.Retroalimentacion))
                                                         {
                                                             if (entrega.Retroalimentacion.StartsWith("CAMBIOS SOLICITADOS:"))
                                                             {
-                                                                <span class="badge badge-danger">Requiere Cambios</span>
+                                                                <span class="badge badge-danger"><i class="fas fa-edit"></i> Requiere Cambios</span>
                                                             }
                                                             else
                                                             {
-                                                                <span class="badge badge-success">Revisada</span>
+                                                                <span class="badge badge-success"><i class="fas fa-check"></i> Revisada</span>
                                                             }
                                                         }
                                                         else if (!string.IsNullOrEmpty(entrega.ArchivoRuta))
                                                         {
-                                                            <span class="badge badge-info">Enviada</span>
+                                                            <span class="badge badge-info"><i class="fas fa-upload"></i> Enviada</span>
                                                         }
                                                         else
                                                         {
-                                                            <span class="badge badge-warning">Pendiente</span>
+                                                            <span class="badge badge-warning"><i class="fas fa-clock"></i> Pendiente</span>
                                                         }
                                                     </td>
                                                     <td>
-                                                        <a href="@Url.Action("DetalleEntrega", "Estudiante", new { id = entrega.Identificacion })" class="btn btn-sm btn-outline-primary">Ver Detalles</a>
+                                                        <div class="btn-group" role="group">
+                                                            <a href="@Url.Action("DetalleEntrega", "Estudiante", new { id = entrega.Identificacion })" 
+                                                               class="btn btn-sm btn-primary" title="Ver Detalles">
+                                                                <i class="fas fa-eye"></i>
+                                                            </a>
+                                                            @if (entrega.Formulario != null && !string.IsNullOrEmpty(entrega.Formulario.ArchivoRuta))
+                                                            {
+                                                                <a href="@Url.Action("DescargarArchivo", "Estudiante", new { entregaId = entrega.Identificacion, tipo = "formulario" })" 
+                                                                   class="btn btn-sm btn-success" title="Descargar Formulario">
+                                                                    <i class="fas fa-download"></i>
+                                                                </a>
+                                                            }
+                                                            @if (!string.IsNullOrEmpty(entrega.ArchivoRuta))
+                                                            {
+                                                                <a href="@Url.Action("DescargarArchivo", "Estudiante", new { entregaId = entrega.Identificacion, tipo = "entrega" })" 
+                                                                   class="btn btn-sm btn-info" title="Descargar Mi Entrega">
+                                                                    <i class="fas fa-file-download"></i>
+                                                                </a>
+                                                            }
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             }
                                         </tbody>
                                     </table>
                                 </div>
-                                <div class="text-center mt-3">
-                                    <a href="@Url.Action("Entregas", "Estudiante")" class="btn btn-primary">Ver Todas las Entregas</a>
-                                </div>
                             }
                             else
                             {
-                                <div class="text-center py-4">
-                                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                                    <h5 class="text-muted">No hay entregas aún</h5>
-                                    <p class="text-muted">Las entregas aparecerán aquí cuando tu tutor las asigne.</p>
+                                <div class="text-center py-5">
+                                    <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                                    <h4 class="text-muted">No hay entregas asignadas</h4>
+                                    <p class="text-muted">Las entregas aparecerán aquí cuando tu tutor las asigne al grupo.</p>
                                 </div>
                             }
                         </div>
@@ -264,5 +262,19 @@
 
     .badge {
         font-size: 0.75em;
+    }
+
+    .table th {
+        border-top: none;
+        background-color: #f8f9fa;
+        font-weight: 600;
+    }
+
+    .btn-group .btn {
+        margin-right: 2px;
+    }
+
+    .btn-group .btn:last-child {
+        margin-right: 0;
     }
 </style>

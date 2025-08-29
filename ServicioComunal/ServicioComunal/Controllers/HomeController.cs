@@ -2182,6 +2182,170 @@ namespace ServicioComunal.Controllers
             await _context.SaveChangesAsync();
             Console.WriteLine($"✅ Se crearon {numeroGrupo - 1} grupos nuevos con líderes asignados");
         }
+
+        // ===== GESTIÓN DE USUARIOS =====
+
+        public async Task<IActionResult> Usuarios()
+        {
+            try
+            {
+                var usuarios = await _context.Usuarios
+                    .OrderBy(u => u.Rol)
+                    .ThenBy(u => u.NombreUsuario)
+                    .ToListAsync();
+
+                return View(usuarios);
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Error = $"Error al cargar usuarios: {ex.Message}";
+                return View(new List<Usuario>());
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RestablecerContraseña([FromBody] RestablecerContraseñaRequest request)
+        {
+            try
+            {
+                var usuario = await _context.Usuarios
+                    .FirstOrDefaultAsync(u => u.Identificacion == request.UsuarioId);
+
+                if (usuario == null)
+                {
+                    return Json(new { success = false, message = "Usuario no encontrado" });
+                }
+
+                // Restablecer contraseña a la identificación del usuario
+                string nuevaContraseña = usuario.Identificacion.ToString();
+                usuario.Contraseña = ServicioComunal.Utilities.PasswordHelper.HashPassword(nuevaContraseña);
+                
+                // Marcar que requiere cambio de contraseña en el próximo login
+                usuario.RequiereCambioContraseña = true;
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { 
+                    success = true, 
+                    message = $"Contraseña restablecida. El usuario deberá usar su cédula ({nuevaContraseña}) para ingresar y se le pedirá cambiar la contraseña." 
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CambiarContraseñaUsuario([FromBody] CambiarContraseñaRequest request)
+        {
+            try
+            {
+                var usuario = await _context.Usuarios
+                    .FirstOrDefaultAsync(u => u.Identificacion == request.UsuarioId);
+
+                if (usuario == null)
+                {
+                    return Json(new { success = false, message = "Usuario no encontrado" });
+                }
+
+                // Validar la nueva contraseña
+                if (string.IsNullOrEmpty(request.NuevaContraseña) || request.NuevaContraseña.Length < 8)
+                {
+                    return Json(new { success = false, message = "La contraseña debe tener al menos 8 caracteres" });
+                }
+
+                if (!System.Text.RegularExpressions.Regex.IsMatch(request.NuevaContraseña, @".*\d.*"))
+                {
+                    return Json(new { success = false, message = "La contraseña debe contener al menos un número" });
+                }
+
+                // Hashear la nueva contraseña
+                usuario.Contraseña = ServicioComunal.Utilities.PasswordHelper.HashPassword(request.NuevaContraseña);
+                usuario.RequiereCambioContraseña = request.ForzarCambio;
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Contraseña cambiada exitosamente" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error al cambiar contraseña: {ex.Message}" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CambiarEstadoUsuario([FromBody] CambiarEstadoUsuarioRequest request)
+        {
+            try
+            {
+                var usuario = await _context.Usuarios
+                    .FirstOrDefaultAsync(u => u.Identificacion == request.UsuarioId);
+
+                if (usuario == null)
+                {
+                    return Json(new { success = false, message = "Usuario no encontrado" });
+                }
+
+                usuario.Activo = request.Activo;
+                await _context.SaveChangesAsync();
+
+                string mensaje = request.Activo ? "Usuario activado exitosamente" : "Usuario desactivado exitosamente";
+                return Json(new { success = true, message = mensaje });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error al cambiar estado: {ex.Message}" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MarcarCambioContraseñaRealizado([FromBody] MarcarCambioContraseñaRequest request)
+        {
+            try
+            {
+                var usuario = await _context.Usuarios
+                    .FirstOrDefaultAsync(u => u.Identificacion == request.UsuarioId);
+
+                if (usuario == null)
+                {
+                    return Json(new { success = false, message = "Usuario no encontrado" });
+                }
+
+                usuario.RequiereCambioContraseña = false;
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Usuario marcado como contraseña cambiada" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
+        }
+    }
+
+    // Clases para requests
+    public class CambiarContraseñaRequest
+    {
+        public int UsuarioId { get; set; }
+        public string NuevaContraseña { get; set; } = string.Empty;
+        public bool ForzarCambio { get; set; }
+    }
+
+    public class RestablecerContraseñaRequest
+    {
+        public int UsuarioId { get; set; }
+    }
+
+    public class CambiarEstadoUsuarioRequest
+    {
+        public int UsuarioId { get; set; }
+        public bool Activo { get; set; }
+    }
+
+    public class MarcarCambioContraseñaRequest
+    {
+        public int UsuarioId { get; set; }
     }
 
     public class EliminarEstudianteGrupoRequest

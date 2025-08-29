@@ -44,8 +44,20 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRXN0dWRpYW50ZVxEYXNoYm9hcmQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/luisd/mi_proyecto/ServicioComunal/ServicioComunal/Views/Estudiante/DetalleEntrega.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRXN0dWRpYW50ZVxEZXRhbGxlRW50cmVnYS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/luisd/mi_proyecto/ServicioComunal/ServicioComunal/Views/Estudiante/Entregas.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRXN0dWRpYW50ZVxFbnRyZWdhcy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/luisd/mi_proyecto/ServicioComunal/ServicioComunal/Views/Estudiante/GestionGrupos.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRXN0dWRpYW50ZVxHZXN0aW9uR3J1cG9zLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/luisd/mi_proyecto/ServicioComunal/ServicioComunal/Views/Estudiante/MiGrupo.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRXN0dWRpYW50ZVxNaUdydXBvLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/luisd/mi_proyecto/ServicioComunal/ServicioComunal/Views/Estudiante/MisSolicitudes.cshtml]
@@ -78,6 +90,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/luisd/mi_proyecto/ServicioComunal/ServicioComunal/Views/Home/GestionGrupos.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxHZXN0aW9uR3J1cG9zLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/luisd/mi_proyecto/ServicioComunal/ServicioComunal/Views/Home/Usuarios.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxVc3Vhcmlvcy5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/luisd/mi_proyecto/ServicioComunal/ServicioComunal/Views/Home/VerificarUsuarios.cshtml]

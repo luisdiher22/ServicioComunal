@@ -2867,33 +2867,6 @@ body.tutor-theme {
     background-color: #c1666b;
 }
 
-/* Modo demo para tutor */
-.tutor-theme .mode-demo {
-    background-color: #f5f1e8;
-    border: 1px solid #e0d5c7;
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 15px;
-    text-align: center;
-    font-size: 12px;
-}
-
-.tutor-theme .mode-demo i {
-    color: #8b7765;
-    margin-bottom: 5px;
-}
-
-.tutor-theme .mode-demo span {
-    display: block;
-    font-weight: 600;
-    color: #8b7765;
-    margin-bottom: 4px;
-}
-
-.tutor-theme .mode-demo small {
-    color: #8b7765;
-}
-
 /* Animaciones */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-10px); }

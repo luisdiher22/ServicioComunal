@@ -17,7 +17,7 @@
         <div class="entregables-lista">
             <div class="lista-header">
                 <h3>Entregables por Revisar</h3>
-                <span class="contador">@(Model?.Count(e => string.IsNullOrEmpty(e.Retroalimentacion)) ?? 0) entregables esperando tu revisión</span>
+                <span class="contador">@(Model?.Count(e => string.IsNullOrEmpty(e.Retroalimentacion) && !string.IsNullOrEmpty(e.ArchivoRuta)) ?? 0) entregables listos para revisión</span>
             </div>
 
             @if (Model != null && Model.Any())
@@ -26,11 +26,15 @@
                     @foreach (var entrega in Model.OrderBy(e => e.FechaLimite))
                     {
                         var estudiante = entrega.Grupo.GruposEstudiantes.FirstOrDefault()?.Estudiante;
-                        var esPendiente = string.IsNullOrEmpty(entrega.Retroalimentacion);
-                        var esAprobado = !string.IsNullOrEmpty(entrega.Retroalimentacion) && !entrega.Retroalimentacion.StartsWith("CAMBIOS SOLICITADOS");
-                        var tieneCambios = !string.IsNullOrEmpty(entrega.Retroalimentacion) && entrega.Retroalimentacion.StartsWith("CAMBIOS SOLICITADOS");
+                        var tieneRetroalimentacion = !string.IsNullOrEmpty(entrega.Retroalimentacion);
+                        var tieneArchivo = !string.IsNullOrEmpty(entrega.ArchivoRuta);
                         
-                        <div class="entregable-item @(esPendiente ? "pendiente" : (esAprobado ? "aprobado" : "cambios"))" 
+                        var esPendiente = !tieneRetroalimentacion && !tieneArchivo;
+                        var esListoParaRevision = !tieneRetroalimentacion && tieneArchivo;
+                        var esAprobado = tieneRetroalimentacion && !entrega.Retroalimentacion.StartsWith("CAMBIOS SOLICITADOS");
+                        var tieneCambios = tieneRetroalimentacion && entrega.Retroalimentacion.StartsWith("CAMBIOS SOLICITADOS");
+                        
+                        <div class="entregable-item @(esPendiente ? "pendiente" : (esListoParaRevision ? "listo-revision" : (esAprobado ? "aprobado" : "cambios")))" 
                              onclick="mostrarDetalle(@entrega.Identificacion)">
                             <div class="entregable-header">
                                 <div class="entregable-info">
@@ -44,6 +48,10 @@
                                     @if (esPendiente)
                                     {
                                         <span class="badge badge-pending">Pendiente</span>
+                                    }
+                                    else if (esListoParaRevision)
+                                    {
+                                        <span class="badge badge-ready">Listo para Revisión</span>
                                     }
                                     else if (esAprobado)
                                     {
@@ -213,6 +221,11 @@
 
 .entregable-item.pendiente {
     border-left: 4px solid #d4a574;
+}
+
+.entregable-item.listo-revision {
+    border-left: 4px solid #17a2b8;
+    background: #e7f4ff;
 }
 
 .entregable-item.aprobado {
@@ -435,11 +448,70 @@
         max-height: none;
     }
 }
+
+/* Estilos para badges */
+.badge {
+    display: inline-block;
+    padding: 0.25em 0.4em;
+    font-size: 75%;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.25rem;
+}
+
+.badge-pending {
+    color: #856404;
+    background-color: #fff3cd;
+}
+
+.badge-ready {
+    color: #0c5460;
+    background-color: #d1ecf1;
+}
+
+.badge-approved {
+    color: #155724;
+    background-color: #d4edda;
+}
+
+.badge-changes {
+    color: #721c24;
+    background-color: #f8d7da;
+}
 </style>
 
 <script>
 let entregableSeleccionado = null;
-let entregablesData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model ?? new List<ServicioComunal.Models.Entrega>()));
+let entregablesData = [
+    @foreach (var entrega in Model ?? new List<ServicioComunal.Models.Entrega>())
+    {
+        var estudiante = entrega.Grupo.GruposEstudiantes.FirstOrDefault()?.Estudiante;
+        <text>{
+            identificacion: @entrega.Identificacion,
+            nombre: "@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(entrega.Nombre))",
+            archivoRuta: "@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(entrega.ArchivoRuta ?? ""))",
+            fechaLimite: "@entrega.FechaLimite.ToString("yyyy-MM-ddTHH:mm:ss")",
+            retroalimentacion: "@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(entrega.Retroalimentacion ?? ""))",
+            grupo: {
+                numero: @entrega.Grupo.Numero,
+                gruposEstudiantes: [
+                    @if (estudiante != null)
+                    {
+                        <text>{
+                            estudiante: {
+                                nombre: "@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(estudiante.Nombre))",
+                                apellidos: "@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(estudiante.Apellidos))"
+                            }
+                        }</text>
+                    }
+                ]
+            }
+        },</text>
+    }
+].filter(item => item.identificacion !== undefined);
 
 function mostrarDetalle(entregaId) {
     // Remover selección anterior
@@ -480,16 +552,28 @@ function mostrarDetalle(entregaId) {
     }
     
     // Configurar botones
-    document.getElementById('btnDescargar').onclick = () => descargarArchivo(entregaId);
+    const btnDescargar = document.getElementById('btnDescargar');
+    if (entregable.archivoRuta) {
+        btnDescargar.disabled = false;
+        btnDescargar.onclick = () => descargarArchivo(entregaId);
+    } else {
+        btnDescargar.disabled = true;
+        btnDescargar.onclick = null;
+    }
+    
     document.getElementById('btnAprobar').onclick = () => aprobarEntrega(entregaId);
     document.getElementById('btnSolicitarCambios').onclick = () => solicitarCambios(entregaId);
     
     // Deshabilitar botones si ya está revisado
-    const esPendiente = !entregable.retroalimentacion;
-    document.getElementById('btnAprobar').disabled = !esPendiente;
-    document.getElementById('btnSolicitarCambios').disabled = !esPendiente;
+    const tieneRetroalimentacion = entregable.retroalimentacion;
+    const tieneArchivo = entregable.archivoRuta;
+    const esPendiente = !tieneRetroalimentacion && !tieneArchivo;
+    const esListoParaRevision = !tieneRetroalimentacion && tieneArchivo;
     
-    if (!esPendiente) {
+    document.getElementById('btnAprobar').disabled = !esListoParaRevision;
+    document.getElementById('btnSolicitarCambios').disabled = !esListoParaRevision;
+
+    if (tieneRetroalimentacion) {
         document.getElementById('detalleSubtitulo').textContent = 'Entregable ya revisado';
     } else {
         document.getElementById('detalleSubtitulo').textContent = `Grupo ${entregable.grupo.numero} - ${estudiante?.nombre} ${estudiante?.apellidos}`;
@@ -497,19 +581,14 @@ function mostrarDetalle(entregaId) {
 }
 
 function descargarArchivo(entregaId) {
-    fetch(`@Url.Action("DescargarArchivo", "Tutor")?entregaId=${entregaId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.archivo) {
-                alert(`Descargando archivo: ${data.archivo}`);
-            } else {
-                alert('Archivo no disponible');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error al descargar el archivo');
-        });
+    // Crear un enlace temporal para la descarga
+    const url = `@Url.Action("DescargarArchivo", "Tutor")?entregaId=${entregaId}`;
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 function aprobarEntrega(entregaId) {

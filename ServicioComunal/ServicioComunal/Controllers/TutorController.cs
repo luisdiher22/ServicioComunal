@@ -70,7 +70,8 @@ namespace ServicioComunal.Controllers
             var totalGrupos = gruposAsignados.Count;
             var revisionesPendientes = await _context.Entregas
                 .Where(e => gruposAsignados.Select(ga => ga.GrupoNumero).Contains(e.GrupoNumero) 
-                           && string.IsNullOrEmpty(e.Retroalimentacion))
+                           && string.IsNullOrEmpty(e.Retroalimentacion)
+                           && !string.IsNullOrEmpty(e.ArchivoRuta))
                 .CountAsync();
 
             // Calcular progreso promedio (simplificado por ahora)
@@ -126,10 +127,12 @@ namespace ServicioComunal.Controllers
                 .ToListAsync();
 
             var entregablesPendientes = await _context.Entregas
-                .Where(e => gruposAsignados.Contains(e.GrupoNumero))
+                .Where(e => gruposAsignados.Contains(e.GrupoNumero) &&
+                           (!string.IsNullOrEmpty(e.ArchivoRuta) || !string.IsNullOrEmpty(e.Retroalimentacion)))
                 .Include(e => e.Grupo)
                 .ThenInclude(g => g.GruposEstudiantes)
                 .ThenInclude(ge => ge.Estudiante)
+                .AsNoTracking()
                 .OrderByDescending(e => e.FechaRetroalimentacion)
                 .ToListAsync();
 
@@ -177,29 +180,90 @@ namespace ServicioComunal.Controllers
         [HttpPost]
         public async Task<IActionResult> SolicitarCambios(int entregaId, string comentarios)
         {
-            var entrega = await _context.Entregas.FindAsync(entregaId);
-            if (entrega != null)
+            try
             {
-                entrega.Retroalimentacion = $"CAMBIOS SOLICITADOS: {comentarios}";
-                entrega.FechaRetroalimentacion = DateTime.Now;
-                await _context.SaveChangesAsync();
+                var entrega = await _context.Entregas.FindAsync(entregaId);
+                if (entrega != null)
+                {
+                    entrega.Retroalimentacion = $"CAMBIOS SOLICITADOS: {comentarios}";
+                    entrega.FechaRetroalimentacion = DateTime.Now;
+                    await _context.SaveChangesAsync();
+                    
+                    return Json(new { success = true, message = "Cambios solicitados correctamente" });
+                }
+                
+                return Json(new { success = false, message = "Entrega no encontrada" });
             }
-            
-            return Json(new { success = true });
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al solicitar cambios: " + ex.Message });
+            }
         }
 
         // API para descargar archivo
         public async Task<IActionResult> DescargarArchivo(int entregaId)
         {
-            var entrega = await _context.Entregas.FindAsync(entregaId);
-            if (entrega == null || string.IsNullOrEmpty(entrega.ArchivoRuta))
+            var tutorId = HttpContext.Session.GetInt32("UsuarioId");
+            if (tutorId == null)
             {
-                return NotFound();
+                return RedirectToAction("Login", "Auth");
             }
 
-            // Implementar descarga de archivo
-            // Por ahora retornamos el nombre del archivo
-            return Json(new { archivo = entrega.ArchivoRuta });
+            // Verificar que la entrega existe y el tutor tiene acceso
+            var entrega = await _context.Entregas
+                .Include(e => e.Grupo)
+                .ThenInclude(g => g.GruposProfesores)
+                .FirstOrDefaultAsync(e => e.Identificacion == entregaId);
+
+            if (entrega == null || string.IsNullOrEmpty(entrega.ArchivoRuta))
+            {
+                return NotFound("Archivo no encontrado");
+            }
+
+            // Verificar que el tutor tiene acceso a este grupo
+            var tieneAcceso = entrega.Grupo.GruposProfesores
+                .Any(gp => gp.ProfesorIdentificacion == tutorId.Value);
+
+            if (!tieneAcceso)
+            {
+                return Forbid();
+            }
+
+            // Construir la ruta completa del archivo
+            var rutaCompleta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", entrega.ArchivoRuta.TrimStart('/'));
+
+            if (!System.IO.File.Exists(rutaCompleta))
+            {
+                return NotFound("El archivo no existe en el servidor");
+            }
+
+            var extension = Path.GetExtension(rutaCompleta);
+            var mimeType = GetMimeType(extension);
+            var nombreDescarga = $"Entrega_{entrega.Nombre}_Grupo_{entrega.Grupo.Numero}{extension}";
+
+            var fileBytes = await System.IO.File.ReadAllBytesAsync(rutaCompleta);
+            return File(fileBytes, mimeType, nombreDescarga);
+        }
+
+        private string GetMimeType(string extension)
+        {
+            return extension.ToLower() switch
+            {
+                ".pdf" => "application/pdf",
+                ".doc" => "application/msword",
+                ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                ".xls" => "application/vnd.ms-excel",
+                ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                ".ppt" => "application/vnd.ms-powerpoint",
+                ".pptx" => "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                ".txt" => "text/plain",
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".gif" => "image/gif",
+                ".zip" => "application/zip",
+                ".rar" => "application/x-rar-compressed",
+                _ => "application/octet-stream"
+            };
         }
     }
 

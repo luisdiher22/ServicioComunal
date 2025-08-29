@@ -57,6 +57,7 @@ namespace ServicioComunal.Controllers
             var entregas = await _context.Entregas
                 .Include(e => e.Formulario)
                 .Where(e => e.GrupoNumero == grupoEstudiante.GrupoNumero)
+                .AsNoTracking()
                 .OrderByDescending(e => e.FechaRetroalimentacion)
                 .ToListAsync();
 
@@ -695,6 +696,324 @@ namespace ServicioComunal.Controllers
             {
                 return Json(new { success = false, message = "Error al limpiar grupos: " + ex.Message });
             }
+        }
+
+        public async Task<IActionResult> MiGrupo()
+        {
+            var usuarioActual = _usuarioService.ObtenerUsuarioActual();
+            if (usuarioActual == null)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            // Verificar si el usuario es un estudiante
+            var estudiante = await _context.Estudiantes
+                .FirstOrDefaultAsync(e => e.Identificacion == usuarioActual.Identificacion);
+
+            if (estudiante == null)
+            {
+                return Forbid();
+            }
+
+            // Verificar si el estudiante está en algún grupo
+            var grupoEstudiante = await _context.GruposEstudiantes
+                .Include(ge => ge.Grupo)
+                .FirstOrDefaultAsync(ge => ge.EstudianteIdentificacion == estudiante.Identificacion);
+
+            if (grupoEstudiante == null)
+            {
+                // Si no está en ningún grupo, redirigir a gestión de grupos
+                return RedirectToAction("GestionGrupos");
+            }
+
+            ViewBag.Estudiante = estudiante;
+            ViewBag.Grupo = grupoEstudiante.Grupo;
+
+            // Obtener todos los integrantes del grupo (incluyendo al estudiante actual)
+            var integrantesGrupo = await _context.GruposEstudiantes
+                .Include(ge => ge.Estudiante)
+                .Where(ge => ge.GrupoNumero == grupoEstudiante.GrupoNumero)
+                .Select(ge => ge.Estudiante)
+                .OrderBy(e => e.Nombre)
+                .ToListAsync();
+
+            ViewBag.IntegrantesGrupo = integrantesGrupo;
+
+            // Obtener el líder del grupo
+            var lider = integrantesGrupo.FirstOrDefault(e => e.Identificacion == grupoEstudiante.Grupo.LiderIdentificacion);
+            ViewBag.Lider = lider;
+
+            // Obtener tutor asignado
+            var tutor = await _context.GruposProfesores
+                .Include(gp => gp.Profesor)
+                .Where(gp => gp.GrupoNumero == grupoEstudiante.GrupoNumero)
+                .Select(gp => gp.Profesor)
+                .FirstOrDefaultAsync();
+
+            ViewBag.Tutor = tutor;
+
+            return View();
+        }
+
+        public async Task<IActionResult> Entregas()
+        {
+            var usuarioActual = _usuarioService.ObtenerUsuarioActual();
+            if (usuarioActual == null)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            // Verificar si el usuario es un estudiante
+            var estudiante = await _context.Estudiantes
+                .FirstOrDefaultAsync(e => e.Identificacion == usuarioActual.Identificacion);
+
+            if (estudiante == null)
+            {
+                return Forbid();
+            }
+
+            // Verificar si el estudiante está en algún grupo
+            var grupoEstudiante = await _context.GruposEstudiantes
+                .Include(ge => ge.Grupo)
+                .FirstOrDefaultAsync(ge => ge.EstudianteIdentificacion == estudiante.Identificacion);
+
+            if (grupoEstudiante == null)
+            {
+                // Si no está en ningún grupo, redirigir a gestión de grupos
+                return RedirectToAction("GestionGrupos");
+            }
+
+            ViewBag.Estudiante = estudiante;
+            ViewBag.Grupo = grupoEstudiante.Grupo;
+
+            // Obtener entregas del grupo
+            var entregas = await _context.Entregas
+                .Include(e => e.Formulario)
+                .Include(e => e.Profesor)
+                .Where(e => e.GrupoNumero == grupoEstudiante.GrupoNumero)
+                .AsNoTracking()
+                .OrderByDescending(e => e.FechaLimite)
+                .ToListAsync();
+
+            ViewBag.Entregas = entregas;
+
+            return View();
+        }
+
+        public async Task<IActionResult> DetalleEntrega(int id)
+        {
+            var usuarioActual = _usuarioService.ObtenerUsuarioActual();
+            if (usuarioActual == null)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            // Verificar si el usuario es un estudiante
+            var estudiante = await _context.Estudiantes
+                .FirstOrDefaultAsync(e => e.Identificacion == usuarioActual.Identificacion);
+
+            if (estudiante == null)
+            {
+                return Forbid();
+            }
+
+            // Verificar si el estudiante está en algún grupo
+            var grupoEstudiante = await _context.GruposEstudiantes
+                .Include(ge => ge.Grupo)
+                .FirstOrDefaultAsync(ge => ge.EstudianteIdentificacion == estudiante.Identificacion);
+
+            if (grupoEstudiante == null)
+            {
+                return RedirectToAction("GestionGrupos");
+            }
+
+            // Obtener la entrega específica
+            var entrega = await _context.Entregas
+                .Include(e => e.Formulario)
+                .Include(e => e.Profesor)
+                .Include(e => e.Grupo)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(e => e.Identificacion == id && e.GrupoNumero == grupoEstudiante.GrupoNumero);
+
+            if (entrega == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.Estudiante = estudiante;
+            ViewBag.Grupo = grupoEstudiante.Grupo;
+
+            return View(entrega);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SubirEntrega(int entregaId, IFormFile archivo)
+        {
+            try
+            {
+                var usuarioActual = _usuarioService.ObtenerUsuarioActual();
+                if (usuarioActual == null)
+                {
+                    return Json(new { success = false, message = "Usuario no autenticado" });
+                }
+
+                // Verificar si el usuario es un estudiante
+                var estudiante = await _context.Estudiantes
+                    .FirstOrDefaultAsync(e => e.Identificacion == usuarioActual.Identificacion);
+
+                if (estudiante == null)
+                {
+                    return Json(new { success = false, message = "Estudiante no encontrado" });
+                }
+
+                // Verificar si el estudiante está en algún grupo
+                var grupoEstudiante = await _context.GruposEstudiantes
+                    .FirstOrDefaultAsync(ge => ge.EstudianteIdentificacion == estudiante.Identificacion);
+
+                if (grupoEstudiante == null)
+                {
+                    return Json(new { success = false, message = "No perteneces a ningún grupo" });
+                }
+
+                // Obtener la entrega
+                var entrega = await _context.Entregas
+                    .FirstOrDefaultAsync(e => e.Identificacion == entregaId && e.GrupoNumero == grupoEstudiante.GrupoNumero);
+
+                if (entrega == null)
+                {
+                    return Json(new { success = false, message = "Entrega no encontrada" });
+                }
+
+                // Verificar que se haya subido un archivo
+                if (archivo == null || archivo.Length == 0)
+                {
+                    return Json(new { success = false, message = "Debe seleccionar un archivo" });
+                }
+
+                // Crear el directorio de entregas si no existe
+                var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "entregas");
+                Directory.CreateDirectory(uploadsPath);
+
+                // Generar nombre único para el archivo
+                var extension = Path.GetExtension(archivo.FileName);
+                var nombreArchivo = $"entrega_{entregaId}_grupo_{grupoEstudiante.GrupoNumero}_{DateTime.Now:yyyyMMdd_HHmmss}{extension}";
+                var rutaArchivo = Path.Combine(uploadsPath, nombreArchivo);
+
+                // Guardar el archivo
+                using (var stream = new FileStream(rutaArchivo, FileMode.Create))
+                {
+                    await archivo.CopyToAsync(stream);
+                }
+
+                // Actualizar la ruta del archivo en la entrega
+                entrega.ArchivoRuta = $"/uploads/entregas/{nombreArchivo}";
+                entrega.FechaRetroalimentacion = DateTime.Now;
+                
+                // Si había cambios solicitados, limpiar la retroalimentación para permitir nueva revisión
+                if (!string.IsNullOrEmpty(entrega.Retroalimentacion) && entrega.Retroalimentacion.StartsWith("CAMBIOS SOLICITADOS:"))
+                {
+                    entrega.Retroalimentacion = string.Empty;
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Entrega subida exitosamente" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al subir la entrega: " + ex.Message });
+            }
+        }
+
+        public async Task<IActionResult> DescargarArchivo(int entregaId, string tipo)
+        {
+            var usuarioActual = _usuarioService.ObtenerUsuarioActual();
+            if (usuarioActual == null)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            // Verificar si el usuario es un estudiante
+            var estudiante = await _context.Estudiantes
+                .FirstOrDefaultAsync(e => e.Identificacion == usuarioActual.Identificacion);
+
+            if (estudiante == null)
+            {
+                return Forbid();
+            }
+
+            // Verificar si el estudiante está en algún grupo
+            var grupoEstudiante = await _context.GruposEstudiantes
+                .FirstOrDefaultAsync(ge => ge.EstudianteIdentificacion == estudiante.Identificacion);
+
+            if (grupoEstudiante == null)
+            {
+                return NotFound();
+            }
+
+            // Obtener la entrega
+            var entrega = await _context.Entregas
+                .Include(e => e.Formulario)
+                .FirstOrDefaultAsync(e => e.Identificacion == entregaId && e.GrupoNumero == grupoEstudiante.GrupoNumero);
+
+            if (entrega == null)
+            {
+                return NotFound();
+            }
+
+            string rutaArchivo = "";
+            string nombreDescarga = "";
+
+            if (tipo == "formulario" && entrega.Formulario != null)
+            {
+                rutaArchivo = entrega.Formulario.ArchivoRuta;
+                nombreDescarga = $"Formulario_{entrega.Formulario.Nombre}";
+            }
+            else if (tipo == "entrega")
+            {
+                rutaArchivo = entrega.ArchivoRuta;
+                nombreDescarga = $"Entrega_{entrega.Nombre}";
+            }
+
+            if (string.IsNullOrEmpty(rutaArchivo))
+            {
+                return NotFound("Archivo no encontrado");
+            }
+
+            // Construir la ruta completa del archivo
+            var rutaCompleta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", rutaArchivo.TrimStart('/'));
+
+            if (!System.IO.File.Exists(rutaCompleta))
+            {
+                return NotFound("El archivo no existe en el servidor");
+            }
+
+            var extension = Path.GetExtension(rutaCompleta);
+            var mimeType = GetMimeType(extension);
+
+            var fileBytes = await System.IO.File.ReadAllBytesAsync(rutaCompleta);
+            return File(fileBytes, mimeType, $"{nombreDescarga}{extension}");
+        }
+
+        private string GetMimeType(string extension)
+        {
+            return extension.ToLower() switch
+            {
+                ".pdf" => "application/pdf",
+                ".doc" => "application/msword",
+                ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                ".xls" => "application/vnd.ms-excel",
+                ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                ".ppt" => "application/vnd.ms-powerpoint",
+                ".pptx" => "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                ".txt" => "text/plain",
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".gif" => "image/gif",
+                ".zip" => "application/zip",
+                ".rar" => "application/x-rar-compressed",
+                _ => "application/octet-stream"
+            };
         }
     }
 
