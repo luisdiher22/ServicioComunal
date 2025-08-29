@@ -436,6 +436,50 @@ namespace ServicioComunal.Controllers
                 return Json(new { success = false, message = "Error al obtener detalles: " + ex.Message });
             }
         }
+
+        /// <summary>
+        /// Verifica qué usuarios aún requieren cambio de contraseña
+        /// </summary>
+        /// <returns>Lista de usuarios que no han cambiado su contraseña inicial</returns>
+        [HttpGet]
+        public async Task<IActionResult> UsuariosSinContraseñaNueva()
+        {
+            try
+            {
+                var usuariosSinCambio = await _context.Usuarios
+                    .Where(u => u.RequiereCambioContraseña == true)
+                    .OrderBy(u => u.Rol)
+                    .ThenBy(u => u.NombreUsuario)
+                    .ToListAsync();
+
+                var resultado = usuariosSinCambio.Select(u => new {
+                    Identificacion = u.Identificacion,
+                    NombreUsuario = u.NombreUsuario,
+                    Rol = u.Rol,
+                    FechaCreacion = u.FechaCreacion.ToString("dd/MM/yyyy"),
+                    UltimoAcceso = u.UltimoAcceso?.ToString("dd/MM/yyyy HH:mm") ?? "Nunca",
+                    ContraseñaInicial = u.Identificacion.ToString(), // La contraseña inicial es la cédula
+                    Activo = u.Activo
+                }).ToList();
+
+                var resumen = new
+                {
+                    TotalUsuarios = await _context.Usuarios.CountAsync(),
+                    UsuariosSinCambioContraseña = usuariosSinCambio.Count,
+                    UsuariosConContraseñaNueva = await _context.Usuarios.CountAsync(u => u.RequiereCambioContraseña == false),
+                    Usuarios = resultado
+                };
+
+                return Json(resumen);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { 
+                    success = false, 
+                    message = "Error al consultar usuarios: " + ex.Message 
+                });
+            }
+        }
     }
 
     public class EliminarEstudianteRequest

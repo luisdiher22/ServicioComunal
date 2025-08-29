@@ -1,35 +1,38 @@
-# Sistema de Gestión de Servicio Comunal ⚡
+# Sistema de Gestión de Servicio Comunal
 
-## 📋 Descripción del Proyecto
+## Descripción del Proyecto
 
-Sistema web desarrollado en **ASP.NET Core** para la gestión de estudiantes, profesores y grupos en programas de servicio comunal. Permite la administración de usuarios, creación de grupos de trabajo, gestión de entregas y seguimiento de actividades.
+Sistema web desarrollado en **ASP.NET Core** para la gestión de estudiantes, profesores y grupos en programas4. Usar las credenciales por defecto listadas arriba
+```
 
-## 🚀 Características Principales
+## Contribuciónservicio comunal. Permite la administración de usuarios, creación de grupos de trabajo, gestión de entregas y seguimiento de actividades.
 
-### ✅ **Sistema de Autenticación Seguro**
+## Características Principales
+
+### Sistema de Autenticación Seguro
 - Hash de contraseñas con SHA256 + salt
 - Gestión de sesiones
 - Roles diferenciados (Estudiante, Profesor, Administrador)
 - Cambio obligatorio de contraseña en primer acceso
 
-### ✅ **Gestión de Grupos**
+### Gestión de Grupos
 - Creación automática de grupos con líderes
 - Solicitudes de ingreso a grupos
 - Administración de miembros
 - Límite de 4 estudiantes por grupo
 
-### ✅ **Panel de Administración**
+### Panel de Administración
 - Gestión completa de usuarios
 - Reinicio de grupos
 - Monitoreo del sistema
 - Seeder de datos automático
 
-### ✅ **Dashboards Específicos por Rol**
+### Dashboards Específicos por Rol
 - Dashboard de estudiantes con información del grupo
 - Panel de tutores para supervisión
 - Área administrativa completa
 
-## 🛠️ Tecnologías Utilizadas
+## Tecnologías Utilizadas
 
 - **Framework**: ASP.NET Core 8.0
 - **Base de Datos**: SQL Server con Entity Framework Core
@@ -38,7 +41,7 @@ Sistema web desarrollado en **ASP.NET Core** para la gestión de estudiantes, pr
 - **ORM**: Entity Framework Core
 - **Arquitectura**: MVC (Model-View-Controller)
 
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 ServicioComunal/
@@ -67,7 +70,7 @@ ServicioComunal/
 └── Migrations/           # Migraciones de EF Core
 ```
 
-## 🗄️ Modelo de Base de Datos
+## Modelo de Base de Datos
 
 ### Entidades Principales:
 - **Usuario**: Autenticación y roles
@@ -80,14 +83,14 @@ ServicioComunal/
 - **Formulario**: Formularios del sistema
 - **Notificacion**: Sistema de notificaciones
 
-## ⚙️ Configuración y Despliegue
+## Configuración y Despliegue
 
-### 1️⃣ Requisitos Previos
+### 1. Requisitos Previos
 - .NET 8.0 SDK
 - SQL Server (LocalDB o instancia completa)
 - Visual Studio 2022 o VS Code
 
-### 2️⃣ Configuración de Base de Datos
+### 2. Configuración de Base de Datos
 ```bash
 # Actualizar la cadena de conexión en appsettings.json
 "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=ServicioComunalDB;Trusted_Connection=true;MultipleActiveResultSets=true"
@@ -96,13 +99,13 @@ ServicioComunal/
 dotnet ef database update
 ```
 
-### 3️⃣ Ejecutar la Aplicación
+### 3. Ejecutar la Aplicación
 ```bash
 cd ServicioComunal
 dotnet run
 ```
 
-### 4️⃣ Datos Iniciales
+### 4. Datos Iniciales
 Al ejecutar la aplicación por primera vez, se poblarán automáticamente datos de prueba:
 
 **Usuarios por Defecto:**
@@ -114,7 +117,7 @@ Al ejecutar la aplicación por primera vez, se poblarán automáticamente datos 
 - **diego.hernandez** / password123 (Estudiante)
 - **camila.vargas** / password123 (Estudiante)
 
-## 🔐 Seguridad Implementada
+## Seguridad Implementada
 
 ### Autenticación
 - Hash seguro de contraseñas (SHA256 + salt)
@@ -131,16 +134,16 @@ Al ejecutar la aplicación por primera vez, se poblarán automáticamente datos 
 - Prevención de SQL Injection mediante EF Core
 - Manejo seguro de sesiones
 
-## 🌐 URLs del Sistema
+## URLs del Sistema
 
-- **🏠 Inicio**: `/`
-- **🔐 Login**: `/Auth/Login`
-- **📊 Dashboard Estudiante**: `/Estudiante/Dashboard`
-- **👨‍🏫 Dashboard Tutor**: `/Tutor/Dashboard`
-- **⚙️ Panel Admin**: `/Admin/Dashboard`
-- **🚪 Logout**: `/Auth/Logout`
+- **Inicio**: `/`
+- **Login**: `/Auth/Login`
+- **Dashboard Estudiante**: `/Estudiante/Dashboard`
+- **Dashboard Tutor**: `/Tutor/Dashboard`
+- **Panel Admin**: `/Admin/Dashboard`
+- **Logout**: `/Auth/Logout`
 
-## 🚦 Flujo de Trabajo
+## Flujo de Trabajo
 
 ### Para Estudiantes:
 1. **Login** con credenciales
@@ -161,7 +164,7 @@ Al ejecutar la aplicación por primera vez, se poblarán automáticamente datos 
 3. **Reinicio del sistema** cuando sea necesario
 4. **Monitoreo** de actividades
 
-## 📈 Funcionalidades Futuras
+## Funcionalidades Futuras
 
 - [ ] Sistema de notificaciones por email
 - [ ] Calendario de entregas
@@ -169,7 +172,7 @@ Al ejecutar la aplicación por primera vez, se poblarán automáticamente datos 
 - [ ] Integración con APIs externas
 - [ ] App móvil complementaria
 
-## 🐛 Solución de Problemas
+## Solución de Problemas
 
 ### Error de Conexión a BD
 ```bash
@@ -193,16 +196,16 @@ Al ejecutar la aplicación por primera vez, se poblarán automáticamente datos 
 4. Push a la rama (`git push origin feature/AmazingFeature`)
 5. Abrir un Pull Request
 
-## 📄 Licencia
+## Licencia
 
 Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
 
-## 📞 Contacto
+## Contacto
 
-**Desarrollador**: [Tu Nombre]  
-**Email**: [tu.email@ejemplo.com]  
-**Proyecto**: [Link al repositorio]
+**Desarrollador**: Luis Diego Hernández Mora / Kendal Salazar Umaña  
+**Email**: luisdiher22@gmail.com  
+**Proyecto**: (https://github.com/luisdiher22/ServicioComunal)
 
 ---
 
-⚡ **Sistema de Servicio Comunal** - Facilitando la gestión educativa desde 2024
+

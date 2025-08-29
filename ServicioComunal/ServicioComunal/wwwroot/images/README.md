@@ -1,7 +1,7 @@
 # Logo del Liceo Carrillos de Poás
 
 ## Estado Actual
-✅ **Logo placeholder creado**: `logo-liceo.svg`
+**Logo placeholder creado**: `logo-liceo.svg`
 - Logo temporal con las iniciales "LC" y un libro
 - Colores que coinciden con el tema verde del sitio
 - Listo para ser reemplazado con el logo oficial
