@@ -98,7 +98,9 @@
                             var totalEntregas = grupo.Entregas.Count;
                             var entregasCompletadas = grupo.Entregas.Count(e => !string.IsNullOrEmpty(e.Retroalimentacion));
                             var progreso = totalEntregas > 0 ? (entregasCompletadas * 100 / totalEntregas) : 0;
-                            var ultimaActividad = grupo.Entregas.Any() ? grupo.Entregas.Max(e => e.FechaRetroalimentacion) : DateTime.MinValue;
+                            var ultimaActividad = grupo.Entregas.Any(e => e.FechaRetroalimentacion.HasValue) ? 
+                                grupo.Entregas.Where(e => e.FechaRetroalimentacion.HasValue).Max(e => e.FechaRetroalimentacion.Value) : 
+                                (DateTime?)null;
                             var entregasPendientes = grupo.Entregas.Count(e => string.IsNullOrEmpty(e.Retroalimentacion));
                             var estado = entregasPendientes == 0 ? "aldia" : "atrasado";
                             var estadoTexto = entregasPendientes == 0 ? "Al día" : $"{entregasPendientes} pendiente{(entregasPendientes > 1 ? "s" : "")}";
@@ -138,10 +140,10 @@
                                 </td>
                                 <td>
                                     <div class="actividad-cell">
-                                        @if (ultimaActividad != DateTime.MinValue)
+                                        @if (ultimaActividad.HasValue)
                                         {
-                                            <div class="fecha-actividad">@ultimaActividad.ToString("dd/MM/yyyy")</div>
-                                            <small class="tiempo-actividad">hace @((DateTime.Now - ultimaActividad).Days) días</small>
+                                            <div class="fecha-actividad">@ultimaActividad.Value.ToString("dd/MM/yyyy")</div>
+                                            <small class="tiempo-actividad">hace @((DateTime.Now - ultimaActividad.Value).Days) días</small>
                                         }
                                         else
                                         {

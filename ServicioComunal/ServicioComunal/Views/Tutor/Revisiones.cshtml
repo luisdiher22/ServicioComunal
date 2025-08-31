@@ -31,7 +31,7 @@
                         
                         var esPendiente = !tieneRetroalimentacion && !tieneArchivo;
                         var esListoParaRevision = !tieneRetroalimentacion && tieneArchivo;
-                        var esAprobado = tieneRetroalimentacion && !entrega.Retroalimentacion.StartsWith("CAMBIOS SOLICITADOS");
+                        var esAprobado = tieneRetroalimentacion && entrega.Retroalimentacion.StartsWith("APROBADO:");
                         var tieneCambios = tieneRetroalimentacion && entrega.Retroalimentacion.StartsWith("CAMBIOS SOLICITADOS");
                         
                         <div class="entregable-item @(esPendiente ? "pendiente" : (esListoParaRevision ? "listo-revision" : (esAprobado ? "aprobado" : "cambios")))" 
@@ -66,13 +66,13 @@
                             <div class="entregable-footer">
                                 <div class="fecha-limite">
                                     <i class="fas fa-calendar-alt"></i>
-                                    <span>Entregado: @entrega.FechaLimite.ToString("dd/MM/yyyy")</span>
+                                    <span>Entregado: @(entrega.FechaEntrega?.ToString("dd/MM/yyyy") ?? "No entregado")</span>
                                 </div>
-                                @if (!esPendiente)
+                                @if (tieneRetroalimentacion && entrega.FechaRetroalimentacion.HasValue)
                                 {
                                     <div class="fecha-revision">
                                         <i class="fas fa-check-circle"></i>
-                                        <span>Revisado: @entrega.FechaRetroalimentacion.ToString("dd/MM/yyyy")</span>
+                                        <span>Revisado: @entrega.FechaRetroalimentacion.Value.ToString("dd/MM/yyyy")</span>
                                     </div>
                                 }
                             </div>
@@ -493,7 +493,8 @@ let entregablesData = [
             identificacion: @entrega.Identificacion,
             nombre: "@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(entrega.Nombre))",
             archivoRuta: "@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(entrega.ArchivoRuta ?? ""))",
-            fechaLimite: "@entrega.FechaLimite.ToString("yyyy-MM-ddTHH:mm:ss")",
+            fechaEntrega: "@(entrega.FechaEntrega?.ToString("yyyy-MM-ddTHH:mm:ss") ?? "")",
+            fechaRetroalimentacion: "@(entrega.FechaRetroalimentacion?.ToString("yyyy-MM-ddTHH:mm:ss") ?? "")",
             retroalimentacion: "@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(entrega.Retroalimentacion ?? ""))",
             grupo: {
                 numero: @entrega.Grupo.Numero,
@@ -543,12 +544,19 @@ function mostrarDetalle(entregaId) {
         estudiante ? `${estudiante.nombre} ${estudiante.apellidos}` : 'No definido';
     document.getElementById('detalleGrupo').textContent = `Grupo ${entregable.grupo.numero}`;
     document.getElementById('detalleArchivo').textContent = entregable.archivoRuta || 'No disponible';
-    document.getElementById('detalleFecha').textContent = new Date(entregable.fechaLimite).toLocaleDateString('es-ES');
+    document.getElementById('detalleFecha').textContent = entregable.fechaEntrega ? 
+        new Date(entregable.fechaEntrega).toLocaleDateString('es-ES') : 'No entregado';
     
     // Configurar comentarios existentes
     const comentariosTextarea = document.getElementById('comentariosTextarea');
     if (entregable.retroalimentacion) {
-        comentariosTextarea.value = entregable.retroalimentacion.replace('CAMBIOS SOLICITADOS: ', '');
+        let comentariosSinPrefijo = entregable.retroalimentacion;
+        if (comentariosSinPrefijo.startsWith('CAMBIOS SOLICITADOS: ')) {
+            comentariosSinPrefijo = comentariosSinPrefijo.replace('CAMBIOS SOLICITADOS: ', '');
+        } else if (comentariosSinPrefijo.startsWith('APROBADO: ')) {
+            comentariosSinPrefijo = comentariosSinPrefijo.replace('APROBADO: ', '');
+        }
+        comentariosTextarea.value = comentariosSinPrefijo;
     }
     
     // Configurar botones
@@ -569,11 +577,17 @@ function mostrarDetalle(entregaId) {
     const tieneArchivo = entregable.archivoRuta;
     const esPendiente = !tieneRetroalimentacion && !tieneArchivo;
     const esListoParaRevision = !tieneRetroalimentacion && tieneArchivo;
+    const esAprobado = tieneRetroalimentacion && entregable.retroalimentacion.startsWith("APROBADO:");
+    const tieneCambiosSolicitados = tieneRetroalimentacion && entregable.retroalimentacion.startsWith("CAMBIOS SOLICITADOS:");
     
     document.getElementById('btnAprobar').disabled = !esListoParaRevision;
     document.getElementById('btnSolicitarCambios').disabled = !esListoParaRevision;
 
-    if (tieneRetroalimentacion) {
+    if (esAprobado) {
+        document.getElementById('detalleSubtitulo').textContent = 'Entregable aprobado';
+    } else if (tieneCambiosSolicitados) {
+        document.getElementById('detalleSubtitulo').textContent = 'Cambios solicitados';
+    } else if (tieneRetroalimentacion) {
         document.getElementById('detalleSubtitulo').textContent = 'Entregable ya revisado';
     } else {
         document.getElementById('detalleSubtitulo').textContent = `Grupo ${entregable.grupo.numero} - ${estudiante?.nombre} ${estudiante?.apellidos}`;
@@ -616,12 +630,12 @@ function aprobarEntrega(entregaId) {
             alert('Entregable aprobado correctamente');
             location.reload();
         } else {
-            alert('Error al aprobar el entregable');
+            alert('Error al aprobar el entregable: ' + (data.message || 'Error desconocido'));
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error al procesar la solicitud');
+        alert('Error al procesar la solicitud: ' + error.message);
     });
 }
 
@@ -649,12 +663,12 @@ function solicitarCambios(entregaId) {
             alert('Cambios solicitados correctamente');
             location.reload();
         } else {
-            alert('Error al solicitar cambios');
+            alert('Error al solicitar cambios: ' + (data.message || 'Error desconocido'));
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error al procesar la solicitud');
+        alert('Error al procesar la solicitud: ' + error.message);
     });
 }
 </script>

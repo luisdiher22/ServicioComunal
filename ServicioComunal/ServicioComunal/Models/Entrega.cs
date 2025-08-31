@@ -25,12 +25,15 @@ namespace ServicioComunal.Models
         [Column("FechaLimite")]
         public DateTime FechaLimite { get; set; }
 
+        [Column("FechaEntrega")]
+        public DateTime? FechaEntrega { get; set; }
+
         [Required]
         [Column("Retroalimentacion")]
         public string Retroalimentacion { get; set; } = string.Empty;
 
         [Column("FechaRetroalimentacion")]
-        public DateTime FechaRetroalimentacion { get; set; }
+        public DateTime? FechaRetroalimentacion { get; set; }
 
         [Column("GRUPO_Numero")]
         public int GrupoNumero { get; set; }

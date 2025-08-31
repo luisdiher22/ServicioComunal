@@ -1652,23 +1652,23 @@ input, textarea, select {
 }
 
 .badge-success {
-    background-color: #d4edda;
-    color: #155724;
+    background: linear-gradient(135deg, #6c8d47 0%, #5a7a3a 100%);
+    color: white;
 }
 
 .badge-warning {
-    background-color: #fff3cd;
-    color: #856404;
+    background: linear-gradient(135deg, #d4a574 0%, #b8936a 100%);
+    color: white;
 }
 
 .badge-danger {
-    background-color: #f8d7da;
-    color: #721c24;
+    background: linear-gradient(135deg, #c1666b 0%, #a85157 100%);
+    color: white;
 }
 
 .badge-secondary {
-    background-color: #e2e3e5;
-    color: #383d41;
+    background: linear-gradient(135deg, #8b7765 0%, #6f5d4f 100%);
+    color: white;
 }
 
 /* Badges específicos para roles */
@@ -1681,18 +1681,18 @@ input, textarea, select {
 }
 
 .badge-rol.tutor {
-    background-color: #e3f2fd;
-    color: #1565c0;
+    background: linear-gradient(135deg, #6c8d47 0%, #5a7a3a 100%);
+    color: white;
 }
 
 .badge-rol.coordinador {
-    background-color: #f3e5f5;
-    color: #7b1fa2;
+    background: linear-gradient(135deg, #8b7765 0%, #6f5d4f 100%);
+    color: white;
 }
 
 .badge-rol.supervisor {
-    background-color: #fff3e0;
-    color: #ef6c00;
+    background: linear-gradient(135deg, #d4a574 0%, #b8936a 100%);
+    color: white;
 }
 
 /* Elementos específicos de grupos */
@@ -2280,17 +2280,17 @@ input, textarea, select {
 }
 
 .badge-success {
-    background-color: #28a745;
+    background: linear-gradient(135deg, #6c8d47 0%, #5a7a3a 100%);
     color: white;
 }
 
 .badge-warning {
-    background-color: #ffc107;
-    color: #212529;
+    background: linear-gradient(135deg, #d4a574 0%, #b8936a 100%);
+    color: white;
 }
 
 .badge-danger {
-    background-color: #dc3545;
+    background: linear-gradient(135deg, #c1666b 0%, #a85157 100%);
     color: white;
 }
 
@@ -2820,6 +2820,252 @@ body.tutor-theme {
     box-shadow: 0 4px 20px rgba(139, 119, 101, 0.15);
 }
 
+/* ===== ESQUEMA DE COLORES ESTANDARIZADO ===== */
+/* Colores principales: Crema (#f5f1e8, #fffcf7), Verde (#6c8d47, #5a7a3a), Café (#8b7765, #6f5d4f) */
+
+/* CARDS DE ESTADÍSTICAS ESTANDARIZADAS */
+.card-icon.students,
+.stat-icon.students {
+    background: linear-gradient(135deg, #6c8d47 0%, #5a7a3a 100%);
+}
+
+.card-icon.groups,
+.stat-icon.groups {
+    background: linear-gradient(135deg, #8b7765 0%, #6f5d4f 100%);
+}
+
+.card-icon.tutors,
+.stat-icon.tutors {
+    background: linear-gradient(135deg, #6c8d47 0%, #5a7a3a 100%);
+}
+
+.card-icon.progress,
+.stat-icon.progress {
+    background: linear-gradient(135deg, #8b7765 0%, #6f5d4f 100%);
+}
+
+.card-icon.warning,
+.stat-icon.warning {
+    background: linear-gradient(135deg, #d4a574 0%, #b8936a 100%);
+}
+
+.card-icon.success,
+.stat-icon.success {
+    background: linear-gradient(135deg, #6c8d47 0%, #5a7a3a 100%);
+}
+
+.card-icon.config {
+    background: linear-gradient(135deg, #6c8d47 0%, #5a7a3a 100%);
+}
+
+.card-icon.forms {
+    background: linear-gradient(135deg, #8b7765 0%, #6f5d4f 100%);
+}
+
+.card-icon.deliveries {
+    background: linear-gradient(135deg, #d4a574 0%, #b8936a 100%);
+}
+
+.card-icon.actions {
+    background: linear-gradient(135deg, #6c8d47 0%, #5a7a3a 100%);
+}
+
+/* BOOTSTRAP CARDS OVERRIDE */
+.bg-primary,
+.card.bg-primary {
+    background: linear-gradient(135deg, #6c8d47 0%, #5a7a3a 100%) !important;
+    color: white !important;
+}
+
+.bg-success,
+.card.bg-success {
+    background: linear-gradient(135deg, #6c8d47 0%, #5a7a3a 100%) !important;
+    color: white !important;
+}
+
+.bg-info,
+.card.bg-info {
+    background: linear-gradient(135deg, #8b7765 0%, #6f5d4f 100%) !important;
+    color: white !important;
+}
+
+.bg-warning,
+.card.bg-warning {
+    background: linear-gradient(135deg, #d4a574 0%, #b8936a 100%) !important;
+    color: white !important;
+}
+
+.bg-danger,
+.card.bg-danger {
+    background: linear-gradient(135deg, #c1666b 0%, #a85157 100%) !important;
+    color: white !important;
+}
+
+.bg-secondary,
+.card.bg-secondary {
+    background: linear-gradient(135deg, #8b7765 0%, #6f5d4f 100%) !important;
+    color: white !important;
+}
+
+/* BOTONES ESTANDARIZADOS */
+.btn-primary {
+    background: linear-gradient(135deg, #6c8d47 0%, #5a7a3a 100%);
+    border-color: #6c8d47;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    background: linear-gradient(135deg, #5a7a3a 0%, #4a6832 100%);
+    border-color: #5a7a3a;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(108, 141, 71, 0.3);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #6c8d47 0%, #5a7a3a 100%);
+    border-color: #6c8d47;
+}
+
+.btn-success:hover,
+.btn-success:focus,
+.btn-success:active {
+    background: linear-gradient(135deg, #5a7a3a 0%, #4a6832 100%);
+    border-color: #5a7a3a;
+}
+
+.btn-info {
+    background: linear-gradient(135deg, #8b7765 0%, #6f5d4f 100%);
+    border-color: #8b7765;
+}
+
+.btn-info:hover,
+.btn-info:focus,
+.btn-info:active {
+    background: linear-gradient(135deg, #6f5d4f 0%, #5a4d41 100%);
+    border-color: #6f5d4f;
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #d4a574 0%, #b8936a 100%);
+    border-color: #d4a574;
+    color: white;
+}
+
+.btn-warning:hover,
+.btn-warning:focus,
+.btn-warning:active {
+    background: linear-gradient(135deg, #b8936a 0%, #9e7f5a 100%);
+    border-color: #b8936a;
+    color: white;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #c1666b 0%, #a85157 100%);
+    border-color: #c1666b;
+}
+
+.btn-danger:hover,
+.btn-danger:focus,
+.btn-danger:active {
+    background: linear-gradient(135deg, #a85157 0%, #8e3d44 100%);
+    border-color: #a85157;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #8b7765 0%, #6f5d4f 100%);
+    border-color: #8b7765;
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus,
+.btn-secondary:active {
+    background: linear-gradient(135deg, #6f5d4f 0%, #5a4d41 100%);
+    border-color: #6f5d4f;
+}
+
+/* OUTLINE BUTTONS */
+.btn-outline-primary {
+    color: #6c8d47;
+    border-color: #6c8d47;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+    background-color: #6c8d47;
+    border-color: #6c8d47;
+    color: white;
+}
+
+.btn-outline-success {
+    color: #6c8d47;
+    border-color: #6c8d47;
+}
+
+.btn-outline-success:hover,
+.btn-outline-success:focus,
+.btn-outline-success:active {
+    background-color: #6c8d47;
+    border-color: #6c8d47;
+    color: white;
+}
+
+.btn-outline-info {
+    color: #8b7765;
+    border-color: #8b7765;
+}
+
+.btn-outline-info:hover,
+.btn-outline-info:focus,
+.btn-outline-info:active {
+    background-color: #8b7765;
+    border-color: #8b7765;
+    color: white;
+}
+
+.btn-outline-warning {
+    color: #d4a574;
+    border-color: #d4a574;
+}
+
+.btn-outline-warning:hover,
+.btn-outline-warning:focus,
+.btn-outline-warning:active {
+    background-color: #d4a574;
+    border-color: #d4a574;
+    color: white;
+}
+
+.btn-outline-danger {
+    color: #c1666b;
+    border-color: #c1666b;
+}
+
+.btn-outline-danger:hover,
+.btn-outline-danger:focus,
+.btn-outline-danger:active {
+    background-color: #c1666b;
+    border-color: #c1666b;
+    color: white;
+}
+
+.btn-outline-secondary {
+    color: #8b7765;
+    border-color: #8b7765;
+}
+
+.btn-outline-secondary:hover,
+.btn-outline-secondary:focus,
+.btn-outline-secondary:active {
+    background-color: #8b7765;
+    border-color: #8b7765;
+    color: white;
+}
+
 /* Progress bars para tutor */
 .tutor-theme .progress-fill {
     background: linear-gradient(90deg, #c4a484 0%, #a8956f 100%);
@@ -2890,22 +3136,22 @@ body.tutor-theme {
 }
 
 .badge-success {
-    background-color: #28a745;
+    background: linear-gradient(135deg, #6c8d47 0%, #5a7a3a 100%);
     color: white;
 }
 
 .badge-warning {
-    background-color: #ffc107;
-    color: #212529;
+    background: linear-gradient(135deg, #d4a574 0%, #b8936a 100%);
+    color: white;
 }
 
 .badge-info {
-    background-color: #17a2b8;
+    background: linear-gradient(135deg, #8b7765 0%, #6f5d4f 100%);
     color: white;
 }
 
 .badge-secondary {
-    background-color: #6c757d;
+    background: linear-gradient(135deg, #8b7765 0%, #6f5d4f 100%);
     color: white;
 }
 
@@ -2920,22 +3166,22 @@ body.tutor-theme {
 
 /* Estados de entregas */
 .estado-completada {
-    color: #28a745;
+    color: #6c8d47;
     font-weight: 600;
 }
 
 .estado-entregada {
-    color: #17a2b8;
+    color: #8b7765;
     font-weight: 600;
 }
 
 .estado-pendiente {
-    color: #6c757d;
+    color: #d4a574;
     font-weight: 600;
 }
 
 .estado-vencida {
-    color: #dc3545;
+    color: #c1666b;
     font-weight: 600;
 }
 
@@ -3285,4 +3531,288 @@ i.fas::before, i.far::before, i.fab::before, i.fal::before, i.fad::before, i.fa:
     -webkit-font-smoothing: antialiased !important;
     -moz-osx-font-smoothing: grayscale !important;
     display: inline-block !important;
+}
+
+/* ===== OVERRIDES FINALES PARA GARANTIZAR CONSISTENCIA ===== */
+/* Estos estilos deben aplicarse sobre cualquier otro estilo existente */
+
+/* BOTONES - OVERRIDE FINAL */
+.btn-primary,
+.btn.btn-primary {
+    background: linear-gradient(135deg, #6c8d47 0%, #5a7a3a 100%) !important;
+    border-color: #6c8d47 !important;
+    color: white !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active,
+.btn.btn-primary:hover,
+.btn.btn-primary:focus,
+.btn.btn-primary:active {
+    background: linear-gradient(135deg, #5a7a3a 0%, #4a6832 100%) !important;
+    border-color: #5a7a3a !important;
+    color: white !important;
+}
+
+.btn-success,
+.btn.btn-success {
+    background: linear-gradient(135deg, #6c8d47 0%, #5a7a3a 100%) !important;
+    border-color: #6c8d47 !important;
+    color: white !important;
+}
+
+.btn-success:hover,
+.btn-success:focus,
+.btn-success:active,
+.btn.btn-success:hover,
+.btn.btn-success:focus,
+.btn.btn-success:active {
+    background: linear-gradient(135deg, #5a7a3a 0%, #4a6832 100%) !important;
+    border-color: #5a7a3a !important;
+    color: white !important;
+}
+
+.btn-info,
+.btn.btn-info {
+    background: linear-gradient(135deg, #8b7765 0%, #6f5d4f 100%) !important;
+    border-color: #8b7765 !important;
+    color: white !important;
+}
+
+.btn-info:hover,
+.btn-info:focus,
+.btn-info:active,
+.btn.btn-info:hover,
+.btn.btn-info:focus,
+.btn.btn-info:active {
+    background: linear-gradient(135deg, #6f5d4f 0%, #5a4d41 100%) !important;
+    border-color: #6f5d4f !important;
+    color: white !important;
+}
+
+.btn-warning,
+.btn.btn-warning {
+    background: linear-gradient(135deg, #d4a574 0%, #b8936a 100%) !important;
+    border-color: #d4a574 !important;
+    color: white !important;
+}
+
+.btn-warning:hover,
+.btn-warning:focus,
+.btn-warning:active,
+.btn.btn-warning:hover,
+.btn.btn-warning:focus,
+.btn.btn-warning:active {
+    background: linear-gradient(135deg, #b8936a 0%, #9e7f5a 100%) !important;
+    border-color: #b8936a !important;
+    color: white !important;
+}
+
+.btn-danger,
+.btn.btn-danger {
+    background: linear-gradient(135deg, #c1666b 0%, #a85157 100%) !important;
+    border-color: #c1666b !important;
+    color: white !important;
+}
+
+.btn-danger:hover,
+.btn-danger:focus,
+.btn-danger:active,
+.btn.btn-danger:hover,
+.btn.btn-danger:focus,
+.btn.btn-danger:active {
+    background: linear-gradient(135deg, #a85157 0%, #8e3d44 100%) !important;
+    border-color: #a85157 !important;
+    color: white !important;
+}
+
+/* CARDS - OVERRIDE FINAL */
+.bg-primary,
+.card.bg-primary,
+.badge.bg-primary {
+    background: linear-gradient(135deg, #6c8d47 0%, #5a7a3a 100%) !important;
+    color: white !important;
+}
+
+.bg-success,
+.card.bg-success,
+.badge.bg-success {
+    background: linear-gradient(135deg, #6c8d47 0%, #5a7a3a 100%) !important;
+    color: white !important;
+}
+
+.bg-info,
+.card.bg-info,
+.badge.bg-info {
+    background: linear-gradient(135deg, #8b7765 0%, #6f5d4f 100%) !important;
+    color: white !important;
+}
+
+.bg-warning,
+.card.bg-warning,
+.badge.bg-warning {
+    background: linear-gradient(135deg, #d4a574 0%, #b8936a 100%) !important;
+    color: white !important;
+}
+
+.bg-danger,
+.card.bg-danger,
+.badge.bg-danger {
+    background: linear-gradient(135deg, #c1666b 0%, #a85157 100%) !important;
+    color: white !important;
+}
+
+.bg-secondary,
+.card.bg-secondary,
+.badge.bg-secondary {
+    background: linear-gradient(135deg, #8b7765 0%, #6f5d4f 100%) !important;
+    color: white !important;
+}
+
+/* TEXT COLORS - OVERRIDE FINAL */
+.text-primary {
+    color: #6c8d47 !important;
+}
+
+.text-success {
+    color: #6c8d47 !important;
+}
+
+.text-info {
+    color: #8b7765 !important;
+}
+
+.text-warning {
+    color: #d4a574 !important;
+}
+
+.text-danger {
+    color: #c1666b !important;
+}
+
+.text-secondary {
+    color: #8b7765 !important;
+}
+
+/* NAVIGATION OVERRIDE */
+.nav-link.active {
+    background: linear-gradient(135deg, #6c8d47 0%, #5a7a3a 100%) !important;
+    color: white !important;
+}
+
+.nav-link:hover {
+    background-color: #f5f1e8 !important;
+    color: #6c8d47 !important;
+}
+
+/* PROGRESS BARS OVERRIDE */
+.progress-bar,
+.progress-fill {
+    background: linear-gradient(90deg, #6c8d47 0%, #5a7a3a 100%) !important;
+}
+
+/* FORM CONTROLS OVERRIDE */
+.form-control:focus,
+.form-select:focus {
+    border-color: #6c8d47 !important;
+    box-shadow: 0 0 0 0.2rem rgba(108, 141, 71, 0.15) !important;
+}
+
+/* TABLE HOVER OVERRIDE */
+.table-hover tbody tr:hover {
+    background-color: rgba(108, 141, 71, 0.05) !important;
+}
+
+/* SPECIFIC STUDENT VIEW STYLES */
+.sidebar {
+    background-color: #ffffff !important;
+    border-right: 1px solid #e0d5c7 !important;
+    box-shadow: 2px 0 10px rgba(139, 119, 101, 0.08) !important;
+}
+
+.main-content {
+    background: linear-gradient(135deg, #f5f1e8 0%, #ede4d3 100%) !important;
+}
+
+/* ENSURE CONSISTENT FONT USAGE */
+body, p, div, span, a, button, input, textarea, select, label, 
+h1, h2, h3, h4, h5, h6, .card, .modal, .table, .form-control,
+.btn, .nav-link, .navbar-brand, .dropdown-item {
+    font-family: 'Fira Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+}
+
+/* OVERRIDE INLINE STYLES */
+.nav-link[style*="background-color"],
+.card[style*="background-color"],
+.btn[style*="background-color"] {
+    background-color: inherit !important;
+    background: inherit !important;
+}
+
+/* SPECIFIC OVERRIDES FOR STUDENT DASHBOARD */
+.estudiante-theme .bg-primary,
+.estudiante-theme .card.bg-primary {
+    background: linear-gradient(135deg, #6c8d47 0%, #5a7a3a 100%) !important;
+}
+
+.estudiante-theme .bg-success,
+.estudiante-theme .card.bg-success {
+    background: linear-gradient(135deg, #6c8d47 0%, #5a7a3a 100%) !important;
+}
+
+.estudiante-theme .bg-info,
+.estudiante-theme .card.bg-info {
+    background: linear-gradient(135deg, #8b7765 0%, #6f5d4f 100%) !important;
+}
+
+.estudiante-theme .bg-warning,
+.estudiante-theme .card.bg-warning {
+    background: linear-gradient(135deg, #d4a574 0%, #b8936a 100%) !important;
+}
+
+.estudiante-theme .bg-danger,
+.estudiante-theme .card.bg-danger {
+    background: linear-gradient(135deg, #c1666b 0%, #a85157 100%) !important;
+}
+
+/* FORCE SIDEBAR ACTIVE STATE */
+.nav-link.active {
+    background: linear-gradient(135deg, #6c8d47 0%, #5a7a3a 100%) !important;
+    color: white !important;
+    border-left-color: #6c8d47 !important;
+}
+
+/* ENSURE PROPER HOVER STATES */
+.card:hover {
+    box-shadow: 0 4px 20px rgba(139, 119, 101, 0.12) !important;
+}
+
+.btn:hover {
+    transform: translateY(-1px) !important;
+}
+
+/* MISCELLANEOUS OVERRIDES */
+.alert-success {
+    background: linear-gradient(135deg, rgba(108, 141, 71, 0.1), rgba(90, 122, 58, 0.08)) !important;
+    border: 1px solid rgba(108, 141, 71, 0.3) !important;
+    color: #4a6832 !important;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, rgba(193, 102, 107, 0.1), rgba(168, 81, 87, 0.08)) !important;
+    border: 1px solid rgba(193, 102, 107, 0.3) !important;
+    color: #8e3d44 !important;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, rgba(212, 165, 116, 0.1), rgba(184, 147, 106, 0.08)) !important;
+    border: 1px solid rgba(212, 165, 116, 0.3) !important;
+    color: #9e7f5a !important;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, rgba(139, 119, 101, 0.1), rgba(111, 93, 79, 0.08)) !important;
+    border: 1px solid rgba(139, 119, 101, 0.3) !important;
+    color: #5a4d41 !important;
 }

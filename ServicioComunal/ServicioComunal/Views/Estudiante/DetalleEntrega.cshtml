@@ -5,10 +5,10 @@
     var grupo = ViewBag.Grupo as ServicioComunal.Models.Grupo;
 }
 
-<div class="container-fluid">
+<div class="container-fluid estudiante-theme">
     <div class="row">
         <!-- Sidebar -->
-        <div class="col-md-3 sidebar bg-light p-3">
+        <div class="col-md-3 sidebar p-3">
             <div class="text-center mb-4">
                 <img src="~/images/logo-liceo.svg" alt="Logo" style="width: 60px; height: 60px;">
                 <h5 class="mt-2">@estudiante?.Nombre @estudiante?.Apellidos</h5>
@@ -182,7 +182,7 @@
                                     {
                                         <i class="fas fa-check-circle fa-3x text-success mb-2"></i>
                                         <h6 class="text-success">Entrega Realizada</h6>
-                                        <p class="text-muted">Fecha: @Model.FechaRetroalimentacion.ToString("dd/MM/yyyy HH:mm")</p>
+                                        <p class="text-muted">Fecha: @(Model.FechaRetroalimentacion?.ToString("dd/MM/yyyy HH:mm") ?? "No disponible")</p>
                                     }
                                     
                                     <a href="@Url.Action("DescargarArchivo", "Estudiante", new { entregaId = Model.Identificacion, tipo = "entrega" })" 
@@ -270,7 +270,7 @@
                                     <p>@Model.Retroalimentacion</p>
                                 }
                                 <small class="text-muted">
-                                    <i class="fas fa-clock"></i> Fecha de revisión: @Model.FechaRetroalimentacion.ToString("dd/MM/yyyy HH:mm")
+                                    <i class="fas fa-clock"></i> Fecha de revisión: @(Model.FechaRetroalimentacion?.ToString("dd/MM/yyyy HH:mm") ?? "No disponible")
                                 </small>
                             </div>
                         </div>

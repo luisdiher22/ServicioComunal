@@ -94,7 +94,10 @@
                 {
                     var grupo = grupoProfesor.Grupo;
                     var totalEstudiantes = grupo.GruposEstudiantes.Count;
-                    var ultimaActividad = grupo.Entregas.Any() ? grupo.Entregas.Max(e => e.FechaRetroalimentacion).ToString("dd/MM/yyyy") : "Sin actividad";
+                    var entregasConFecha = grupo.Entregas.Where(e => e.FechaRetroalimentacion.HasValue).ToList();
+                    var ultimaActividad = entregasConFecha.Any() ? 
+                        entregasConFecha.Max(e => e.FechaRetroalimentacion!.Value).ToString("dd/MM/yyyy") : 
+                        "Sin actividad";
                     var entregasPendientes = grupo.Entregas.Count(e => string.IsNullOrEmpty(e.Retroalimentacion));
                     // Cálculo simple de progreso
                     var progreso = grupo.Entregas.Any() ? (grupo.Entregas.Count(e => !string.IsNullOrEmpty(e.Retroalimentacion)) * 100 / grupo.Entregas.Count) : 0;

@@ -907,12 +907,13 @@ namespace ServicioComunal.Controllers
 
                 // Actualizar la ruta del archivo en la entrega
                 entrega.ArchivoRuta = $"/uploads/entregas/{nombreArchivo}";
-                entrega.FechaRetroalimentacion = DateTime.Now;
+                entrega.FechaEntrega = DateTime.Now;
                 
                 // Si había cambios solicitados, limpiar la retroalimentación para permitir nueva revisión
                 if (!string.IsNullOrEmpty(entrega.Retroalimentacion) && entrega.Retroalimentacion.StartsWith("CAMBIOS SOLICITADOS:"))
                 {
                     entrega.Retroalimentacion = string.Empty;
+                    entrega.FechaRetroalimentacion = null;
                 }
 
                 await _context.SaveChangesAsync();

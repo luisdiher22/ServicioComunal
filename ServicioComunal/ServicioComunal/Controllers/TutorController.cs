@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ServicioComunal.Data;
 using ServicioComunal.Models;
+using System.Text.Json.Serialization;
 
 namespace ServicioComunal.Controllers
 {
@@ -163,39 +164,70 @@ namespace ServicioComunal.Controllers
 
         // API para aprobar entrega
         [HttpPost]
-        public async Task<IActionResult> AprobarEntrega(int entregaId, string comentarios)
+        public async Task<IActionResult> AprobarEntrega([FromBody] AprobarEntregaRequest request)
         {
-            var entrega = await _context.Entregas.FindAsync(entregaId);
-            if (entrega != null)
+            try
             {
-                entrega.Retroalimentacion = comentarios ?? "Aprobado";
-                entrega.FechaRetroalimentacion = DateTime.Now;
-                await _context.SaveChangesAsync();
+                Console.WriteLine($"AprobarEntrega llamado con EntregaId: {request.EntregaId}");
+                
+                var entrega = await _context.Entregas.FindAsync(request.EntregaId);
+                if (entrega != null)
+                {
+                    Console.WriteLine($"Entrega encontrada: {entrega.Identificacion} - {entrega.Nombre}");
+                    
+                    entrega.Retroalimentacion = $"APROBADO: {request.Comentarios ?? "Sin comentarios adicionales"}";
+                    entrega.FechaRetroalimentacion = DateTime.Now;
+                    await _context.SaveChangesAsync();
+                    
+                    return Json(new { success = true, message = "Entrega aprobada correctamente" });
+                }
+                
+                Console.WriteLine($"Entrega no encontrada para ID: {request.EntregaId}");
+                
+                // Verificar si existen entregas y cuáles son sus IDs
+                var todasLasEntregas = await _context.Entregas.Select(e => e.Identificacion).ToListAsync();
+                Console.WriteLine($"IDs de entregas existentes: {string.Join(", ", todasLasEntregas)}");
+                
+                return Json(new { success = false, message = "Entrega no encontrada" });
             }
-            
-            return Json(new { success = true });
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en AprobarEntrega: {ex.Message}");
+                return Json(new { success = false, message = "Error al aprobar la entrega: " + ex.Message });
+            }
         }
 
         // API para solicitar cambios
         [HttpPost]
-        public async Task<IActionResult> SolicitarCambios(int entregaId, string comentarios)
+        public async Task<IActionResult> SolicitarCambios([FromBody] SolicitarCambiosRequest request)
         {
             try
             {
-                var entrega = await _context.Entregas.FindAsync(entregaId);
+                Console.WriteLine($"SolicitarCambios llamado con EntregaId: {request.EntregaId}");
+                
+                var entrega = await _context.Entregas.FindAsync(request.EntregaId);
                 if (entrega != null)
                 {
-                    entrega.Retroalimentacion = $"CAMBIOS SOLICITADOS: {comentarios}";
+                    Console.WriteLine($"Entrega encontrada: {entrega.Identificacion} - {entrega.Nombre}");
+                    
+                    entrega.Retroalimentacion = $"CAMBIOS SOLICITADOS: {request.Comentarios}";
                     entrega.FechaRetroalimentacion = DateTime.Now;
                     await _context.SaveChangesAsync();
                     
                     return Json(new { success = true, message = "Cambios solicitados correctamente" });
                 }
                 
+                Console.WriteLine($"Entrega no encontrada para ID: {request.EntregaId}");
+                
+                // Verificar si existen entregas y cuáles son sus IDs
+                var todasLasEntregas = await _context.Entregas.Select(e => e.Identificacion).ToListAsync();
+                Console.WriteLine($"IDs de entregas existentes: {string.Join(", ", todasLasEntregas)}");
+                
                 return Json(new { success = false, message = "Entrega no encontrada" });
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error en SolicitarCambios: {ex.Message}");
                 return Json(new { success = false, message = "Error al solicitar cambios: " + ex.Message });
             }
         }
@@ -275,5 +307,24 @@ namespace ServicioComunal.Controllers
             int diff = (7 + (dt.DayOfWeek - startOfWeek)) % 7;
             return dt.AddDays(-1 * diff).Date;
         }
+    }
+
+    // Request models para las acciones del tutor
+    public class SolicitarCambiosRequest
+    {
+        [JsonPropertyName("entregaId")]
+        public int EntregaId { get; set; }
+        
+        [JsonPropertyName("comentarios")]
+        public string Comentarios { get; set; } = string.Empty;
+    }
+
+    public class AprobarEntregaRequest
+    {
+        [JsonPropertyName("entregaId")]
+        public int EntregaId { get; set; }
+        
+        [JsonPropertyName("comentarios")]
+        public string Comentarios { get; set; } = string.Empty;
     }
 }
