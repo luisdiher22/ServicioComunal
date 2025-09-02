@@ -486,3 +486,114 @@ function exportarEstudiantes() {
         }
     }, 3000);
 }
+
+// Funciones para importar estudiantes desde Excel
+function importarEstudiantes() {
+    const archivo = document.getElementById('archivoExcelEstudiantes').files[0];
+    
+    if (!archivo) {
+        mostrarError('Por favor selecciona un archivo Excel');
+        return;
+    }
+
+    // Validar tipo de archivo
+    const tiposPermitidos = [
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+        'application/vnd.ms-excel' // .xls
+    ];
+
+    if (!tiposPermitidos.includes(archivo.type)) {
+        mostrarError('El archivo debe ser un Excel (.xlsx o .xls)');
+        return;
+    }
+
+    // Mostrar progreso
+    const btn = document.getElementById('btnImportarEstudiantes');
+    const textoOriginal = btn.textContent;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importando...';
+
+    const formData = new FormData();
+    formData.append('archivo', archivo);
+
+    fetch('/Home/ImportarEstudiantes', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Error en la respuesta del servidor');
+        }
+        // Como el controlador hace redirect, manejamos la respuesta
+        return response.text();
+    })
+    .then(data => {
+        // El servidor redirige, así que simplemente recargamos la página
+        mostrarExito('Importación completada. Recargando página...');
+        
+        // Cerrar modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('modalImportarEstudiantes'));
+        modal.hide();
+        
+        // Recargar página después de 2 segundos
+        setTimeout(() => {
+            location.reload();
+        }, 2000);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarError('Error al comunicarse con el servidor');
+    })
+    .finally(() => {
+        // Restaurar botón
+        btn.disabled = false;
+        btn.textContent = textoOriginal;
+        
+        // Limpiar input
+        document.getElementById('archivoExcelEstudiantes').value = '';
+        btn.disabled = true; // Volver a deshabilitar hasta que se seleccione otro archivo
+    });
+}
+
+function descargarPlantillaEstudiantes() {
+    // Mostrar notificación de procesamiento
+    mostrarNotificacion('Generando plantilla...', 'info');
+    
+    // Crear un enlace temporal para la descarga
+    const link = document.createElement('a');
+    link.href = '/Home/DescargarPlantillaEstudiantes';
+    link.download = 'Plantilla_Estudiantes.xlsx';
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    
+    // Simular click en el enlace
+    link.click();
+    
+    // Limpiar el enlace temporal
+    document.body.removeChild(link);
+    
+    // Mostrar notificación de éxito
+    setTimeout(() => {
+        mostrarExito('Plantilla descargada exitosamente');
+    }, 500);
+}
+
+// Inicializar eventos para importación
+document.addEventListener('DOMContentLoaded', function() {
+    // Event listener para el input de archivo de estudiantes
+    const inputArchivo = document.getElementById('archivoExcelEstudiantes');
+    if (inputArchivo) {
+        inputArchivo.addEventListener('change', function(e) {
+            const archivo = e.target.files[0];
+            const btn = document.getElementById('btnImportarEstudiantes');
+            
+            if (archivo) {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-upload"></i> Importar ${archivo.name}`;
+            } else {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-upload"></i> Importar Excel';
+            }
+        });
+    }
+});

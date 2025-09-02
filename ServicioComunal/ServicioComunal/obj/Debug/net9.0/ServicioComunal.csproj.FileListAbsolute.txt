@@ -148,7 +148,6 @@ C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\scop
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\ful9djivkc-s5pko4ze0c.gz
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\9ys0p4f7fe-9f7ffutko8.gz
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\0jtmnh8ld0-ovnjpd4s46.gz
-C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\2objixxzfm-p5cjcmjjxn.gz
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\9n3u2t3lg9-5sa2gp9bq0.gz
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\kt1r5zl0oc-jn4kor0tmr.gz
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\staticwebassets.build.json
@@ -166,3 +165,4 @@ C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\comp
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\ce1x5duqkr-d07k8lev69.gz
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\b4kx2f4z8i-ghmvn51eso.gz
 C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\x1drzuj8fm-0czmtjj63d.gz
+C:\Users\luisd\mi_proyecto\ServicioComunal\ServicioComunal\obj\Debug\net9.0\compressed\2objixxzfm-oge958olgz.gz

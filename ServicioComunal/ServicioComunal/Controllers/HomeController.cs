@@ -563,6 +563,370 @@ namespace ServicioComunal.Controllers
         }
 
         [HttpPost]
+        public async Task<IActionResult> ImportarEstudiantes(IFormFile archivo)
+        {
+            if (archivo == null || archivo.Length == 0)
+            {
+                TempData["Error"] = "Por favor seleccione un archivo válido.";
+                return RedirectToAction("Estudiantes");
+            }
+
+            var extensionesPermitidas = new[] { ".xlsx", ".xls" };
+            var extension = Path.GetExtension(archivo.FileName).ToLowerInvariant();
+            
+            if (!extensionesPermitidas.Contains(extension))
+            {
+                TempData["Error"] = "Solo se permiten archivos Excel (.xlsx, .xls).";
+                return RedirectToAction("Estudiantes");
+            }
+
+            try
+            {
+                var estudiantesImportados = 0;
+                var estudiantesExistentes = 0;
+                var usuariosCreados = 0;
+                var errores = new List<string>();
+
+                using (var transaction = await _context.Database.BeginTransactionAsync())
+                {
+                    Console.WriteLine("DEBUG: Transacción iniciada");
+                    
+                    try
+                    {
+                        using (var stream = archivo.OpenReadStream())
+                        {
+                            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+                            using (var package = new ExcelPackage(stream))
+                    {
+                        var worksheet = package.Workbook.Worksheets[0];
+                        var rowCount = worksheet.Dimension?.Rows ?? 0;
+
+                        if (rowCount < 2)
+                        {
+                            TempData["Error"] = "El archivo debe contener al menos una fila de datos además del encabezado.";
+                            return RedirectToAction("Estudiantes");
+                        }
+
+                        for (int row = 2; row <= rowCount; row++)
+                        {
+                            try
+                            {
+                                var apellidos = worksheet.Cells[row, 1].Value?.ToString()?.Trim();
+                                var nombre = worksheet.Cells[row, 2].Value?.ToString()?.Trim();
+                                var clase = worksheet.Cells[row, 3].Value?.ToString()?.Trim();
+                                var cedulaTexto = worksheet.Cells[row, 4].Value?.ToString()?.Trim();
+
+                                if (string.IsNullOrWhiteSpace(apellidos) || 
+                                    string.IsNullOrWhiteSpace(nombre) || 
+                                    string.IsNullOrWhiteSpace(clase) ||
+                                    string.IsNullOrWhiteSpace(cedulaTexto))
+                                {
+                                    errores.Add($"Fila {row}: Datos incompletos");
+                                    continue;
+                                }
+
+                                if (!int.TryParse(cedulaTexto, out int cedula))
+                                {
+                                    errores.Add($"Fila {row}: Número de identificación inválido ({cedulaTexto})");
+                                    continue;
+                                }
+
+                                // Verificar si ya existe el estudiante
+                                var existeEstudiante = await _context.Estudiantes
+                                    .AnyAsync(e => e.Identificacion == cedula);
+
+                                if (existeEstudiante)
+                                {
+                                    estudiantesExistentes++;
+                                    continue;
+                                }
+
+                                // Crear estudiante
+                                var estudiante = new ServicioComunal.Models.Estudiante
+                                {
+                                    Identificacion = cedula,
+                                    Nombre = nombre,
+                                    Apellidos = apellidos,
+                                    Clase = clase
+                                };
+
+                                _context.Estudiantes.Add(estudiante);
+                                estudiantesImportados++;
+
+                                // Verificar si ya existe usuario para este estudiante
+                                var existeUsuario = await _context.Usuarios
+                                    .AnyAsync(u => u.Identificacion == cedula);
+
+                                Console.WriteLine($"DEBUG: Estudiante {nombre} {apellidos} (ID: {cedula}) - Usuario existe: {existeUsuario}");
+
+                                if (!existeUsuario)
+                                {
+                                    try
+                                    {
+                                        // Crear usuario automáticamente
+                                        string nombreUsuario = GenerarNombreUsuario(nombre, apellidos);
+                                        Console.WriteLine($"DEBUG: Generando usuario para {nombre} {apellidos} - Username: {nombreUsuario}");
+                                        
+                                        var usuario = new ServicioComunal.Models.Usuario
+                                        {
+                                            Identificacion = cedula,
+                                            NombreUsuario = nombreUsuario,
+                                            Contraseña = PasswordHelper.HashPassword(cedula.ToString()),
+                                            Rol = "Estudiante",
+                                            RequiereCambioContraseña = true,
+                                            FechaCreacion = DateTime.Now,
+                                            Activo = true
+                                        };
+
+                                        _context.Usuarios.Add(usuario);
+                                        usuariosCreados++;
+                                        Console.WriteLine($"DEBUG: Usuario agregado al contexto. Total usuarios a crear: {usuariosCreados}");
+                                    }
+                                    catch (Exception userEx)
+                                    {
+                                        Console.WriteLine($"ERROR creando usuario para {nombre} {apellidos}: {userEx.Message}");
+                                        errores.Add($"Error creando usuario para {nombre} {apellidos}: {userEx.Message}");
+                                    }
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"DEBUG: Usuario ya existe para {nombre} {apellidos} (ID: {cedula})");
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                errores.Add($"Fila {row}: {ex.Message}");
+                            }
+                        }
+
+                        await _context.SaveChangesAsync();
+                    }
+                }
+
+                Console.WriteLine("DEBUG: Commit de transacción");
+                await transaction.CommitAsync();
+                
+                var mensaje = new StringBuilder();
+                mensaje.AppendLine($"Importación completada:");
+                mensaje.AppendLine($"- Estudiantes importados: {estudiantesImportados}");
+                mensaje.AppendLine($"- Usuarios creados: {usuariosCreados}");
+                if (estudiantesExistentes > 0)
+                    mensaje.AppendLine($"- Estudiantes ya existentes: {estudiantesExistentes}");
+                
+                // DEBUG: Verificar usuarios después del guardado
+                var totalUsuarios = await _context.Usuarios.CountAsync();
+                var usuariosEstudiantes = await _context.Usuarios.CountAsync(u => u.Rol == "Estudiante");
+                mensaje.AppendLine($"DEBUG - Total usuarios en DB: {totalUsuarios}");
+                mensaje.AppendLine($"DEBUG - Usuarios estudiantes en DB: {usuariosEstudiantes}");
+                
+                if (errores.Any())
+                {
+                    mensaje.AppendLine($"- Errores: {errores.Count}");
+                    mensaje.AppendLine("Detalles de errores:");
+                    foreach (var error in errores.Take(5)) // Mostrar máximo 5 errores
+                    {
+                        mensaje.AppendLine($"  • {error}");
+                    }
+                    if (errores.Count > 5)
+                        mensaje.AppendLine($"  • ... y {errores.Count - 5} errores más");
+                }
+
+                TempData["Success"] = mensaje.ToString();
+                return RedirectToAction("Estudiantes");
+                    }
+                    catch (Exception transactionEx)
+                    {
+                        Console.WriteLine($"ERROR en transacción: {transactionEx.Message}");
+                        await transaction.RollbackAsync();
+                        throw;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERROR general: {ex.Message}");
+                TempData["Error"] = $"Error al importar archivo: {ex.Message}";
+                return RedirectToAction("Estudiantes");
+            }
+        }
+
+        [HttpGet]
+        public IActionResult DescargarPlantillaEstudiantes()
+        {
+            try
+            {
+                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+                
+                using (var package = new ExcelPackage())
+                {
+                    var worksheet = package.Workbook.Worksheets.Add("Estudiantes");
+
+                    // Encabezados
+                    worksheet.Cells[1, 1].Value = "Apellidos";
+                    worksheet.Cells[1, 2].Value = "Nombre";
+                    worksheet.Cells[1, 3].Value = "Clase";
+                    worksheet.Cells[1, 4].Value = "Número de identificación";
+
+                    // Estilo para encabezados
+                    using (var range = worksheet.Cells[1, 1, 1, 4])
+                    {
+                        range.Style.Font.Bold = true;
+                        range.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightBlue);
+                        range.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin);
+                    }
+
+                    // Datos de ejemplo
+                    worksheet.Cells[2, 1].Value = "Pérez González";
+                    worksheet.Cells[2, 2].Value = "Juan Carlos";
+                    worksheet.Cells[2, 3].Value = "11-A";
+                    worksheet.Cells[2, 4].Value = "123456789";
+
+                    worksheet.Cells[3, 1].Value = "Rodríguez Mora";
+                    worksheet.Cells[3, 2].Value = "María Elena";
+                    worksheet.Cells[3, 3].Value = "10-B";
+                    worksheet.Cells[3, 4].Value = "987654321";
+
+                    worksheet.Cells[4, 1].Value = "Jiménez Castro";
+                    worksheet.Cells[4, 2].Value = "Luis Fernando";
+                    worksheet.Cells[4, 3].Value = "11-C";
+                    worksheet.Cells[4, 4].Value = "456789123";
+
+                    // Ajustar ancho de columnas
+                    worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+
+                    // Generar el archivo
+                    var fileName = "Plantilla_Estudiantes.xlsx";
+                    var fileBytes = package.GetAsByteArray();
+                    
+                    return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error al generar plantilla: {ex.Message}";
+                return RedirectToAction("Estudiantes");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DebugUsuarios()
+        {
+            var usuarios = await _context.Usuarios.ToListAsync();
+            var estudiantes = await _context.Estudiantes.ToListAsync();
+            
+            var info = new StringBuilder();
+            info.AppendLine($"Total usuarios: {usuarios.Count}");
+            info.AppendLine($"Total estudiantes: {estudiantes.Count}");
+            info.AppendLine("\nUsuarios:");
+            foreach (var usuario in usuarios)
+            {
+                info.AppendLine($"- {usuario.NombreUsuario} (ID: {usuario.Identificacion}, Rol: {usuario.Rol})");
+            }
+            info.AppendLine("\nEstudiantes:");
+            foreach (var estudiante in estudiantes)
+            {
+                info.AppendLine($"- {estudiante.Nombre} {estudiante.Apellidos} (ID: {estudiante.Identificacion}, Clase: {estudiante.Clase})");
+            }
+            
+            return Content(info.ToString(), "text/plain");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> TestImportEstudiantes()
+        {
+            try
+            {
+                Console.WriteLine("=== INICIANDO TEST DE IMPORTACIÓN ===");
+                
+                // Crear un estudiante de prueba directamente
+                var testStudentId = 999888777;
+                
+                // Verificar si ya existe
+                var existeEstudiante = await _context.Estudiantes
+                    .AnyAsync(e => e.Identificacion == testStudentId);
+                
+                var existeUsuario = await _context.Usuarios
+                    .AnyAsync(u => u.Identificacion == testStudentId);
+                
+                Console.WriteLine($"Estudiante existe: {existeEstudiante}");
+                Console.WriteLine($"Usuario existe: {existeUsuario}");
+                
+                if (!existeEstudiante)
+                {
+                    // Crear estudiante
+                    var estudiante = new ServicioComunal.Models.Estudiante
+                    {
+                        Identificacion = testStudentId,
+                        Nombre = "Test",
+                        Apellidos = "Student",
+                        Clase = "TEST"
+                    };
+                    
+                    _context.Estudiantes.Add(estudiante);
+                    Console.WriteLine("Estudiante agregado al contexto");
+                    
+                    // Crear usuario correspondiente
+                    if (!existeUsuario)
+                    {
+                        string nombreUsuario = GenerarNombreUsuario("Test", "Student");
+                        Console.WriteLine($"Username generado: {nombreUsuario}");
+                        
+                        var usuario = new ServicioComunal.Models.Usuario
+                        {
+                            Identificacion = testStudentId,
+                            NombreUsuario = nombreUsuario,
+                            Contraseña = PasswordHelper.HashPassword(testStudentId.ToString()),
+                            Rol = "Estudiante",
+                            RequiereCambioContraseña = true,
+                            FechaCreacion = DateTime.Now,
+                            Activo = true
+                        };
+                        
+                        _context.Usuarios.Add(usuario);
+                        Console.WriteLine("Usuario agregado al contexto");
+                    }
+                    
+                    // Guardar cambios
+                    await _context.SaveChangesAsync();
+                    Console.WriteLine("SaveChangesAsync completado");
+                    
+                    // Verificar que se guardaron
+                    var estudianteGuardado = await _context.Estudiantes
+                        .FirstOrDefaultAsync(e => e.Identificacion == testStudentId);
+                    var usuarioGuardado = await _context.Usuarios
+                        .FirstOrDefaultAsync(u => u.Identificacion == testStudentId);
+                    
+                    Console.WriteLine($"Estudiante guardado: {estudianteGuardado != null}");
+                    Console.WriteLine($"Usuario guardado: {usuarioGuardado != null}");
+                    
+                    if (usuarioGuardado != null)
+                    {
+                        Console.WriteLine($"Usuario creado - Username: {usuarioGuardado.NombreUsuario}, Rol: {usuarioGuardado.Rol}");
+                    }
+                }
+                
+                var totalUsuarios = await _context.Usuarios.CountAsync();
+                var totalEstudiantes = await _context.Estudiantes.CountAsync();
+                
+                var resultado = $"TEST COMPLETADO:\n" +
+                              $"Total estudiantes: {totalEstudiantes}\n" +
+                              $"Total usuarios: {totalUsuarios}\n" +
+                              $"Estudiante test guardado: {await _context.Estudiantes.AnyAsync(e => e.Identificacion == testStudentId)}\n" +
+                              $"Usuario test guardado: {await _context.Usuarios.AnyAsync(u => u.Identificacion == testStudentId)}";
+                
+                Console.WriteLine(resultado);
+                return Content(resultado, "text/plain");
+            }
+            catch (Exception ex)
+            {
+                var error = $"ERROR EN TEST: {ex.Message}\nStackTrace: {ex.StackTrace}";
+                Console.WriteLine(error);
+                return Content(error, "text/plain");
+            }
+        }
+
+        [HttpPost]
         public async Task<IActionResult> CambiarRolProfesor([FromBody] CambiarRolRequest request)
         {
             try

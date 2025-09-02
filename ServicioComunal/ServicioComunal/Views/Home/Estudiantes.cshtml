@@ -20,6 +20,10 @@
             <p>Gestionar lista de estudiantes</p>
         </div>
         <div class="header-actions">
+            <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#modalImportarEstudiantes">
+                <i class="fas fa-file-excel"></i>
+                Importar desde Excel
+            </button>
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalEstudiante">
                 <i class="fas fa-plus"></i>
                 Agregar Estudiante
@@ -270,6 +274,79 @@
                 <button type="button" class="btn btn-danger" id="btnConfirmarEliminar">
                     <i class="fas fa-trash"></i>
                     Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Importar Estudiantes desde Excel -->
+<div class="modal fade" id="modalImportarEstudiantes" tabindex="-1" aria-labelledby="modalImportarEstudiantesLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="modalImportarEstudiantesLabel">
+                    <i class="fas fa-file-excel text-success"></i>
+                    Importar Estudiantes desde Excel
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Formato requerido del archivo Excel:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Columna A: <strong>Apellidos</strong></li>
+                        <li>Columna B: <strong>Nombre</strong></li>
+                        <li>Columna C: <strong>Clase</strong> (ej: 10-A, 11-B, 12-C)</li>
+                        <li>Columna D: <strong>Número de identificación</strong> (solo números)</li>
+                    </ul>
+                    <small class="text-muted d-block mt-2">
+                        <strong>Funcionalidad automática:</strong><br>
+                        • La primera fila debe contener los encabezados<br>
+                        • Los estudiantes duplicados serán omitidos<br>
+                        • Se crearán automáticamente usuarios para cada estudiante<br>
+                        • Usuario: primer_nombre.primer_apellido<br>
+                        • Contraseña temporal: número de identificación
+                    </small>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-8">
+                        <form id="formImportarEstudiantes" method="post" enctype="multipart/form-data" action="/Home/ImportarEstudiantes">
+                            <div class="mb-3">
+                                <label for="archivoExcelEstudiantes" class="form-label">
+                                    <i class="fas fa-upload"></i>
+                                    Seleccionar archivo Excel
+                                </label>
+                                <input type="file" class="form-control" id="archivoExcelEstudiantes" name="archivo" 
+                                       accept=".xlsx,.xls" required>
+                                <div class="form-text">
+                                    Solo archivos Excel (.xlsx, .xls). Tamaño máximo: 10MB
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="template-download">
+                            <i class="fas fa-download fa-2x text-primary mb-2"></i>
+                            <p class="small mb-2">¿Necesitas una plantilla?</p>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="descargarPlantillaEstudiantes()">
+                                <i class="fas fa-file-excel"></i>
+                                Descargar Plantilla
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-success" id="btnImportarEstudiantes" disabled onclick="importarEstudiantes()">
+                    <i class="fas fa-upload"></i>
+                    Importar Excel
                 </button>
             </div>
         </div>
