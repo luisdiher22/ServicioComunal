@@ -7,6 +7,7 @@ let modoEdicion = false;
 document.addEventListener('DOMContentLoaded', function() {
     inicializarEventos();
     inicializarFiltros();
+    inicializarImportacion();
 });
 
 function inicializarEventos() {
@@ -36,6 +37,25 @@ function inicializarEventos() {
             validarCampo(e.target);
         }
     }, true);
+}
+
+function inicializarImportacion() {
+    // Event listener para el input de archivo
+    const inputArchivo = document.getElementById('archivoExcel');
+    if (inputArchivo) {
+        inputArchivo.addEventListener('change', function(e) {
+            const archivo = e.target.files[0];
+            if (archivo) {
+                const btn = document.getElementById('btnImportar');
+                btn.disabled = false;
+                btn.textContent = `Importar ${archivo.name}`;
+            } else {
+                const btn = document.getElementById('btnImportar');
+                btn.disabled = true;
+                btn.textContent = 'Importar Excel';
+            }
+        });
+    }
 }
 
 function inicializarFiltros() {
@@ -670,4 +690,180 @@ function mostrarNotificacion(mensaje, tipo) {
             notificacion.remove();
         }
     }, 5000);
+}
+
+// Función para descargar la plantilla de Excel
+function descargarPlantilla() {
+    // Crear datos de ejemplo
+    const datosEjemplo = [
+        ['Apellido', 'Nombre', 'Cédula'],
+        ['García', 'María José', '123456789'],
+        ['Rodríguez', 'Juan Carlos', '987654321'],
+        ['López', 'Ana Sofía', '456789123']
+    ];
+
+    // Crear workbook y worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(datosEjemplo);
+
+    // Agregar worksheet al workbook
+    XLSX.utils.book_append_sheet(wb, ws, 'Docentes');
+
+    // Descargar archivo
+    XLSX.writeFile(wb, 'Plantilla_Docentes.xlsx');
+}
+
+// Función para importar profesores desde Excel
+function importarProfesores() {
+    const archivo = document.getElementById('archivoExcel').files[0];
+    
+    if (!archivo) {
+        mostrarError('Por favor selecciona un archivo Excel');
+        return;
+    }
+
+    // Validar tipo de archivo
+    const tiposPermitidos = [
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+        'application/vnd.ms-excel' // .xls
+    ];
+
+    if (!tiposPermitidos.includes(archivo.type)) {
+        mostrarError('El archivo debe ser un Excel (.xlsx o .xls)');
+        return;
+    }
+
+    // Mostrar progreso
+    const btn = document.getElementById('btnImportar');
+    const textoOriginal = btn.textContent;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importando...';
+
+    const formData = new FormData();
+    formData.append('archivo', archivo);
+
+    fetch('/Home/ImportarProfesores', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            mostrarExito(`Importación exitosa: ${data.procesados} docentes procesados, ${data.nuevos} nuevos, ${data.errores} errores`);
+            
+            // Cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalImportar'));
+            modal.hide();
+            
+            // Recargar página después de 2 segundos
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            mostrarError(data.message || 'Error durante la importación');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarError('Error al comunicarse con el servidor');
+    })
+    .finally(() => {
+        // Restaurar botón
+        btn.disabled = false;
+        btn.textContent = textoOriginal;
+        
+        // Limpiar input
+        document.getElementById('archivoExcel').value = '';
+    });
+}
+
+// Función para cambiar el rol de un profesor
+function cambiarRol(identificacion, nuevoRol) {
+    console.log(`Cambiando rol para identificacion: ${identificacion} a: ${nuevoRol}`);
+    
+    // Confirmar cambio
+    let mensaje = `¿Estás seguro de cambiar el rol del docente a ${nuevoRol}?`;
+    if (nuevoRol === 'Administrador') {
+        mensaje += '\n\nEl docente tendrá acceso completo a las funciones administrativas.';
+    }
+
+    if (!confirm(mensaje)) {
+        console.log('Cambio de rol cancelado por el usuario');
+        // Restaurar valor anterior del select
+        const select = document.querySelector(`select[data-profesor-id="${identificacion}"]`);
+        if (select) {
+            select.value = select.dataset.rolOriginal || 'Profesor';
+        }
+        return;
+    }
+
+    console.log('Enviando solicitud de cambio de rol...');
+
+    fetch('/Home/CambiarRolProfesor', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            profesorId: parseInt(identificacion),
+            nuevoRol: nuevoRol
+        })
+    })
+    .then(response => {
+        console.log('Respuesta recibida:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Datos de respuesta:', data);
+        if (data.success) {
+            mostrarExito('Rol actualizado exitosamente');
+            
+            // Actualizar la interfaz
+            const badge = document.querySelector(`tr[data-tutor-id="${identificacion}"] .badge-rol`);
+            console.log('Badge encontrado:', badge);
+            if (badge) {
+                // Remover clases anteriores
+                badge.classList.remove('administrador', 'profesor', 'tutor', 'coordinador', 'supervisor');
+                badge.className = 'badge badge-rol';
+                
+                if (nuevoRol === 'Administrador') {
+                    badge.classList.add('administrador');
+                    badge.innerHTML = '<i class="fas fa-crown"></i> Administrador';
+                    console.log('Badge actualizado a Administrador');
+                } else {
+                    badge.classList.add(nuevoRol.toLowerCase());
+                    badge.textContent = nuevoRol;
+                    console.log(`Badge actualizado a ${nuevoRol}`);
+                }
+            } else {
+                console.log('No se encontró el badge para actualizar');
+            }
+            
+            // Actualizar el valor del select
+            const select = document.querySelector(`select[data-profesor-id="${identificacion}"]`);
+            if (select) {
+                select.dataset.rolOriginal = nuevoRol;
+                console.log(`Select actualizado, rol original ahora es: ${nuevoRol}`);
+            }
+        } else {
+            console.error('Error del servidor:', data.message);
+            mostrarError(data.message || 'Error al cambiar el rol');
+            
+            // Restaurar valor anterior del select
+            const select = document.querySelector(`select[data-profesor-id="${identificacion}"]`);
+            if (select) {
+                select.value = select.dataset.rolOriginal || 'Profesor';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarError('Error al comunicarse con el servidor');
+        
+        // Restaurar valor anterior del select
+        const select = document.querySelector(`select[data-profesor-id="${identificacion}"]`);
+        if (select) {
+            select.value = select.dataset.rolOriginal || 'Profesor';
+        }
+    });
 }

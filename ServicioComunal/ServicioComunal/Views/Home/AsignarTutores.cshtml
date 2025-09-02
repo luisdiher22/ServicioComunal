@@ -11,9 +11,13 @@
             <p>Gestionar asignación de tutores a grupos</p>
         </div>
         <div class="header-actions">
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalImportar">
+                <i class="fas fa-file-excel"></i>
+                Importar Profesores
+            </button>
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTutor">
                 <i class="fas fa-plus"></i>
-                Agregar Tutor
+                Agregar Docente
             </button>
         </div>
     </div>
@@ -32,8 +36,7 @@
                     <select id="filterRol" class="form-select">
                         <option value="">Todos los roles</option>
                         <option value="Tutor">Tutor</option>
-                        <option value="Coordinador">Coordinador</option>
-                        <option value="Supervisor">Supervisor</option>
+                        <option value="Administrador">Administrador</option>
                     </select>
                 </div>
                 <div class="col-md-3">
@@ -139,7 +142,16 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="badge-rol @tutor.Rol.ToLower()">@tutor.Rol</span>
+                                    @if (tutor.Rol == "Administrador")
+                                    {
+                                        <span class="badge-rol administrador">
+                                            <i class="fas fa-crown"></i> @tutor.Rol
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge-rol @tutor.Rol.ToLower()">@tutor.Rol</span>
+                                    }
                                 </td>
                                 <td>
                                     <div class="grupos-asignados">
@@ -197,6 +209,19 @@
                                                 title="Asignar grupos">
                                             <i class="fas fa-users-cog"></i>
                                         </button>
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-sm btn-outline-info dropdown-toggle" 
+                                                    data-bs-toggle="dropdown" aria-expanded="false" title="Cambiar rol">
+                                                <i class="fas fa-user-tag"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item" href="#" onclick="cambiarRol(@tutor.Identificacion, 'Tutor')">Tutor</a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item" href="#" onclick="cambiarRol(@tutor.Identificacion, 'Administrador')">
+                                                    <i class="fas fa-crown text-warning"></i> Administrador
+                                                </a></li>
+                                            </ul>
+                                        </div>
                                         <button type="button" class="btn btn-sm btn-outline-warning" 
                                                 onclick="editarTutor(@tutor.Identificacion)" 
                                                 title="Editar">
@@ -223,7 +248,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalTutorLabel">Agregar Tutor</h5>
+                <h5 class="modal-title" id="modalTutorLabel">Agregar Docente</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -246,8 +271,7 @@
                                 <select class="form-select" id="rol" name="rol" required>
                                     <option value="">Seleccionar rol</option>
                                     <option value="Tutor">Tutor</option>
-                                    <option value="Coordinador">Coordinador</option>
-                                    <option value="Supervisor">Supervisor</option>
+                                    <option value="Administrador">Administrador</option>
                                 </select>
                                 <div class="invalid-feedback">
                                     Por favor seleccione un rol.
@@ -359,6 +383,90 @@
     </div>
 </div>
 
+<!-- Modal para importar profesores -->
+<div class="modal fade" id="modalImportar" tabindex="-1" aria-labelledby="modalImportarLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalImportarLabel">
+                    <i class="fas fa-file-excel text-success"></i>
+                    Importar Profesores desde Excel
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Formato requerido del archivo Excel:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Columna A: <strong>Apellidos</strong></li>
+                        <li>Columna B: <strong>Nombre</strong></li>
+                        <li>Columna C: <strong>Cédula</strong> (solo números)</li>
+                    </ul>
+                    <small class="text-muted d-block mt-2">
+                        Nota: Los profesores importados tendrán rol "Tutor" por defecto. Puede cambiar el rol después de la importación.
+                    </small>
+                </div>
+
+                <form action="@Url.Action("ImportarProfesores", "Home")" method="post" enctype="multipart/form-data" id="formImportar">
+                    <div class="form-group">
+                        <label for="archivoExcel" class="form-label">Archivo Excel *</label>
+                        <input type="file" class="form-control" id="archivoExcel" name="archivo" accept=".xlsx,.xls" required>
+                        <div class="form-text">Solo se permiten archivos .xlsx y .xls (máximo 5MB)</div>
+                        <div class="invalid-feedback">
+                            Por favor seleccione un archivo Excel válido.
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-download text-primary"></i>
+                                        Plantilla de ejemplo
+                                    </h6>
+                                    <p class="card-text small mb-2">Descargue una plantilla de ejemplo con el formato correcto:</p>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="descargarPlantilla()">
+                                        <i class="fas fa-download"></i>
+                                        Descargar Plantilla
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-check-circle text-success"></i>
+                                        Validaciones
+                                    </h6>
+                                    <ul class="small mb-0">
+                                        <li>Cédulas duplicadas serán omitidas</li>
+                                        <li>Se validan todos los campos obligatorios</li>
+                                        <li>Se reportan errores por fila</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-success" id="btnImportar" onclick="importarProfesores()" disabled>
+                    <i class="fas fa-upload"></i>
+                    Importar Excel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="~/js/tutores.js"></script>
 }

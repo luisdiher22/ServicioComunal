@@ -1695,6 +1695,14 @@ input, textarea, select {
     color: white;
 }
 
+.badge-rol.administrador {
+    background: linear-gradient(135deg, #d4a574 0%, #b8936a 100%);
+    color: white;
+    border: 2px solid #ffd700;
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+    font-weight: 700;
+}
+
 /* Elementos específicos de grupos */
 .grupo-numero {
     display: flex;

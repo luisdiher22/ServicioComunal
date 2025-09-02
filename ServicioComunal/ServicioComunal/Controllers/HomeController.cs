@@ -3,8 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using ServicioComunal.Data;
 using ServicioComunal.Services;
 using ServicioComunal.Models;
+using ServicioComunal.Utilities;
 using OfficeOpenXml;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace ServicioComunal.Controllers
 {
@@ -368,6 +370,318 @@ namespace ServicioComunal.Controllers
                 ViewBag.Error = "Error al cargar la lista de tutores";
                 return View(new List<ServicioComunal.Models.Profesor>());
             }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AgregarDocente([FromBody] ServicioComunal.Models.Profesor profesor)
+        {
+            try
+            {
+                // Verificar si ya existe un profesor con esa identificación
+                var existeProfesor = await _context.Profesores
+                    .AnyAsync(p => p.Identificacion == profesor.Identificacion);
+
+                if (existeProfesor)
+                {
+                    return Json(new { success = false, message = "Ya existe un docente con esa cédula" });
+                }
+
+                // Verificar campos obligatorios
+                if (string.IsNullOrWhiteSpace(profesor.Nombre) || 
+                    string.IsNullOrWhiteSpace(profesor.Apellidos) ||
+                    string.IsNullOrWhiteSpace(profesor.Rol))
+                {
+                    return Json(new { success = false, message = "Todos los campos son obligatorios" });
+                }
+
+                // Validar que el rol sea válido
+                var rolesValidos = new[] { "Tutor", "Coordinador", "Supervisor", "Administrador" };
+                if (!rolesValidos.Contains(profesor.Rol))
+                {
+                    return Json(new { success = false, message = "Rol no válido" });
+                }
+
+                // Si es administrador, también crear usuario
+                if (profesor.Rol == "Administrador")
+                {
+                    var existeUsuario = await _context.Usuarios
+                        .AnyAsync(u => u.Identificacion == profesor.Identificacion);
+
+                    if (!existeUsuario)
+                    {
+                        // Generar nombre de usuario en formato primer_nombre.primer_apellido
+                        string nombreUsuario = GenerarNombreUsuario(profesor.Nombre, profesor.Apellidos);
+                        
+                        var usuario = new ServicioComunal.Models.Usuario
+                        {
+                            Identificacion = profesor.Identificacion,
+                            NombreUsuario = nombreUsuario,
+                            Contraseña = profesor.Identificacion.ToString(), // Contraseña temporal = cédula
+                            Rol = "Administrador",
+                            RequiereCambioContraseña = true
+                        };
+                        _context.Usuarios.Add(usuario);
+                    }
+                }
+
+                _context.Profesores.Add(profesor);
+                await _context.SaveChangesAsync();
+
+                return Json(new { 
+                    success = true, 
+                    message = profesor.Rol == "Administrador" ? 
+                        "Docente creado exitosamente. Se ha creado un usuario administrador con contraseña temporal igual a su cédula." :
+                        "Docente creado exitosamente"
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al crear el docente: " + ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ImportarProfesores(IFormFile archivo)
+        {
+            if (archivo == null || archivo.Length == 0)
+            {
+                TempData["Error"] = "Por favor seleccione un archivo válido.";
+                return RedirectToAction("AsignarTutores");
+            }
+
+            var extensionesPermitidas = new[] { ".xlsx", ".xls" };
+            var extension = Path.GetExtension(archivo.FileName).ToLowerInvariant();
+            
+            if (!extensionesPermitidas.Contains(extension))
+            {
+                TempData["Error"] = "Solo se permiten archivos Excel (.xlsx, .xls).";
+                return RedirectToAction("AsignarTutores");
+            }
+
+            try
+            {
+                var profesoresImportados = 0;
+                var profesoresExistentes = 0;
+                var errores = new List<string>();
+
+                using (var stream = archivo.OpenReadStream())
+                {
+                    ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+                    using (var package = new ExcelPackage(stream))
+                    {
+                        var worksheet = package.Workbook.Worksheets[0];
+                        var rowCount = worksheet.Dimension?.Rows ?? 0;
+
+                        if (rowCount < 2)
+                        {
+                            TempData["Error"] = "El archivo debe contener al menos una fila de datos además del encabezado.";
+                            return RedirectToAction("AsignarTutores");
+                        }
+
+                        for (int row = 2; row <= rowCount; row++)
+                        {
+                            try
+                            {
+                                var apellidos = worksheet.Cells[row, 1].Value?.ToString()?.Trim();
+                                var nombre = worksheet.Cells[row, 2].Value?.ToString()?.Trim();
+                                var cedulaTexto = worksheet.Cells[row, 3].Value?.ToString()?.Trim();
+
+                                if (string.IsNullOrWhiteSpace(apellidos) || 
+                                    string.IsNullOrWhiteSpace(nombre) || 
+                                    string.IsNullOrWhiteSpace(cedulaTexto))
+                                {
+                                    errores.Add($"Fila {row}: Datos incompletos");
+                                    continue;
+                                }
+
+                                if (!int.TryParse(cedulaTexto, out int cedula))
+                                {
+                                    errores.Add($"Fila {row}: Cédula inválida ({cedulaTexto})");
+                                    continue;
+                                }
+
+                                // Verificar si ya existe
+                                var existeProfesor = await _context.Profesores
+                                    .AnyAsync(p => p.Identificacion == cedula);
+
+                                if (existeProfesor)
+                                {
+                                    profesoresExistentes++;
+                                    continue;
+                                }
+
+                                var profesor = new ServicioComunal.Models.Profesor
+                                {
+                                    Identificacion = cedula,
+                                    Nombre = nombre,
+                                    Apellidos = apellidos,
+                                    Rol = "Tutor" // Rol por defecto para importación masiva
+                                };
+
+                                _context.Profesores.Add(profesor);
+                                profesoresImportados++;
+                            }
+                            catch (Exception ex)
+                            {
+                                errores.Add($"Fila {row}: {ex.Message}");
+                            }
+                        }
+
+                        await _context.SaveChangesAsync();
+                    }
+                }
+
+                var mensaje = new StringBuilder();
+                mensaje.AppendLine($"Importación completada:");
+                mensaje.AppendLine($"- Profesores importados: {profesoresImportados}");
+                if (profesoresExistentes > 0)
+                    mensaje.AppendLine($"- Profesores ya existentes (omitidos): {profesoresExistentes}");
+                if (errores.Any())
+                {
+                    mensaje.AppendLine($"- Errores encontrados: {errores.Count}");
+                    mensaje.AppendLine("Errores:");
+                    foreach (var error in errores.Take(5))
+                    {
+                        mensaje.AppendLine($"  • {error}");
+                    }
+                    if (errores.Count > 5)
+                        mensaje.AppendLine($"  • ... y {errores.Count - 5} errores más");
+                }
+
+                if (profesoresImportados > 0)
+                    TempData["Success"] = mensaje.ToString();
+                else
+                    TempData["Warning"] = mensaje.ToString();
+
+                return RedirectToAction("AsignarTutores");
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error al importar archivo: {ex.Message}";
+                return RedirectToAction("AsignarTutores");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CambiarRolProfesor([FromBody] CambiarRolRequest request)
+        {
+            try
+            {
+                Console.WriteLine($"Cambiando rol para ProfesorId: {request.ProfesorId} a {request.NuevoRol}");
+                
+                var profesor = await _context.Profesores
+                    .FirstOrDefaultAsync(p => p.Identificacion == request.ProfesorId);
+
+                if (profesor == null)
+                {
+                    Console.WriteLine($"Profesor no encontrado con ID: {request.ProfesorId}");
+                    return Json(new { success = false, message = "Profesor no encontrado" });
+                }
+
+                var rolesValidos = new[] { "Tutor", "Administrador" };
+                if (!rolesValidos.Contains(request.NuevoRol))
+                {
+                    return Json(new { success = false, message = "Rol no válido" });
+                }
+
+                var rolAnterior = profesor.Rol;
+                Console.WriteLine($"Cambiando rol de {rolAnterior} a {request.NuevoRol} para {profesor.Nombre} {profesor.Apellidos}");
+                
+                profesor.Rol = request.NuevoRol;
+
+                // Si se cambia a administrador, crear usuario si no existe o actualizar si existe
+                if (request.NuevoRol == "Administrador")
+                {
+                    var usuarioExistente = await _context.Usuarios
+                        .FirstOrDefaultAsync(u => u.Identificacion == profesor.Identificacion);
+
+                    if (usuarioExistente == null)
+                    {
+                        // Generar nombre de usuario en formato primer_nombre.primer_apellido
+                        string nombreUsuario = GenerarNombreUsuario(profesor.Nombre, profesor.Apellidos);
+                        
+                        var usuario = new ServicioComunal.Models.Usuario
+                        {
+                            Identificacion = profesor.Identificacion,
+                            NombreUsuario = nombreUsuario,
+                            Contraseña = PasswordHelper.HashPassword(profesor.Identificacion.ToString()),
+                            Rol = "Administrador",
+                            RequiereCambioContraseña = true
+                        };
+                        _context.Usuarios.Add(usuario);
+                        Console.WriteLine($"Usuario administrador creado: {nombreUsuario} para {profesor.Nombre}");
+                    }
+                    else
+                    {
+                        usuarioExistente.Rol = "Administrador";
+                        // Resetear contraseña con la cédula hasheada
+                        usuarioExistente.Contraseña = PasswordHelper.HashPassword(profesor.Identificacion.ToString());
+                        usuarioExistente.RequiereCambioContraseña = true;
+                        
+                        // También actualizar el nombre de usuario si está en formato de cédula
+                        if (usuarioExistente.NombreUsuario == profesor.Identificacion.ToString())
+                        {
+                            usuarioExistente.NombreUsuario = GenerarNombreUsuario(profesor.Nombre, profesor.Apellidos);
+                            Console.WriteLine($"Nombre de usuario actualizado a formato correcto: {usuarioExistente.NombreUsuario}");
+                        }
+                        Console.WriteLine($"Usuario existente actualizado a Administrador para {profesor.Nombre} - Contraseña reseteada");
+                    }
+                }
+                // Si se quita el rol de administrador
+                else if (rolAnterior == "Administrador")
+                {
+                    var usuario = await _context.Usuarios
+                        .FirstOrDefaultAsync(u => u.Identificacion == profesor.Identificacion);
+                    if (usuario != null)
+                    {
+                        // Si el nuevo rol permite tener usuario (como Profesor), actualizar rol
+                        if (request.NuevoRol == "Profesor")
+                        {
+                            usuario.Rol = "Profesor";
+                            Console.WriteLine($"Usuario actualizado de Administrador a Profesor para {profesor.Nombre}");
+                        }
+                        else
+                        {
+                            // Para otros roles, eliminar usuario
+                            _context.Usuarios.Remove(usuario);
+                            Console.WriteLine($"Usuario eliminado para {profesor.Nombre} (rol: {request.NuevoRol})");
+                        }
+                    }
+                }
+                // Si ya existe un usuario con rol diferente, actualizar
+                else
+                {
+                    var usuario = await _context.Usuarios
+                        .FirstOrDefaultAsync(u => u.Identificacion == profesor.Identificacion);
+                    if (usuario != null)
+                    {
+                        usuario.Rol = request.NuevoRol;
+                        Console.WriteLine($"Usuario existente actualizado de {usuario.Rol} a {request.NuevoRol} para {profesor.Nombre}");
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                Console.WriteLine($"Rol actualizado exitosamente en la base de datos");
+
+                return Json(new { 
+                    success = true, 
+                    message = $"Rol cambiado exitosamente de {rolAnterior} a {request.NuevoRol}" +
+                              (request.NuevoRol == "Administrador" ? ". Se ha creado acceso de administrador." : "")
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al cambiar el rol: " + ex.Message });
+            }
+        }
+
+        public class CambiarRolRequest
+        {
+            [JsonPropertyName("profesorId")]
+            public int ProfesorId { get; set; }
+            
+            [JsonPropertyName("nuevoRol")]
+            public string NuevoRol { get; set; } = string.Empty;
         }
 
         // ===== ACCIONES PARA GRUPOS =====
@@ -2320,6 +2634,211 @@ namespace ServicioComunal.Controllers
             catch (Exception ex)
             {
                 return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
+        }
+
+        // Método auxiliar para generar nombre de usuario en formato primer_nombre.primer_apellido
+        private string GenerarNombreUsuario(string nombre, string apellidos)
+        {
+            try
+            {
+                // Obtener primer nombre (antes del primer espacio)
+                string primerNombre = nombre.Trim().Split(' ')[0].ToLower();
+                
+                // Obtener primer apellido (antes del primer espacio)
+                string primerApellido = apellidos.Trim().Split(' ')[0].ToLower();
+                
+                // Remover acentos y caracteres especiales
+                primerNombre = RemoverAcentos(primerNombre);
+                primerApellido = RemoverAcentos(primerApellido);
+                
+                return $"{primerNombre}.{primerApellido}";
+            }
+            catch
+            {
+                // Si hay algún error, usar un formato básico
+                return $"{nombre.ToLower()}.{apellidos.ToLower()}".Replace(" ", "");
+            }
+        }
+
+        // Método auxiliar para remover acentos
+        private string RemoverAcentos(string texto)
+        {
+            return texto
+                .Replace("á", "a").Replace("é", "e").Replace("í", "i").Replace("ó", "o").Replace("ú", "u")
+                .Replace("ñ", "n")
+                .Replace("ü", "u");
+        }
+
+        // MÉTODO TEMPORAL DE DIAGNÓSTICO - ELIMINAR DESPUÉS
+        [HttpGet]
+        public async Task<IActionResult> DiagnosticarContraseñas()
+        {
+            try
+            {
+                var usuarios = await _context.Usuarios
+                    .Where(u => u.NombreUsuario.Contains("elena") || u.Identificacion == 567890123)
+                    .ToListAsync();
+
+                var resultado = usuarios.Select(u => new {
+                    Identificacion = u.Identificacion,
+                    NombreUsuario = u.NombreUsuario,
+                    ContraseñaLength = u.Contraseña?.Length ?? 0,
+                    ContraseñaInicia = u.Contraseña?.Substring(0, Math.Min(10, u.Contraseña?.Length ?? 0)) + "...",
+                    TieneSignoDolar = u.Contraseña?.Contains("$") ?? false,
+                    Rol = u.Rol,
+                    RequiereCambio = u.RequiereCambioContraseña,
+                    // TEST: Verificar si la contraseña actual coincide con la cédula
+                    CedulaComoTexto = u.Identificacion.ToString(),
+                    VerificacionDirecta = u.Contraseña == u.Identificacion.ToString(),
+                    VerificacionHash = PasswordHelper.VerifyPassword(u.Identificacion.ToString(), u.Contraseña ?? "")
+                }).ToList();
+
+                return Json(resultado);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
+            }
+        }
+
+        // MÉTODO TEMPORAL PARA SINCRONIZAR ROLES - ELIMINAR DESPUÉS
+        [HttpGet]
+        public async Task<IActionResult> SincronizarRoles()
+        {
+            try
+            {
+                var sincronizados = 0;
+                var problemas = new List<string>();
+                
+                // Obtener todos los usuarios con sus profesores correspondientes
+                var usuariosConProfesores = await _context.Usuarios
+                    .Join(_context.Profesores, 
+                          u => u.Identificacion, 
+                          p => p.Identificacion, 
+                          (u, p) => new { Usuario = u, Profesor = p })
+                    .ToListAsync();
+
+                foreach (var item in usuariosConProfesores)
+                {
+                    // Si el usuario es Administrador pero el profesor no tiene el rol correcto
+                    if (item.Usuario.Rol == "Administrador" && item.Profesor.Rol != "Administrador")
+                    {
+                        item.Profesor.Rol = "Administrador";
+                        sincronizados++;
+                        problemas.Add($"✅ {item.Profesor.Nombre} {item.Profesor.Apellidos}: PROFESOR actualizado a Administrador");
+                    }
+                    // Si el profesor es Administrador pero no existe usuario o el usuario no es Administrador
+                    else if (item.Profesor.Rol == "Administrador" && item.Usuario.Rol != "Administrador")
+                    {
+                        item.Usuario.Rol = "Administrador";
+                        sincronizados++;
+                        problemas.Add($"✅ {item.Profesor.Nombre} {item.Profesor.Apellidos}: USUARIO actualizado a Administrador");
+                    }
+                    // Si ambos son profesores/tutores, asegurar consistencia
+                    else if ((item.Usuario.Rol == "Profesor" || item.Usuario.Rol == "Tutor") && 
+                             (item.Profesor.Rol == "Profesor" || item.Profesor.Rol == "Tutor"))
+                    {
+                        // Normalizar a "Tutor" para profesores no-administradores
+                        if (item.Profesor.Rol != "Tutor")
+                        {
+                            item.Profesor.Rol = "Tutor";
+                            sincronizados++;
+                            problemas.Add($"✅ {item.Profesor.Nombre} {item.Profesor.Apellidos}: PROFESOR normalizado a Tutor");
+                        }
+                        if (item.Usuario.Rol != "Profesor")
+                        {
+                            item.Usuario.Rol = "Profesor";
+                            sincronizados++;
+                            problemas.Add($"✅ {item.Profesor.Nombre} {item.Profesor.Apellidos}: USUARIO normalizado a Profesor");
+                        }
+                    }
+                }
+
+                // También verificar profesores administradores sin usuario
+                var profesoresAdmin = await _context.Profesores
+                    .Where(p => p.Rol == "Administrador")
+                    .ToListAsync();
+
+                foreach (var profesor in profesoresAdmin)
+                {
+                    var usuario = await _context.Usuarios
+                        .FirstOrDefaultAsync(u => u.Identificacion == profesor.Identificacion);
+                    
+                    if (usuario == null)
+                    {
+                        // Crear usuario para administrador
+                        string nombreUsuario = GenerarNombreUsuario(profesor.Nombre, profesor.Apellidos);
+                        var nuevoUsuario = new ServicioComunal.Models.Usuario
+                        {
+                            Identificacion = profesor.Identificacion,
+                            NombreUsuario = nombreUsuario,
+                            Contraseña = PasswordHelper.HashPassword(profesor.Identificacion.ToString()),
+                            Rol = "Administrador",
+                            RequiereCambioContraseña = true,
+                            FechaCreacion = DateTime.Now,
+                            Activo = true
+                        };
+                        _context.Usuarios.Add(nuevoUsuario);
+                        sincronizados++;
+                        problemas.Add($"🆕 {profesor.Nombre} {profesor.Apellidos}: USUARIO creado para administrador");
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { 
+                    success = true, 
+                    message = $"Roles sincronizados: {sincronizados}",
+                    detalles = problemas
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { 
+                    success = false, 
+                    error = ex.Message 
+                });
+            }
+        }
+
+        // MÉTODO TEMPORAL PARA CORREGIR CONTRASEÑAS - ELIMINAR DESPUÉS
+        [HttpGet]
+        public async Task<IActionResult> CorregirContraseñas()
+        {
+            try
+            {
+                var usuarios = await _context.Usuarios.ToListAsync();
+                int corregidos = 0;
+
+                foreach (var usuario in usuarios)
+                {
+                    // Si la contraseña es igual a la cédula (texto plano) o no tiene el formato hash correcto
+                    if (usuario.Contraseña == usuario.Identificacion.ToString() || 
+                        string.IsNullOrEmpty(usuario.Contraseña) || 
+                        !usuario.Contraseña.Contains("$"))
+                    {
+                        // Hashear la cédula como contraseña temporal
+                        usuario.Contraseña = PasswordHelper.HashPassword(usuario.Identificacion.ToString());
+                        usuario.RequiereCambioContraseña = true;
+                        corregidos++;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { 
+                    success = true, 
+                    message = $"Contraseñas corregidas: {corregidos}",
+                    totalUsuarios = usuarios.Count
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { 
+                    success = false, 
+                    error = ex.Message 
+                });
             }
         }
     }
