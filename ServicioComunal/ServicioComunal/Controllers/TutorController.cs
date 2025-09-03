@@ -115,29 +115,52 @@ namespace ServicioComunal.Controllers
         // Revisiones
         public async Task<IActionResult> Revisiones()
         {
+            // Verificar autenticación
             var tutorId = HttpContext.Session.GetInt32("UsuarioId");
+            var usuarioRol = HttpContext.Session.GetString("UsuarioRol");
             
-            if (tutorId==null || !await EsTutor(tutorId.Value))
+            if (tutorId == null || usuarioRol != "Profesor")
             {
                 return RedirectToAction("Login", "Auth");
             }
 
+            // Obtener grupos asignados al tutor
             var gruposAsignados = await _context.GruposProfesores
                 .Where(gp => gp.ProfesorIdentificacion == tutorId)
                 .Select(gp => gp.GrupoNumero)
                 .ToListAsync();
 
-            var entregablesPendientes = await _context.Entregas
-                .Where(e => gruposAsignados.Contains(e.GrupoNumero) &&
-                           (!string.IsNullOrEmpty(e.ArchivoRuta) || !string.IsNullOrEmpty(e.Retroalimentacion)))
+            if (!gruposAsignados.Any())
+            {
+                ViewBag.Message = "No tienes grupos asignados.";
+                return View(new List<Entrega>());
+            }
+
+            // Obtener todas las entregas de los grupos asignados
+            var entregas = await _context.Entregas
+                .Where(e => gruposAsignados.Contains(e.GrupoNumero))
                 .Include(e => e.Grupo)
                 .ThenInclude(g => g.GruposEstudiantes)
                 .ThenInclude(ge => ge.Estudiante)
-                .AsNoTracking()
-                .OrderByDescending(e => e.FechaRetroalimentacion)
+                .Include(e => e.Formulario)
+                .OrderBy(e => e.FechaLimite)
+                .ThenBy(e => e.GrupoNumero)
                 .ToListAsync();
 
-            return View(entregablesPendientes);
+            // Categorizar entregas
+            ViewBag.EntregasPendientes = entregas.Where(e => 
+                !string.IsNullOrEmpty(e.ArchivoRuta) && 
+                (string.IsNullOrEmpty(e.Retroalimentacion) || e.Retroalimentacion == "Pendiente de revisión")).ToList();
+                
+            ViewBag.EntregasRevisadas = entregas.Where(e => 
+                !string.IsNullOrEmpty(e.ArchivoRuta) && 
+                !string.IsNullOrEmpty(e.Retroalimentacion) && 
+                e.Retroalimentacion != "Pendiente de revisión").ToList();
+                
+            ViewBag.EntregasSinSubir = entregas.Where(e => 
+                string.IsNullOrEmpty(e.ArchivoRuta)).ToList();
+
+            return View(entregas);
         }
 
         // Progreso

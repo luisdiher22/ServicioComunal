@@ -1,0 +1,373 @@
+@model List<ServicioComunal.Models.Entrega>
+
+@{
+    ViewData["Title"] = "Mis Entregas";
+    var estudiante = ViewBag.Estudiante as ServicioComunal.Models.Estudiante;
+    var grupo = ViewBag.Grupo as ServicioComunal.Models.Grupo;
+}
+
+<div class="dashboard-header-content">
+    <h1 class="dashboard-title">
+        <i class="fas fa-tasks"></i>
+        Mis Entregas
+    </h1>
+    <p class="dashboard-subtitle">
+        @if (grupo != null)
+        {
+            <span>Grupo @grupo.Numero - @estudiante?.Nombre @estudiante?.Apellidos</span>
+        }
+        else
+        {
+            <span>No estás asignado a ningún grupo</span>
+        }
+    </p>
+</div>
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger" role="alert">
+        <i class="fas fa-exclamation-triangle"></i>
+        @ViewBag.Error
+    </div>
+}
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info" role="alert">
+        <i class="fas fa-info-circle"></i>
+        No hay entregas asignadas a tu grupo.
+    </div>
+}
+else
+{
+    <div class="content-section">
+        <div class="section-header">
+            <h2>Lista de Entregas</h2>
+            <div class="filter-buttons">
+                <button class="btn btn-outline-primary btn-sm" onclick="filtrarEntregas('todas')">
+                    <i class="fas fa-list"></i> Todas
+                </button>
+                <button class="btn btn-outline-warning btn-sm" onclick="filtrarEntregas('pendientes')">
+                    <i class="fas fa-clock"></i> Pendientes
+                </button>
+                <button class="btn btn-outline-success btn-sm" onclick="filtrarEntregas('entregadas')">
+                    <i class="fas fa-check"></i> Entregadas
+                </button>
+                <button class="btn btn-outline-danger btn-sm" onclick="filtrarEntregas('vencidas')">
+                    <i class="fas fa-exclamation"></i> Vencidas
+                </button>
+            </div>
+        </div>
+
+        <div class="row">
+            @foreach (var entrega in Model)
+            {
+                var fechaVencida = entrega.FechaLimite < DateTime.Now;
+                var tieneArchivo = !string.IsNullOrEmpty(entrega.ArchivoRuta);
+                var estadoClase = tieneArchivo ? "entregada" : (fechaVencida ? "vencida" : "pendiente");
+                
+                <div class="col-lg-6 col-xl-4 mb-4 entrega-card" data-estado="@estadoClase">
+                    <div class="card h-100 entrega-item @estadoClase">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-file-alt"></i>
+                                @entrega.Nombre
+                            </h5>
+                            <span class="badge badge-@(tieneArchivo ? "success" : (fechaVencida ? "danger" : "warning"))">
+                                @if (tieneArchivo)
+                                {
+                                    <text><i class="fas fa-check"></i> Entregada</text>
+                                }
+                                else if (fechaVencida)
+                                {
+                                    <text><i class="fas fa-times"></i> Vencida</text>
+                                }
+                                else
+                                {
+                                    <text><i class="fas fa-clock"></i> Pendiente</text>
+                                }
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">@entrega.Descripcion</p>
+                            
+                            <div class="entrega-info">
+                                <div class="info-item">
+                                    <strong>Fecha Límite:</strong>
+                                    <span class="@(fechaVencida ? "text-danger" : "")">
+                                        @entrega.FechaLimite.ToString("dd/MM/yyyy HH:mm")
+                                    </span>
+                                </div>
+                                
+                                @if (entrega.FechaEntrega.HasValue)
+                                {
+                                    <div class="info-item">
+                                        <strong>Fecha de Entrega:</strong>
+                                        <span class="text-success">
+                                            @entrega.FechaEntrega.Value.ToString("dd/MM/yyyy HH:mm")
+                                        </span>
+                                    </div>
+                                }
+                                
+                                @if (entrega.Formulario != null)
+                                {
+                                    <div class="info-item">
+                                        <strong>Formulario Base:</strong>
+                                        <a href="/Home/DescargarFormulario/@entrega.Formulario.Identificacion" 
+                                           class="btn btn-link p-0" target="_blank">
+                                            <i class="fas fa-download"></i>
+                                            @entrega.Formulario.Nombre
+                                        </a>
+                                    </div>
+                                }
+                                
+                                @if (!string.IsNullOrEmpty(entrega.Retroalimentacion) && entrega.Retroalimentacion != "Pendiente de revisión")
+                                {
+                                    <div class="info-item">
+                                        <strong>Retroalimentación:</strong>
+                                        <div class="retroalimentacion">
+                                            @entrega.Retroalimentacion
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            @if (tieneArchivo)
+                            {
+                                <div class="d-flex justify-content-between">
+                                    <a href="/Estudiante/DescargarEntrega/@entrega.Identificacion" 
+                                       class="btn btn-success btn-sm">
+                                        <i class="fas fa-download"></i>
+                                        Descargar
+                                    </a>
+                                    @if (!fechaVencida)
+                                    {
+                                        <button class="btn btn-warning btn-sm" 
+                                                onclick="mostrarModalSubida(@entrega.Identificacion, '@entrega.Nombre')">
+                                            <i class="fas fa-edit"></i>
+                                            Reemplazar
+                                        </button>
+                                    }
+                                </div>
+                            }
+                            else if (!fechaVencida)
+                            {
+                                <button class="btn btn-primary btn-sm w-100" 
+                                        onclick="mostrarModalSubida(@entrega.Identificacion, '@entrega.Nombre')">
+                                    <i class="fas fa-upload"></i>
+                                    Subir Entrega
+                                </button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-secondary btn-sm w-100" disabled>
+                                    <i class="fas fa-times"></i>
+                                    Fecha Vencida
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<!-- Modal para subir archivo -->
+<div class="modal fade" id="modalSubirEntrega" tabindex="-1" role="dialog" 
+     aria-labelledby="modalSubirEntregaLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalSubirEntregaLabel">
+                    <i class="fas fa-upload"></i>
+                    Subir Entrega
+                </h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="formSubirEntrega" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <input type="hidden" id="entregaId" name="entregaId">
+                    
+                    <div class="form-group mb-3">
+                        <label for="entregaNombre">Entrega:</label>
+                        <input type="text" id="entregaNombre" class="form-control" readonly>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="archivo">Archivo:</label>
+                        <input type="file" id="archivo" name="archivo" class="form-control" 
+                               accept=".pdf,.doc,.docx,.txt,.zip,.rar" required>
+                        <small class="form-text text-muted">
+                            Formatos permitidos: PDF, DOC, DOCX, TXT, ZIP, RAR (máximo 20MB)
+                        </small>
+                    </div>
+                    
+                    <div id="progress-container" class="d-none">
+                        <div class="progress">
+                            <div id="upload-progress" class="progress-bar" role="progressbar" 
+                                 style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                0%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i>
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="btnSubir">
+                        <i class="fas fa-upload"></i>
+                        Subir Archivo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.entrega-item {
+    transition: all 0.3s ease;
+    border-left: 4px solid #ddd;
+}
+
+.entrega-item.pendiente {
+    border-left-color: #ffc107;
+}
+
+.entrega-item.entregada {
+    border-left-color: #28a745;
+}
+
+.entrega-item.vencida {
+    border-left-color: #dc3545;
+}
+
+.entrega-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.entrega-info .info-item {
+    margin-bottom: 0.5rem;
+}
+
+.retroalimentacion {
+    background: #f8f9fa;
+    padding: 0.5rem;
+    border-radius: 4px;
+    margin-top: 0.25rem;
+    font-style: italic;
+}
+
+.filter-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.badge {
+    font-size: 0.8em;
+}
+
+.progress {
+    height: 20px;
+}
+
+.d-none {
+    display: none !important;
+}
+</style>
+
+<script>
+function mostrarModalSubida(entregaId, entregaNombre) {
+    document.getElementById('entregaId').value = entregaId;
+    document.getElementById('entregaNombre').value = entregaNombre;
+    document.getElementById('archivo').value = '';
+    document.getElementById('progress-container').classList.add('d-none');
+    
+    $('#modalSubirEntrega').modal('show');
+}
+
+function filtrarEntregas(tipo) {
+    const cards = document.querySelectorAll('.entrega-card');
+    
+    cards.forEach(card => {
+        const estado = card.getAttribute('data-estado');
+        let mostrar = false;
+        
+        switch(tipo) {
+            case 'todas':
+                mostrar = true;
+                break;
+            case 'pendientes':
+                mostrar = estado === 'pendiente';
+                break;
+            case 'entregadas':
+                mostrar = estado === 'entregada';
+                break;
+            case 'vencidas':
+                mostrar = estado === 'vencida';
+                break;
+        }
+        
+        card.style.display = mostrar ? 'block' : 'none';
+    });
+    
+    // Actualizar botones activos
+    document.querySelectorAll('.filter-buttons .btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+}
+
+document.getElementById('formSubirEntrega').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const btnSubir = document.getElementById('btnSubir');
+    const progressContainer = document.getElementById('progress-container');
+    const progressBar = document.getElementById('upload-progress');
+    
+    // Mostrar progreso
+    progressContainer.classList.remove('d-none');
+    btnSubir.disabled = true;
+    btnSubir.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subiendo...';
+    
+    try {
+        const response = await fetch('/Estudiante/SubirEntrega', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Entrega subida exitosamente');
+            location.reload(); // Recargar para mostrar cambios
+        } else {
+            alert('Error: ' + result.message);
+        }
+    } catch (error) {
+        alert('Error al subir archivo: ' + error.message);
+    } finally {
+        btnSubir.disabled = false;
+        btnSubir.innerHTML = '<i class="fas fa-upload"></i> Subir Archivo';
+        progressContainer.classList.add('d-none');
+        $('#modalSubirEntrega').modal('hide');
+    }
+});
+
+// Inicializar con todas las entregas visibles
+document.addEventListener('DOMContentLoaded', function() {
+    const todasBtn = document.querySelector('.filter-buttons .btn');
+    if (todasBtn) {
+        todasBtn.classList.add('active');
+    }
+});
+</script>

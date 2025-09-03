@@ -1016,6 +1016,234 @@ namespace ServicioComunal.Controllers
                 _ => "application/octet-stream"
             };
         }
+
+        // ===== GESTIÓN DE ENTREGAS =====
+
+        /// <summary>
+        /// Vista para mostrar las entregas del grupo del estudiante
+        /// </summary>
+        public async Task<IActionResult> MisEntregas()
+        {
+            // Verificar autenticación
+            var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+            var usuarioRol = HttpContext.Session.GetString("UsuarioRol");
+            
+            if (usuarioId == null || usuarioRol != "Estudiante")
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var estudiante = await _context.Estudiantes
+                .FirstOrDefaultAsync(e => e.Identificacion == usuarioId.Value);
+
+            if (estudiante == null)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            // Obtener el grupo del estudiante
+            var grupoEstudiante = await _context.GruposEstudiantes
+                .Include(ge => ge.Grupo)
+                .FirstOrDefaultAsync(ge => ge.EstudianteIdentificacion == estudiante.Identificacion);
+
+            if (grupoEstudiante == null)
+            {
+                ViewBag.Error = "No estás asignado a ningún grupo.";
+                return View(new List<Entrega>());
+            }
+
+            // Obtener entregas del grupo
+            var entregas = await _context.Entregas
+                .Include(e => e.Formulario)
+                .Include(e => e.Profesor)
+                .Where(e => e.GrupoNumero == grupoEstudiante.GrupoNumero)
+                .OrderByDescending(e => e.FechaLimite)
+                .ToListAsync();
+
+            ViewBag.Estudiante = estudiante;
+            ViewBag.Grupo = grupoEstudiante.Grupo;
+
+            return View(entregas);
+        }
+
+        /// <summary>
+        /// Subir archivo para una entrega específica
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> SubirEntrega()
+        {
+            try
+            {
+                // Verificar autenticación
+                var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+                var usuarioRol = HttpContext.Session.GetString("UsuarioRol");
+                
+                if (usuarioId == null || usuarioRol != "Estudiante")
+                {
+                    return Json(new { success = false, message = "No tienes permisos para subir entregas" });
+                }
+
+                var entregaId = int.Parse(Request.Form["entregaId"].ToString());
+                var archivo = Request.Form.Files.GetFile("archivo");
+
+                if (archivo == null || archivo.Length == 0)
+                {
+                    return Json(new { success = false, message = "Debe seleccionar un archivo" });
+                }
+
+                // Verificar que la entrega existe y pertenece al grupo del estudiante
+                var estudiante = await _context.Estudiantes
+                    .FirstOrDefaultAsync(e => e.Identificacion == usuarioId.Value);
+
+                if (estudiante == null)
+                {
+                    return Json(new { success = false, message = "Estudiante no encontrado" });
+                }
+
+                var grupoEstudiante = await _context.GruposEstudiantes
+                    .FirstOrDefaultAsync(ge => ge.EstudianteIdentificacion == estudiante.Identificacion);
+
+                if (grupoEstudiante == null)
+                {
+                    return Json(new { success = false, message = "No estás asignado a ningún grupo" });
+                }
+
+                var entrega = await _context.Entregas
+                    .FirstOrDefaultAsync(e => e.Identificacion == entregaId && 
+                                            e.GrupoNumero == grupoEstudiante.GrupoNumero);
+
+                if (entrega == null)
+                {
+                    return Json(new { success = false, message = "Entrega no encontrada o no pertenece a tu grupo" });
+                }
+
+                // Verificar fecha límite
+                if (DateTime.Now > entrega.FechaLimite)
+                {
+                    return Json(new { success = false, message = "La fecha límite para esta entrega ya pasó" });
+                }
+
+                // Validar tipo de archivo
+                var extensionesPermitidas = new[] { ".pdf", ".docx", ".doc", ".txt", ".zip", ".rar" };
+                var extension = Path.GetExtension(archivo.FileName).ToLowerInvariant();
+                
+                if (!extensionesPermitidas.Contains(extension))
+                {
+                    return Json(new { success = false, message = "Solo se permiten archivos PDF, DOC, DOCX, TXT, ZIP o RAR" });
+                }
+
+                // Validar tamaño (20MB máximo)
+                if (archivo.Length > 20 * 1024 * 1024)
+                {
+                    return Json(new { success = false, message = "El archivo no puede ser mayor a 20MB" });
+                }
+
+                // Crear directorio si no existe
+                var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "entregas");
+                if (!Directory.Exists(uploadsDir))
+                {
+                    Directory.CreateDirectory(uploadsDir);
+                }
+
+                // Generar nombre único para el archivo
+                var nombreArchivo = $"entrega_{entregaId}_{grupoEstudiante.GrupoNumero}_{Guid.NewGuid()}{extension}";
+                var rutaCompleta = Path.Combine(uploadsDir, nombreArchivo);
+
+                // Eliminar archivo anterior si existe
+                if (!string.IsNullOrEmpty(entrega.ArchivoRuta))
+                {
+                    var archivoAnterior = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", entrega.ArchivoRuta);
+                    if (System.IO.File.Exists(archivoAnterior))
+                    {
+                        System.IO.File.Delete(archivoAnterior);
+                    }
+                }
+
+                // Guardar archivo
+                using (var stream = new FileStream(rutaCompleta, FileMode.Create))
+                {
+                    await archivo.CopyToAsync(stream);
+                }
+
+                // Actualizar entrega
+                entrega.ArchivoRuta = $"uploads/entregas/{nombreArchivo}";
+                entrega.FechaEntrega = DateTime.Now;
+                entrega.Retroalimentacion = "Pendiente de revisión";
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { 
+                    success = true, 
+                    message = "Entrega subida exitosamente",
+                    fechaEntrega = entrega.FechaEntrega?.ToString("dd/MM/yyyy HH:mm")
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error al subir entrega: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// Descargar archivo de entrega (para estudiantes del grupo)
+        /// </summary>
+        public async Task<IActionResult> DescargarEntrega(int entregaId)
+        {
+            try
+            {
+                // Verificar autenticación
+                var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+                var usuarioRol = HttpContext.Session.GetString("UsuarioRol");
+                
+                if (usuarioId == null || usuarioRol != "Estudiante")
+                {
+                    return Forbid();
+                }
+
+                var estudiante = await _context.Estudiantes
+                    .FirstOrDefaultAsync(e => e.Identificacion == usuarioId.Value);
+
+                if (estudiante == null)
+                {
+                    return NotFound("Estudiante no encontrado");
+                }
+
+                var grupoEstudiante = await _context.GruposEstudiantes
+                    .FirstOrDefaultAsync(ge => ge.EstudianteIdentificacion == estudiante.Identificacion);
+
+                if (grupoEstudiante == null)
+                {
+                    return Forbid("No estás asignado a ningún grupo");
+                }
+
+                var entrega = await _context.Entregas
+                    .FirstOrDefaultAsync(e => e.Identificacion == entregaId && 
+                                            e.GrupoNumero == grupoEstudiante.GrupoNumero);
+
+                if (entrega == null || string.IsNullOrEmpty(entrega.ArchivoRuta))
+                {
+                    return NotFound("Archivo no encontrado");
+                }
+
+                var rutaCompleta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", entrega.ArchivoRuta);
+                
+                if (!System.IO.File.Exists(rutaCompleta))
+                {
+                    return NotFound("El archivo no existe en el servidor");
+                }
+
+                var bytes = await System.IO.File.ReadAllBytesAsync(rutaCompleta);
+                var extension = Path.GetExtension(rutaCompleta);
+                var contentType = GetMimeType(extension);
+                var nombreArchivo = Path.GetFileName(rutaCompleta);
+
+                return File(bytes, contentType, nombreArchivo);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error al descargar el archivo: {ex.Message}");
+            }
+        }
     }
 
     public class ResponderSolicitudRequest

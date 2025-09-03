@@ -1910,6 +1910,15 @@ namespace ServicioComunal.Controllers
         {
             try
             {
+                // Verificar autenticación
+                var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+                var usuarioRol = HttpContext.Session.GetString("UsuarioRol");
+                
+                if (usuarioId == null || usuarioRol != "Administrador")
+                {
+                    return Json(new { success = false, message = "No tienes permisos para crear formularios" });
+                }
+
                 var nombre = Request.Form["nombre"].ToString();
                 var descripcion = Request.Form["descripcion"].ToString();
                 var archivo = Request.Form.Files.GetFile("archivo");
@@ -1965,7 +1974,7 @@ namespace ServicioComunal.Controllers
                     Descripcion = descripcion,
                     ArchivoRuta = archivoRuta,
                     FechaIngreso = DateTime.Now,
-                    ProfesorIdentificacion = 1 // Valor por defecto
+                    ProfesorIdentificacion = usuarioId.Value // Usuario autenticado
                 };
 
                 _context.Formularios.Add(formulario);
@@ -2191,6 +2200,15 @@ namespace ServicioComunal.Controllers
         {
             try
             {
+                // Verificar autenticación
+                var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+                var usuarioRol = HttpContext.Session.GetString("UsuarioRol");
+                
+                if (usuarioId == null || usuarioRol != "Administrador")
+                {
+                    return Json(new { success = false, message = "No tienes permisos para crear entregas" });
+                }
+
                 if (string.IsNullOrWhiteSpace(entregaDto.Nombre) || 
                     string.IsNullOrWhiteSpace(entregaDto.Descripcion))
                 {
