@@ -1434,31 +1434,109 @@ namespace ServicioComunal.Controllers
 
         // POST: /Estudiante/GuardarAnexo2
         [HttpPost]
-        public async Task<IActionResult> GuardarAnexo2(int entregaId, Anexo2FormularioDto formData)
+        public async Task<IActionResult> GuardarAnexo2(Anexo2FormularioDto formData)
         {
+            _logger.LogWarning("=== INICIO GuardarAnexo2 - ACCIÓN EJECUTÁNDOSE ===");
+            
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            var entregaId = 0;
+            
             try
             {
+                _logger.LogInformation("POST recibido para GuardarAnexo2");
+                _logger.LogInformation("FormData recibido: {@FormData}", formData);
+                
+                // Obtener entregaId desde el form data
+                entregaId = formData?.EntregaId ?? 0;
+                if (entregaId == 0)
+                {
+                    // Intentar obtener desde Request.Form como fallback
+                    if (Request.Form.ContainsKey("entregaId") && int.TryParse(Request.Form["entregaId"], out var parsedId))
+                    {
+                        entregaId = parsedId;
+                        if (formData != null)
+                        {
+                            formData.EntregaId = entregaId;
+                        }
+                    }
+                }
+                
+                _logger.LogInformation("EntregaId: {EntregaId}", entregaId);
+                _logger.LogInformation("NombreProyecto: '{NombreProyecto}'", formData?.NombreProyecto);
+                
+                if (entregaId == 0)
+                {
+                    _logger.LogWarning("EntregaId no válido: {EntregaId}", entregaId);
+                    TempData["Error"] = "ID de entrega no válido";
+                    return RedirectToAction("FormularioAnexo", new { entregaId });
+                }
+                
+                // Verificar autenticación
+                var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+                var usuarioRol = HttpContext.Session.GetString("UsuarioRol");
+                
+                if (usuarioId == null || usuarioRol != "Estudiante")
+                {
+                    _logger.LogWarning("Usuario no autenticado o rol incorrecto");
+                    return RedirectToAction("Login", "Auth");
+                }
+                
+                _logger.LogInformation("Iniciando guardado de Anexo 2 para entrega {EntregaId} - Datos: {@FormData}", entregaId, formData);
+                
+                // Validación básica
+                if (formData == null)
+                {
+                    _logger.LogWarning("FormData es null para entrega {EntregaId}", entregaId);
+                    TempData["Error"] = "No se recibieron datos del formulario";
+                    return RedirectToAction("FormularioAnexo", new { entregaId });
+                }
+                
                 var entrega = await _context.Entregas.FindAsync(entregaId);
                 if (entrega == null)
                 {
+                    _logger.LogWarning("Entrega {EntregaId} no encontrada", entregaId);
                     return NotFound("Entrega no encontrada");
                 }
 
+                _logger.LogInformation("Entrega encontrada, serializando datos del formulario - Tiempo transcurrido: {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
+                
+                // Guardar datos del formulario en JSON
                 var jsonData = JsonSerializer.Serialize(formData);
                 entrega.DatosFormularioJson = jsonData;
 
-                var rutaPdf = await _pdfFillerService.SaveFilledPdfAsync(entregaId, 2, formData);
+                _logger.LogInformation("Generando PDF para Anexo 2 - Tiempo transcurrido: {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
+                
+                // Generar PDF rellenado con manejo de errores específico
+                string rutaPdf;
+                try
+                {
+                    _logger.LogInformation("Llamando al PdfFillerService.SaveFilledPdfAsync...");
+                    rutaPdf = await _pdfFillerService.SaveFilledPdfAsync(entregaId, 2, formData);
+                    _logger.LogInformation("PdfFillerService completado exitosamente. Ruta: {RutaPdf}", rutaPdf);
+                }
+                catch (Exception pdfEx)
+                {
+                    _logger.LogError(pdfEx, "Error específico en la generación de PDF para entrega {EntregaId}", entregaId);
+                    throw new InvalidOperationException($"Error generando PDF: {pdfEx.Message}", pdfEx);
+                }
+                
                 entrega.ArchivoRuta = rutaPdf;
                 entrega.FechaEntrega = DateTime.Now;
 
+                _logger.LogInformation("PDF generado en ruta: {RutaPdf} - Tiempo transcurrido: {ElapsedMs}ms", rutaPdf, stopwatch.ElapsedMilliseconds);
+
                 await _context.SaveChangesAsync();
 
+                stopwatch.Stop();
+                _logger.LogInformation("Anexo 2 guardado exitosamente para entrega {EntregaId} - Tiempo total: {ElapsedMs}ms", entregaId, stopwatch.ElapsedMilliseconds);
+                
                 TempData["Success"] = "Anexo 2 guardado exitosamente";
                 return RedirectToAction("DetalleEntrega", new { id = entregaId });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error guardando Anexo 2 para entrega {EntregaId}", entregaId);
+                stopwatch.Stop();
+                _logger.LogError(ex, "Error guardando Anexo 2 para entrega {EntregaId} - Tiempo transcurrido: {ElapsedMs}ms", entregaId, stopwatch.ElapsedMilliseconds);
                 TempData["Error"] = "Error al guardar el anexo: " + ex.Message;
                 return RedirectToAction("FormularioAnexo", new { entregaId });
             }
@@ -1466,31 +1544,109 @@ namespace ServicioComunal.Controllers
 
         // POST: /Estudiante/GuardarAnexo3
         [HttpPost]
-        public async Task<IActionResult> GuardarAnexo3(int entregaId, Anexo3FormularioDto formData)
+        public async Task<IActionResult> GuardarAnexo3(Anexo3FormularioDto formData)
         {
+            _logger.LogWarning("=== INICIO GuardarAnexo3 - ACCIÓN EJECUTÁNDOSE ===");
+            
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            var entregaId = 0;
+            
             try
             {
+                _logger.LogInformation("POST recibido para GuardarAnexo3");
+                _logger.LogInformation("FormData recibido: {@FormData}", formData);
+                
+                // Obtener entregaId desde el form data
+                entregaId = formData?.EntregaId ?? 0;
+                if (entregaId == 0)
+                {
+                    // Intentar obtener desde Request.Form como fallback
+                    if (Request.Form.ContainsKey("entregaId") && int.TryParse(Request.Form["entregaId"], out var parsedId))
+                    {
+                        entregaId = parsedId;
+                        if (formData != null)
+                        {
+                            formData.EntregaId = entregaId;
+                        }
+                    }
+                }
+                
+                _logger.LogInformation("EntregaId: {EntregaId}", entregaId);
+                _logger.LogInformation("NombreDelProyecto: '{NombreDelProyecto}'", formData?.NombreDelProyecto);
+                
+                if (entregaId == 0)
+                {
+                    _logger.LogWarning("EntregaId no válido: {EntregaId}", entregaId);
+                    TempData["Error"] = "ID de entrega no válido";
+                    return RedirectToAction("FormularioAnexo", new { entregaId });
+                }
+                
+                // Verificar autenticación
+                var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+                var usuarioRol = HttpContext.Session.GetString("UsuarioRol");
+                
+                if (usuarioId == null || usuarioRol != "Estudiante")
+                {
+                    _logger.LogWarning("Usuario no autenticado o rol incorrecto");
+                    return RedirectToAction("Login", "Auth");
+                }
+                
+                _logger.LogInformation("Iniciando guardado de Anexo 3 para entrega {EntregaId} - Datos: {@FormData}", entregaId, formData);
+                
+                // Validación básica
+                if (formData == null)
+                {
+                    _logger.LogWarning("FormData es null para entrega {EntregaId}", entregaId);
+                    TempData["Error"] = "No se recibieron datos del formulario";
+                    return RedirectToAction("FormularioAnexo", new { entregaId });
+                }
+                
                 var entrega = await _context.Entregas.FindAsync(entregaId);
                 if (entrega == null)
                 {
+                    _logger.LogWarning("Entrega {EntregaId} no encontrada", entregaId);
                     return NotFound("Entrega no encontrada");
                 }
 
+                _logger.LogInformation("Entrega encontrada, serializando datos del formulario - Tiempo transcurrido: {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
+                
+                // Guardar datos del formulario en JSON
                 var jsonData = JsonSerializer.Serialize(formData);
                 entrega.DatosFormularioJson = jsonData;
 
-                var rutaPdf = await _pdfFillerService.SaveFilledPdfAsync(entregaId, 3, formData);
+                _logger.LogInformation("Generando PDF para Anexo 3 - Tiempo transcurrido: {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
+                
+                // Generar PDF rellenado con manejo de errores específico
+                string rutaPdf;
+                try
+                {
+                    _logger.LogInformation("Llamando al PdfFillerService.SaveFilledPdfAsync...");
+                    rutaPdf = await _pdfFillerService.SaveFilledPdfAsync(entregaId, 3, formData);
+                    _logger.LogInformation("PdfFillerService completado exitosamente. Ruta: {RutaPdf}", rutaPdf);
+                }
+                catch (Exception pdfEx)
+                {
+                    _logger.LogError(pdfEx, "Error específico en la generación de PDF para entrega {EntregaId}", entregaId);
+                    throw new InvalidOperationException($"Error generando PDF: {pdfEx.Message}", pdfEx);
+                }
+                
                 entrega.ArchivoRuta = rutaPdf;
                 entrega.FechaEntrega = DateTime.Now;
 
+                _logger.LogInformation("PDF generado en ruta: {RutaPdf} - Tiempo transcurrido: {ElapsedMs}ms", rutaPdf, stopwatch.ElapsedMilliseconds);
+
                 await _context.SaveChangesAsync();
 
+                stopwatch.Stop();
+                _logger.LogInformation("Anexo 3 guardado exitosamente para entrega {EntregaId} - Tiempo total: {ElapsedMs}ms", entregaId, stopwatch.ElapsedMilliseconds);
+                
                 TempData["Success"] = "Anexo 3 guardado exitosamente";
                 return RedirectToAction("DetalleEntrega", new { id = entregaId });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error guardando Anexo 3 para entrega {EntregaId}", entregaId);
+                stopwatch.Stop();
+                _logger.LogError(ex, "Error guardando Anexo 3 para entrega {EntregaId} - Tiempo transcurrido: {ElapsedMs}ms", entregaId, stopwatch.ElapsedMilliseconds);
                 TempData["Error"] = "Error al guardar el anexo: " + ex.Message;
                 return RedirectToAction("FormularioAnexo", new { entregaId });
             }
@@ -1498,31 +1654,109 @@ namespace ServicioComunal.Controllers
 
         // POST: /Estudiante/GuardarAnexo5
         [HttpPost]
-        public async Task<IActionResult> GuardarAnexo5(int entregaId, Anexo5FormularioDto formData)
+        public async Task<IActionResult> GuardarAnexo5(Anexo5FormularioDto formData)
         {
+            _logger.LogWarning("=== INICIO GuardarAnexo5 - ACCIÓN EJECUTÁNDOSE ===");
+            
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            var entregaId = 0;
+            
             try
             {
+                _logger.LogInformation("POST recibido para GuardarAnexo5");
+                _logger.LogInformation("FormData recibido: {@FormData}", formData);
+                
+                // Obtener entregaId desde el form data
+                entregaId = formData?.EntregaId ?? 0;
+                if (entregaId == 0)
+                {
+                    // Intentar obtener desde Request.Form como fallback
+                    if (Request.Form.ContainsKey("entregaId") && int.TryParse(Request.Form["entregaId"], out var parsedId))
+                    {
+                        entregaId = parsedId;
+                        if (formData != null)
+                        {
+                            formData.EntregaId = entregaId;
+                        }
+                    }
+                }
+                
+                _logger.LogInformation("EntregaId: {EntregaId}", entregaId);
+                _logger.LogInformation("NombreProyecto: '{NombreProyecto}'", formData?.NombreProyecto);
+                
+                if (entregaId == 0)
+                {
+                    _logger.LogWarning("EntregaId no válido: {EntregaId}", entregaId);
+                    TempData["Error"] = "ID de entrega no válido";
+                    return RedirectToAction("FormularioAnexo", new { entregaId });
+                }
+                
+                // Verificar autenticación
+                var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+                var usuarioRol = HttpContext.Session.GetString("UsuarioRol");
+                
+                if (usuarioId == null || usuarioRol != "Estudiante")
+                {
+                    _logger.LogWarning("Usuario no autenticado o rol incorrecto");
+                    return RedirectToAction("Login", "Auth");
+                }
+                
+                _logger.LogInformation("Iniciando guardado de Anexo 5 para entrega {EntregaId} - Datos: {@FormData}", entregaId, formData);
+                
+                // Validación básica
+                if (formData == null)
+                {
+                    _logger.LogWarning("FormData es null para entrega {EntregaId}", entregaId);
+                    TempData["Error"] = "No se recibieron datos del formulario";
+                    return RedirectToAction("FormularioAnexo", new { entregaId });
+                }
+                
                 var entrega = await _context.Entregas.FindAsync(entregaId);
                 if (entrega == null)
                 {
+                    _logger.LogWarning("Entrega {EntregaId} no encontrada", entregaId);
                     return NotFound("Entrega no encontrada");
                 }
 
+                _logger.LogInformation("Entrega encontrada, serializando datos del formulario - Tiempo transcurrido: {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
+                
+                // Guardar datos del formulario en JSON
                 var jsonData = JsonSerializer.Serialize(formData);
                 entrega.DatosFormularioJson = jsonData;
 
-                var rutaPdf = await _pdfFillerService.SaveFilledPdfAsync(entregaId, 5, formData);
+                _logger.LogInformation("Generando PDF para Anexo 5 - Tiempo transcurrido: {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
+                
+                // Generar PDF rellenado con manejo de errores específico
+                string rutaPdf;
+                try
+                {
+                    _logger.LogInformation("Llamando al PdfFillerService.SaveFilledPdfAsync...");
+                    rutaPdf = await _pdfFillerService.SaveFilledPdfAsync(entregaId, 5, formData);
+                    _logger.LogInformation("PdfFillerService completado exitosamente. Ruta: {RutaPdf}", rutaPdf);
+                }
+                catch (Exception pdfEx)
+                {
+                    _logger.LogError(pdfEx, "Error específico en la generación de PDF para entrega {EntregaId}", entregaId);
+                    throw new InvalidOperationException($"Error generando PDF: {pdfEx.Message}", pdfEx);
+                }
+                
                 entrega.ArchivoRuta = rutaPdf;
                 entrega.FechaEntrega = DateTime.Now;
 
+                _logger.LogInformation("PDF generado en ruta: {RutaPdf} - Tiempo transcurrido: {ElapsedMs}ms", rutaPdf, stopwatch.ElapsedMilliseconds);
+
                 await _context.SaveChangesAsync();
 
+                stopwatch.Stop();
+                _logger.LogInformation("Anexo 5 guardado exitosamente para entrega {EntregaId} - Tiempo total: {ElapsedMs}ms", entregaId, stopwatch.ElapsedMilliseconds);
+                
                 TempData["Success"] = "Anexo 5 guardado exitosamente";
                 return RedirectToAction("DetalleEntrega", new { id = entregaId });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error guardando Anexo 5 para entrega {EntregaId}", entregaId);
+                stopwatch.Stop();
+                _logger.LogError(ex, "Error guardando Anexo 5 para entrega {EntregaId} - Tiempo transcurrido: {ElapsedMs}ms", entregaId, stopwatch.ElapsedMilliseconds);
                 TempData["Error"] = "Error al guardar el anexo: " + ex.Message;
                 return RedirectToAction("FormularioAnexo", new { entregaId });
             }

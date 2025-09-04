@@ -29,6 +29,7 @@
                     }
 
                     <form asp-controller="Estudiante" asp-action="GuardarAnexo2" method="post" id="anexo2Form">
+                        @Html.AntiForgeryToken()
                         <input type="hidden" name="entregaId" value="@entrega?.Identificacion" />
                         
                         <!-- Información del Proyecto -->
@@ -44,7 +45,7 @@
                                     <label asp-for="NombreProyecto" class="form-label fw-bold">
                                         Nombre del Proyecto <span class="text-danger">*</span>
                                     </label>
-                                    <input asp-for="NombreProyecto" class="form-control" required 
+                                    <input asp-for="NombreProyecto" name="NombreProyecto" class="form-control" required 
                                            placeholder="Ingrese el nombre del proyecto">
                                     <span asp-validation-for="NombreProyecto" class="text-danger"></span>
                                 </div>
@@ -54,7 +55,7 @@
                                     <label asp-for="Tutor" class="form-label fw-bold">
                                         Tutor <span class="text-danger">*</span>
                                     </label>
-                                    <input asp-for="Tutor" class="form-control" required 
+                                    <input asp-for="Tutor" name="Tutor" class="form-control" required 
                                            placeholder="Ingrese el nombre del tutor">
                                     <span asp-validation-for="Tutor" class="text-danger"></span>
                                 </div>
@@ -83,7 +84,7 @@
                                     <label asp-for="Seccion1" class="form-label fw-bold">
                                         Sección 1 <span class="text-danger">*</span>
                                     </label>
-                                    <input asp-for="Seccion1" class="form-control" required 
+                                    <input asp-for="Seccion1" name="Seccion1" class="form-control" required 
                                            placeholder="Sección del estudiante 1">
                                 </div>
                             </div>
@@ -92,7 +93,7 @@
                                     <label asp-for="Nombre2" class="form-label fw-bold">
                                         Estudiante 2
                                     </label>
-                                    <input asp-for="Nombre2" class="form-control" 
+                                    <input asp-for="Nombre2" name="Nombre2" class="form-control" 
                                            placeholder="Nombre del estudiante 2">
                                 </div>
                             </div>
@@ -101,7 +102,7 @@
                                     <label asp-for="Seccion2" class="form-label fw-bold">
                                         Sección 2
                                     </label>
-                                    <input asp-for="Seccion2" class="form-control" 
+                                    <input asp-for="Seccion2" name="Seccion2" class="form-control" 
                                            placeholder="Sección del estudiante 2">
                                 </div>
                             </div>
@@ -110,7 +111,7 @@
                                     <label asp-for="Nombre3" class="form-label fw-bold">
                                         Estudiante 3
                                     </label>
-                                    <input asp-for="Nombre3" class="form-control" 
+                                    <input asp-for="Nombre3" name="Nombre3" class="form-control" 
                                            placeholder="Nombre del estudiante 3">
                                 </div>
                             </div>
@@ -119,7 +120,7 @@
                                     <label asp-for="Seccion3" class="form-label fw-bold">
                                         Sección 3
                                     </label>
-                                    <input asp-for="Seccion3" class="form-control" 
+                                    <input asp-for="Seccion3" name="Seccion3" class="form-control" 
                                            placeholder="Sección del estudiante 3">
                                 </div>
                             </div>
@@ -128,7 +129,7 @@
                                     <label asp-for="Nombre4" class="form-label fw-bold">
                                         Estudiante 4
                                     </label>
-                                    <input asp-for="Nombre4" class="form-control" 
+                                    <input asp-for="Nombre4" name="Nombre4" class="form-control" 
                                            placeholder="Nombre del estudiante 4">
                                 </div>
                             </div>
@@ -137,7 +138,7 @@
                                     <label asp-for="Seccion4" class="form-label fw-bold">
                                         Sección 4
                                     </label>
-                                    <input asp-for="Seccion4" class="form-control" 
+                                    <input asp-for="Seccion4" name="Seccion4" class="form-control" 
                                            placeholder="Sección del estudiante 4">
                                 </div>
                             </div>
@@ -154,19 +155,19 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-check mb-2">
-                                    <input asp-for="MedioAmbiente" class="form-check-input" type="checkbox">
+                                    <input asp-for="MedioAmbiente" name="MedioAmbiente" class="form-check-input" type="checkbox">
                                     <label asp-for="MedioAmbiente" class="form-check-label">
                                         Medio Ambiente
                                     </label>
                                 </div>
                                 <div class="form-check mb-2">
-                                    <input asp-for="JovenesApoyandoJovenes" class="form-check-input" type="checkbox">
+                                    <input asp-for="JovenesApoyandoJovenes" name="JovenesApoyandoJovenes" class="form-check-input" type="checkbox">
                                     <label asp-for="JovenesApoyandoJovenes" class="form-check-label">
                                         Jóvenes Apoyando Jóvenes
                                     </label>
                                 </div>
                                 <div class="form-check mb-2">
-                                    <input asp-for="InformacionEstudiantil" class="form-check-input" type="checkbox">
+                                    <input asp-for="InformacionEstudiantil" name="InformacionEstudiantil" class="form-check-input" type="checkbox">
                                     <label asp-for="InformacionEstudiantil" class="form-check-label">
                                         Información Estudiantil
                                     </label>
@@ -174,25 +175,25 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-check mb-2">
-                                    <input asp-for="Arte" class="form-check-input" type="checkbox">
+                                    <input asp-for="Arte" name="Arte" class="form-check-input" type="checkbox">
                                     <label asp-for="Arte" class="form-check-label">
                                         Arte
                                     </label>
                                 </div>
                                 <div class="form-check mb-2">
-                                    <input asp-for="EstilosVidaSaludables" class="form-check-input" type="checkbox">
+                                    <input asp-for="EstilosVidaSaludables" name="EstilosVidaSaludables" class="form-check-input" type="checkbox">
                                     <label asp-for="EstilosVidaSaludables" class="form-check-label">
                                         Estilos de Vida Saludables
                                     </label>
                                 </div>
                                 <div class="form-check mb-2">
-                                    <input asp-for="Otros" class="form-check-input" type="checkbox" onchange="toggleOtrosField()">
+                                    <input asp-for="Otros" name="Otros" class="form-check-input" type="checkbox" onchange="toggleOtrosField()">
                                     <label asp-for="Otros" class="form-check-label">
                                         Otros
                                     </label>
                                 </div>
                                 <div class="form-group mt-2" id="otrosField" style="display: none;">
-                                    <input asp-for="OtrosEspecifique" class="form-control" 
+                                    <input asp-for="OtrosEspecifique" name="OtrosEspecifique" class="form-control" 
                                            placeholder="Especifique otros...">
                                 </div>
                             </div>
@@ -211,7 +212,7 @@
                                     <label asp-for="BreveDescripcion" class="form-label fw-bold">
                                         Breve Descripción <span class="text-danger">*</span>
                                     </label>
-                                    <textarea asp-for="BreveDescripcion" class="form-control" rows="6" required
+                                    <textarea asp-for="BreveDescripcion" name="BreveDescripcion" class="form-control" rows="6" required
                                               placeholder="Describa brevemente el proyecto, sus objetivos y beneficiarios..."></textarea>
                                     <span asp-validation-for="BreveDescripcion" class="text-danger"></span>
                                 </div>
@@ -269,4 +270,90 @@ function guardarBorrador() {
     // Implementar funcionalidad de guardar borrador
     alert('Funcionalidad de guardar borrador pendiente de implementar');
 }
+
+// Prevent default form submission and use fetch API instead
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('formularioAnexo2');
+    
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent default form submission
+            
+            // Validate required fields
+            const nombreProyecto = document.querySelector('input[name="NombreProyecto"]');
+            const tutor = document.querySelector('input[name="Tutor"]');
+            const seccion1 = document.querySelector('input[name="Seccion1"]');
+            const breveDescripcion = document.querySelector('textarea[name="BreveDescripcion"]');
+            
+            if (!nombreProyecto || !nombreProyecto.value.trim()) {
+                alert('Por favor, ingrese el nombre del proyecto.');
+                if (nombreProyecto) nombreProyecto.focus();
+                return;
+            }
+            
+            if (!tutor || !tutor.value.trim()) {
+                alert('Por favor, ingrese el nombre del tutor.');
+                if (tutor) tutor.focus();
+                return;
+            }
+            
+            if (!seccion1 || !seccion1.value.trim()) {
+                alert('Por favor, ingrese la sección del estudiante 1.');
+                if (seccion1) seccion1.focus();
+                return;
+            }
+            
+            if (!breveDescripcion || !breveDescripcion.value.trim()) {
+                alert('Por favor, ingrese la descripción del proyecto.');
+                if (breveDescripcion) breveDescripcion.focus();
+                return;
+            }
+            
+            // Create FormData from the form
+            const formData = new FormData(form);
+            
+            // Show loading state
+            const submitButton = form.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando PDF...';
+            
+            // Submit using fetch API
+            fetch('@Url.Action("GuardarAnexo2", "Estudiante")', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert('Anexo 2 guardado y PDF generado exitosamente.');
+                    
+                    // Redirect to the specified URL if provided
+                    if (data.redirectUrl) {
+                        window.location.href = data.redirectUrl;
+                    } else {
+                        // Fallback: reload the page or redirect to a default location
+                        window.location.reload();
+                    }
+                } else {
+                    alert('Error: ' + (data.message || 'No se pudo guardar el anexo 2.'));
+                }
+            })
+            .catch(error => {
+                console.error('Error submitting form:', error);
+                alert('Error al enviar el formulario. Por favor, inténtelo de nuevo.');
+            })
+            .finally(() => {
+                // Restore button state
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalText;
+            });
+        });
+    }
+});
 </script>

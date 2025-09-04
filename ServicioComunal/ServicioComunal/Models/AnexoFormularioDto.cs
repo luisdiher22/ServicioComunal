@@ -25,6 +25,7 @@ namespace ServicioComunal.Models
 
     public class Anexo2FormularioDto
     {
+        public int EntregaId { get; set; }
         public string? NombreProyecto { get; set; }
         public string? Tutor { get; set; }
         public string? Nombre1 { get; set; }
@@ -47,6 +48,7 @@ namespace ServicioComunal.Models
 
     public class Anexo3FormularioDto
     {
+        public int EntregaId { get; set; }
         public string? FirmaTutor { get; set; }
         public string? Tutor { get; set; }
         public string? NombreEstudiante1 { get; set; }
@@ -96,6 +98,7 @@ namespace ServicioComunal.Models
 
     public class Anexo5FormularioDto
     {
+        public int EntregaId { get; set; }
         public string? Tutor { get; set; }
         public string? NombreProyecto { get; set; }
         public string? NombreEstudiante1 { get; set; }

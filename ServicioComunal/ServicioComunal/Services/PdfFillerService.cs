@@ -318,58 +318,357 @@ fillPDF();
         ",
 
                 2 => @"
-        // Anexo 2
-        if (formData.NombreProyecto) form.getTextField('NOMBREPROYECTO').setText(formData.NombreProyecto);
-        if (formData.Tutor) form.getTextField('TUTOR').setText(formData.Tutor);
-        if (formData.Nombre1) form.getTextField('NOMBRE1').setText(formData.Nombre1);
-        if (formData.Nombre2) form.getTextField('NOMBRE2').setText(formData.Nombre2);
-        if (formData.Nombre3) form.getTextField('NOMBRE3').setText(formData.Nombre3);
-        if (formData.Nombre4) form.getTextField('NOMBRE4').setText(formData.Nombre4);
-        if (formData.Seccion1) form.getTextField('SECCION1').setText(formData.Seccion1);
-        if (formData.Seccion2) form.getTextField('SECCION2').setText(formData.Seccion2);
-        if (formData.Seccion3) form.getTextField('SECCION3').setText(formData.Seccion3);
-        if (formData.Seccion4) form.getTextField('SECCION4').setText(formData.Seccion4);
-        if (formData.MedioAmbiente) form.getCheckBox('CBMEDIOAMBIENTE').check();
-        if (formData.JovenesApoyandoJovenes) form.getCheckBox('CBJOVENESAPOYANDOJOVENES').check();
-        if (formData.InformacionEstudiantil) form.getCheckBox('CBINFORMACIONESTUDIANTIL').check();
-        if (formData.Arte) form.getCheckBox('CBARTE').check();
-        if (formData.EstilosVidaSaludables) form.getCheckBox('CBESTILOSDEVIDASALUDABLES').check();
-        if (formData.Otros) form.getCheckBox('CBOTROS').check();
-        if (formData.OtrosEspecifique) form.getTextField('OTROSESPECIFIQUE').setText(formData.OtrosEspecifique);
-        if (formData.BreveDescripcion) form.getTextField('BREVEDESCRIPCION').setText(formData.BreveDescripcion);
+        // Anexo 2 - Mapeo de campos
+        console.log('Procesando Anexo 2...');
+        
+        try {
+            if (formData.nombreProyecto) {
+                const field = form.getTextField('NOMBREPROYECTO');
+                field.setText(formData.nombreProyecto);
+                console.log('Campo NOMBREPROYECTO llenado con:', formData.nombreProyecto);
+            }
+        } catch (e) { console.log('Error en NOMBREPROYECTO:', e.message); }
+        
+        try {
+            if (formData.tutor) {
+                const field = form.getTextField('TUTOR');
+                field.setText(formData.tutor);
+                console.log('Campo TUTOR llenado con:', formData.tutor);
+            }
+        } catch (e) { console.log('Error en TUTOR:', e.message); }
+        
+        try {
+            if (formData.nombre1) {
+                const field = form.getTextField('NOMBRE1');
+                field.setText(formData.nombre1);
+                console.log('Campo NOMBRE1 llenado con:', formData.nombre1);
+            }
+        } catch (e) { console.log('Error en NOMBRE1:', e.message); }
+        
+        try {
+            if (formData.nombre2) {
+                const field = form.getTextField('NOMBRE2');
+                field.setText(formData.nombre2);
+                console.log('Campo NOMBRE2 llenado con:', formData.nombre2);
+            }
+        } catch (e) { console.log('Error en NOMBRE2:', e.message); }
+        
+        try {
+            if (formData.nombre3) {
+                const field = form.getTextField('NOMBRE3');
+                field.setText(formData.nombre3);
+                console.log('Campo NOMBRE3 llenado con:', formData.nombre3);
+            }
+        } catch (e) { console.log('Error en NOMBRE3:', e.message); }
+        
+        try {
+            if (formData.nombre4) {
+                const field = form.getTextField('NOMBRE4');
+                field.setText(formData.nombre4);
+                console.log('Campo NOMBRE4 llenado con:', formData.nombre4);
+            }
+        } catch (e) { console.log('Error en NOMBRE4:', e.message); }
+        
+        try {
+            if (formData.seccion1) {
+                const field = form.getTextField('SECCION1');
+                field.setText(formData.seccion1);
+                console.log('Campo SECCION1 llenado con:', formData.seccion1);
+            }
+        } catch (e) { console.log('Error en SECCION1:', e.message); }
+        
+        try {
+            if (formData.seccion2) {
+                const field = form.getTextField('SECCION2');
+                field.setText(formData.seccion2);
+                console.log('Campo SECCION2 llenado con:', formData.seccion2);
+            }
+        } catch (e) { console.log('Error en SECCION2:', e.message); }
+        
+        try {
+            if (formData.seccion3) {
+                const field = form.getTextField('SECCION3');
+                field.setText(formData.seccion3);
+                console.log('Campo SECCION3 llenado con:', formData.seccion3);
+            }
+        } catch (e) { console.log('Error en SECCION3:', e.message); }
+        
+        try {
+            if (formData.seccion4) {
+                const field = form.getTextField('SECCION4');
+                field.setText(formData.seccion4);
+                console.log('Campo SECCION4 llenado con:', formData.seccion4);
+            }
+        } catch (e) { console.log('Error en SECCION4:', e.message); }
+        
+        // Checkboxes
+        try {
+            if (formData.medioAmbiente) {
+                const field = form.getCheckBox('CBMEDIOAMBIENTE');
+                field.check();
+                console.log('Checkbox CBMEDIOAMBIENTE marcado');
+            }
+        } catch (e) { console.log('Error en CBMEDIOAMBIENTE:', e.message); }
+        
+        try {
+            if (formData.jovenesApoyandoJovenes) {
+                const field = form.getCheckBox('CBJOVENESAPOYANDOJOVENES');
+                field.check();
+                console.log('Checkbox CBJOVENESAPOYANDOJOVENES marcado');
+            }
+        } catch (e) { console.log('Error en CBJOVENESAPOYANDOJOVENES:', e.message); }
+        
+        try {
+            if (formData.informacionEstudiantil) {
+                const field = form.getCheckBox('CBINFORMACIONESTUDIANTIL');
+                field.check();
+                console.log('Checkbox CBINFORMACIONESTUDIANTIL marcado');
+            }
+        } catch (e) { console.log('Error en CBINFORMACIONESTUDIANTIL:', e.message); }
+        
+        try {
+            if (formData.arte) {
+                const field = form.getCheckBox('CBARTE');
+                field.check();
+                console.log('Checkbox CBARTE marcado');
+            }
+        } catch (e) { console.log('Error en CBARTE:', e.message); }
+        
+        try {
+            if (formData.estilosVidaSaludables) {
+                const field = form.getCheckBox('CBESTILOSDEVIDASALUDABLES');
+                field.check();
+                console.log('Checkbox CBESTILOSDEVIDASALUDABLES marcado');
+            }
+        } catch (e) { console.log('Error en CBESTILOSDEVIDASALUDABLES:', e.message); }
+        
+        try {
+            if (formData.otros) {
+                const field = form.getCheckBox('CBOTROS');
+                field.check();
+                console.log('Checkbox CBOTROS marcado');
+            }
+        } catch (e) { console.log('Error en CBOTROS:', e.message); }
+        
+        try {
+            if (formData.otrosEspecifique) {
+                const field = form.getTextField('OTROSESPECIFIQUE');
+                field.setText(formData.otrosEspecifique);
+                console.log('Campo OTROSESPECIFIQUE llenado con:', formData.otrosEspecifique);
+            }
+        } catch (e) { console.log('Error en OTROSESPECIFIQUE:', e.message); }
+        
+        try {
+            if (formData.breveDescripcion) {
+                const field = form.getTextField('BREVEDESCRIPCION');
+                field.setText(formData.breveDescripcion);
+                console.log('Campo BREVEDESCRIPCION llenado con:', formData.breveDescripcion);
+            }
+        } catch (e) { console.log('Error en BREVEDESCRIPCION:', e.message); }
         ",
 
                 3 => @"
-        // Anexo 3 - Solo algunos campos principales para el ejemplo
-        if (formData.FirmaTutor) form.getTextField('FirmaTutor').setText(formData.FirmaTutor);
-        if (formData.Tutor) form.getTextField('Tutor').setText(formData.Tutor);
-        if (formData.NombreEstudiante1) form.getTextField('NombreEstudiante1').setText(formData.NombreEstudiante1);
-        if (formData.Seccion01) form.getTextField('Seccion01').setText(formData.Seccion01);
-        if (formData.Telefono) form.getTextField('Telefono').setText(formData.Telefono);
-        if (formData.NombreDelProyecto) form.getTextField('NombredelProyecto').setText(formData.NombreDelProyecto);
-        if (formData.Provincia) form.getTextField('Provincia').setText(formData.Provincia);
-        if (formData.Canton) form.getTextField('Canton').setText(formData.Canton);
-        if (formData.Distrito) form.getTextField('Distrito').setText(formData.Distrito);
-        // ... más campos según sea necesario
+        // Anexo 3 - Mapeo de campos principales
+        console.log('Procesando Anexo 3...');
+        
+        try {
+            if (formData.firmaTutor) {
+                const field = form.getTextField('FirmaTutor');
+                field.setText(formData.firmaTutor);
+                console.log('Campo FirmaTutor llenado con:', formData.firmaTutor);
+            }
+        } catch (e) { console.log('Error en FirmaTutor:', e.message); }
+        
+        try {
+            if (formData.tutor) {
+                const field = form.getTextField('Tutor');
+                field.setText(formData.tutor);
+                console.log('Campo Tutor llenado con:', formData.tutor);
+            }
+        } catch (e) { console.log('Error en Tutor:', e.message); }
+        
+        try {
+            if (formData.nombreEstudiante1) {
+                const field = form.getTextField('NombreEstudiante1');
+                field.setText(formData.nombreEstudiante1);
+                console.log('Campo NombreEstudiante1 llenado con:', formData.nombreEstudiante1);
+            }
+        } catch (e) { console.log('Error en NombreEstudiante1:', e.message); }
+        
+        try {
+            if (formData.seccion01) {
+                const field = form.getTextField('Seccion01');
+                field.setText(formData.seccion01);
+                console.log('Campo Seccion01 llenado con:', formData.seccion01);
+            }
+        } catch (e) { console.log('Error en Seccion01:', e.message); }
+        
+        try {
+            if (formData.telefono) {
+                const field = form.getTextField('Telefono');
+                field.setText(formData.telefono);
+                console.log('Campo Telefono llenado con:', formData.telefono);
+            }
+        } catch (e) { console.log('Error en Telefono:', e.message); }
+        
+        try {
+            if (formData.nombreDelProyecto) {
+                const field = form.getTextField('NombredelProyecto');
+                field.setText(formData.nombreDelProyecto);
+                console.log('Campo NombredelProyecto llenado con:', formData.nombreDelProyecto);
+            }
+        } catch (e) { console.log('Error en NombredelProyecto:', e.message); }
+        
+        try {
+            if (formData.provincia) {
+                const field = form.getTextField('Provincia');
+                field.setText(formData.provincia);
+                console.log('Campo Provincia llenado con:', formData.provincia);
+            }
+        } catch (e) { console.log('Error en Provincia:', e.message); }
+        
+        try {
+            if (formData.canton) {
+                const field = form.getTextField('Canton');
+                field.setText(formData.canton);
+                console.log('Campo Canton llenado con:', formData.canton);
+            }
+        } catch (e) { console.log('Error en Canton:', e.message); }
+        
+        try {
+            if (formData.distrito) {
+                const field = form.getTextField('Distrito');
+                field.setText(formData.distrito);
+                console.log('Campo Distrito llenado con:', formData.distrito);
+            }
+        } catch (e) { console.log('Error en Distrito:', e.message); }
+        
+        // Nota: Anexo 3 tiene muchos más campos, estos son los principales para empezar
         ",
 
                 5 => @"
-        // Anexo 5
-        if (formData.Tutor) form.getTextField('Tutor').setText(formData.Tutor);
-        if (formData.NombreProyecto) form.getTextField('NombreProyecto').setText(formData.NombreProyecto);
-        if (formData.NombreEstudiante1) form.getTextField('NombreEstudiante1').setText(formData.NombreEstudiante1);
-        if (formData.NombreEstudiante2) form.getTextField('NombreEstudiante2').setText(formData.NombreEstudiante2);
-        if (formData.NombreEstudiante3) form.getTextField('NombreEstudiante3').setText(formData.NombreEstudiante3);
-        if (formData.NombreEstudiante4) form.getTextField('NombreEstudiante4').setText(formData.NombreEstudiante4);
-        if (formData.Seccion1) form.getTextField('Seccion1').setText(formData.Seccion1);
-        if (formData.Seccion2) form.getTextField('Seccion2').setText(formData.Seccion2);
-        if (formData.Seccion3) form.getTextField('Seccion3').setText(formData.Seccion3);
-        if (formData.Seccion4) form.getTextField('Seccion4').setText(formData.Seccion4);
-        if (formData.ResumenResultadosObjetivosMetas) form.getTextField('ResumenResultadosObjetivosMetas').setText(formData.ResumenResultadosObjetivosMetas);
-        if (formData.ProblemasLimitacionesEncontradas) form.getTextField('ProblemasLimitacionesEncontradas').setText(formData.ProblemasLimitacionesEncontradas);
-        if (formData.RecursosFacilidadesEncontradas) form.getTextField('RecursosFacilidadesEncontradas').setText(formData.RecursosFacilidadesEncontradas);
-        if (formData.Sugerencias) form.getTextField('Sugerencias').setText(formData.Sugerencias);
-        if (formData.Observaciones) form.getTextField('Observaciones').setText(formData.Observaciones);
+        // Anexo 5 - Mapeo de campos
+        console.log('Procesando Anexo 5...');
+        
+        try {
+            if (formData.tutor) {
+                const field = form.getTextField('Tutor');
+                field.setText(formData.tutor);
+                console.log('Campo Tutor llenado con:', formData.tutor);
+            }
+        } catch (e) { console.log('Error en Tutor:', e.message); }
+        
+        try {
+            if (formData.nombreProyecto) {
+                const field = form.getTextField('NombreProyecto');
+                field.setText(formData.nombreProyecto);
+                console.log('Campo NombreProyecto llenado con:', formData.nombreProyecto);
+            }
+        } catch (e) { console.log('Error en NombreProyecto:', e.message); }
+        
+        try {
+            if (formData.nombreEstudiante1) {
+                const field = form.getTextField('NombreEstudiante1');
+                field.setText(formData.nombreEstudiante1);
+                console.log('Campo NombreEstudiante1 llenado con:', formData.nombreEstudiante1);
+            }
+        } catch (e) { console.log('Error en NombreEstudiante1:', e.message); }
+        
+        try {
+            if (formData.nombreEstudiante2) {
+                const field = form.getTextField('NombreEstudiante2');
+                field.setText(formData.nombreEstudiante2);
+                console.log('Campo NombreEstudiante2 llenado con:', formData.nombreEstudiante2);
+            }
+        } catch (e) { console.log('Error en NombreEstudiante2:', e.message); }
+        
+        try {
+            if (formData.nombreEstudiante3) {
+                const field = form.getTextField('NombreEstudiante3');
+                field.setText(formData.nombreEstudiante3);
+                console.log('Campo NombreEstudiante3 llenado con:', formData.nombreEstudiante3);
+            }
+        } catch (e) { console.log('Error en NombreEstudiante3:', e.message); }
+        
+        try {
+            if (formData.nombreEstudiante4) {
+                const field = form.getTextField('NombreEstudiante4');
+                field.setText(formData.nombreEstudiante4);
+                console.log('Campo NombreEstudiante4 llenado con:', formData.nombreEstudiante4);
+            }
+        } catch (e) { console.log('Error en NombreEstudiante4:', e.message); }
+        
+        try {
+            if (formData.seccion1) {
+                const field = form.getTextField('Seccion1');
+                field.setText(formData.seccion1);
+                console.log('Campo Seccion1 llenado con:', formData.seccion1);
+            }
+        } catch (e) { console.log('Error en Seccion1:', e.message); }
+        
+        try {
+            if (formData.seccion2) {
+                const field = form.getTextField('Seccion2');
+                field.setText(formData.seccion2);
+                console.log('Campo Seccion2 llenado con:', formData.seccion2);
+            }
+        } catch (e) { console.log('Error en Seccion2:', e.message); }
+        
+        try {
+            if (formData.seccion3) {
+                const field = form.getTextField('Seccion3');
+                field.setText(formData.seccion3);
+                console.log('Campo Seccion3 llenado con:', formData.seccion3);
+            }
+        } catch (e) { console.log('Error en Seccion3:', e.message); }
+        
+        try {
+            if (formData.seccion4) {
+                const field = form.getTextField('Seccion4');
+                field.setText(formData.seccion4);
+                console.log('Campo Seccion4 llenado con:', formData.seccion4);
+            }
+        } catch (e) { console.log('Error en Seccion4:', e.message); }
+        
+        try {
+            if (formData.resumenResultadosObjetivosMetas) {
+                const field = form.getTextField('ResumenResultadosObjetivosMetas');
+                field.setText(formData.resumenResultadosObjetivosMetas);
+                console.log('Campo ResumenResultadosObjetivosMetas llenado');
+            }
+        } catch (e) { console.log('Error en ResumenResultadosObjetivosMetas:', e.message); }
+        
+        try {
+            if (formData.problemasLimitacionesEncontradas) {
+                const field = form.getTextField('ProblemasLimitacionesEncontradas');
+                field.setText(formData.problemasLimitacionesEncontradas);
+                console.log('Campo ProblemasLimitacionesEncontradas llenado');
+            }
+        } catch (e) { console.log('Error en ProblemasLimitacionesEncontradas:', e.message); }
+        
+        try {
+            if (formData.recursosFacilidadesEncontradas) {
+                const field = form.getTextField('RecursosFacilidadesEncontradas');
+                field.setText(formData.recursosFacilidadesEncontradas);
+                console.log('Campo RecursosFacilidadesEncontradas llenado');
+            }
+        } catch (e) { console.log('Error en RecursosFacilidadesEncontradas:', e.message); }
+        
+        try {
+            if (formData.sugerencias) {
+                const field = form.getTextField('Sugerencias');
+                field.setText(formData.sugerencias);
+                console.log('Campo Sugerencias llenado con:', formData.sugerencias);
+            }
+        } catch (e) { console.log('Error en Sugerencias:', e.message); }
+        
+        try {
+            if (formData.observaciones) {
+                const field = form.getTextField('Observaciones');
+                field.setText(formData.observaciones);
+                console.log('Campo Observaciones llenado con:', formData.observaciones);
+            }
+        } catch (e) { console.log('Error en Observaciones:', e.message); }
         ",
 
                 _ => throw new ArgumentException($"Tipo de anexo no válido: {tipoAnexo}")

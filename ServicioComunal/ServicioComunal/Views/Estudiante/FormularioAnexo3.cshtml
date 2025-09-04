@@ -29,6 +29,7 @@
                     }
 
                     <form asp-controller="Estudiante" asp-action="GuardarAnexo3" method="post" id="anexo3Form">
+                        @Html.AntiForgeryToken()
                         <input type="hidden" name="entregaId" value="@entrega?.Identificacion" />
                         
                         <!-- Información del Proyecto -->
@@ -44,7 +45,7 @@
                                     <label asp-for="NombreDelProyecto" class="form-label fw-bold">
                                         Nombre del Proyecto <span class="text-danger">*</span>
                                     </label>
-                                    <input asp-for="NombreDelProyecto" class="form-control" required 
+                                    <input asp-for="NombreDelProyecto" name="NombreDelProyecto" class="form-control" required 
                                            placeholder="Ingrese el nombre del proyecto">
                                 </div>
                             </div>
@@ -63,7 +64,7 @@
                                     <label asp-for="Tutor" class="form-label fw-bold">
                                         Nombre del Tutor <span class="text-danger">*</span>
                                     </label>
-                                    <input asp-for="Tutor" class="form-control" required 
+                                    <input asp-for="Tutor" name="Tutor" class="form-control" required 
                                            placeholder="Nombre completo del tutor">
                                 </div>
                             </div>
@@ -72,7 +73,7 @@
                                     <label asp-for="Telefono" class="form-label fw-bold">
                                         Teléfono del Tutor
                                     </label>
-                                    <input asp-for="Telefono" class="form-control" 
+                                    <input asp-for="Telefono" name="Telefono" class="form-control" 
                                            placeholder="Número de teléfono">
                                 </div>
                             </div>
@@ -133,7 +134,7 @@
                                     <label asp-for="Provincia" class="form-label fw-bold">
                                         Provincia <span class="text-danger">*</span>
                                     </label>
-                                    <input asp-for="Provincia" class="form-control" required>
+                                    <input asp-for="Provincia" name="Provincia" class="form-control" required>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -141,7 +142,7 @@
                                     <label asp-for="Canton" class="form-label fw-bold">
                                         Cantón <span class="text-danger">*</span>
                                     </label>
-                                    <input asp-for="Canton" class="form-control" required>
+                                    <input asp-for="Canton" name="Canton" class="form-control" required>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -149,7 +150,7 @@
                                     <label asp-for="Distrito" class="form-label fw-bold">
                                         Distrito <span class="text-danger">*</span>
                                     </label>
-                                    <input asp-for="Distrito" class="form-control" required>
+                                    <input asp-for="Distrito" name="Distrito" class="form-control" required>
                                 </div>
                             </div>
                             <div class="col-12">
@@ -157,7 +158,7 @@
                                     <label asp-for="DireccionExacta" class="form-label fw-bold">
                                         Dirección Exacta <span class="text-danger">*</span>
                                     </label>
-                                    <textarea asp-for="DireccionExacta" class="form-control" rows="2" required
+                                    <textarea asp-for="DireccionExacta" name="DireccionExacta" class="form-control" rows="2" required
                                               placeholder="Descripción detallada de la ubicación"></textarea>
                                 </div>
                             </div>
@@ -176,7 +177,7 @@
                                     <label asp-for="ObjetivoGeneral1" class="form-label fw-bold">
                                         Objetivo General <span class="text-danger">*</span>
                                     </label>
-                                    <textarea asp-for="ObjetivoGeneral1" class="form-control" rows="3" required
+                                    <textarea asp-for="ObjetivoGeneral1" name="ObjetivoGeneral1" class="form-control" rows="3" required
                                               placeholder="Describa el objetivo general del proyecto"></textarea>
                                 </div>
                             </div>
@@ -185,7 +186,7 @@
                                     <label asp-for="ObjetivosEspecificos" class="form-label fw-bold">
                                         Objetivos Específicos <span class="text-danger">*</span>
                                     </label>
-                                    <textarea asp-for="ObjetivosEspecificos" class="form-control" rows="4" required
+                                    <textarea asp-for="ObjetivosEspecificos" name="ObjetivosEspecificos" class="form-control" rows="4" required
                                               placeholder="Liste los objetivos específicos del proyecto"></textarea>
                                 </div>
                             </div>
@@ -226,4 +227,132 @@
 function guardarBorrador() {
     alert('Funcionalidad de guardar borrador pendiente de implementar');
 }
+
+// Prevent default form submission and use fetch API instead
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('anexo3Form');
+    
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent default form submission
+            
+            // Validate required fields
+            const nombreDelProyecto = document.querySelector('input[name="NombreDelProyecto"]');
+            const tutor = document.querySelector('input[name="Tutor"]');
+            const nombreEstudiante1 = document.querySelector('input[name="NombreEstudiante1"]');
+            const seccion01 = document.querySelector('input[name="Seccion01"]');
+            const provincia = document.querySelector('input[name="Provincia"]');
+            const canton = document.querySelector('input[name="Canton"]');
+            const distrito = document.querySelector('input[name="Distrito"]');
+            const direccionExacta = document.querySelector('textarea[name="DireccionExacta"]');
+            const objetivoGeneral1 = document.querySelector('textarea[name="ObjetivoGeneral1"]');
+            const objetivosEspecificos = document.querySelector('textarea[name="ObjetivosEspecificos"]');
+            
+            if (!nombreDelProyecto || !nombreDelProyecto.value.trim()) {
+                alert('Por favor, ingrese el nombre del proyecto.');
+                if (nombreDelProyecto) nombreDelProyecto.focus();
+                return;
+            }
+            
+            if (!tutor || !tutor.value.trim()) {
+                alert('Por favor, ingrese el nombre del tutor.');
+                if (tutor) tutor.focus();
+                return;
+            }
+            
+            if (!nombreEstudiante1 || !nombreEstudiante1.value.trim()) {
+                alert('Por favor, ingrese el nombre del estudiante 1.');
+                if (nombreEstudiante1) nombreEstudiante1.focus();
+                return;
+            }
+            
+            if (!seccion01 || !seccion01.value.trim()) {
+                alert('Por favor, ingrese la sección del estudiante 1.');
+                if (seccion01) seccion01.focus();
+                return;
+            }
+            
+            if (!provincia || !provincia.value.trim()) {
+                alert('Por favor, ingrese la provincia.');
+                if (provincia) provincia.focus();
+                return;
+            }
+            
+            if (!canton || !canton.value.trim()) {
+                alert('Por favor, ingrese el cantón.');
+                if (canton) canton.focus();
+                return;
+            }
+            
+            if (!distrito || !distrito.value.trim()) {
+                alert('Por favor, ingrese el distrito.');
+                if (distrito) distrito.focus();
+                return;
+            }
+            
+            if (!direccionExacta || !direccionExacta.value.trim()) {
+                alert('Por favor, ingrese la dirección exacta.');
+                if (direccionExacta) direccionExacta.focus();
+                return;
+            }
+            
+            if (!objetivoGeneral1 || !objetivoGeneral1.value.trim()) {
+                alert('Por favor, ingrese el objetivo general.');
+                if (objetivoGeneral1) objetivoGeneral1.focus();
+                return;
+            }
+            
+            if (!objetivosEspecificos || !objetivosEspecificos.value.trim()) {
+                alert('Por favor, ingrese los objetivos específicos.');
+                if (objetivosEspecificos) objetivosEspecificos.focus();
+                return;
+            }
+            
+            // Create FormData from the form
+            const formData = new FormData(form);
+            
+            // Show loading state
+            const submitButton = form.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando PDF...';
+            
+            // Submit using fetch API
+            fetch('@Url.Action("GuardarAnexo3", "Estudiante")', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert('Anexo 3 guardado y PDF generado exitosamente.');
+                    
+                    // Redirect to the specified URL if provided
+                    if (data.redirectUrl) {
+                        window.location.href = data.redirectUrl;
+                    } else {
+                        // Fallback: reload the page or redirect to a default location
+                        window.location.reload();
+                    }
+                } else {
+                    alert('Error: ' + (data.message || 'No se pudo guardar el anexo 3.'));
+                }
+            })
+            .catch(error => {
+                console.error('Error submitting form:', error);
+                alert('Error al enviar el formulario. Por favor, inténtelo de nuevo.');
+            })
+            .finally(() => {
+                // Restore button state
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalText;
+            });
+        });
+    }
+});
 </script>
