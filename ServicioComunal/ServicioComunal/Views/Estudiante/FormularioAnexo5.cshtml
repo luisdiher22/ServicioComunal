@@ -1,0 +1,287 @@
+@model ServicioComunal.Models.Anexo5FormularioDto
+@{
+    ViewData["Title"] = "Formulario Anexo #5";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var entrega = ViewBag.Entrega as ServicioComunal.Models.Entrega;
+    var estudiantes = ViewBag.Estudiantes as List<ServicioComunal.Models.Estudiante>;
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-clipboard-check"></i>
+                        Anexo #5: @entrega?.Nombre
+                    </h4>
+                    <p class="mb-0">Evaluación Final del Proyecto - Completar la información solicitada</p>
+                </div>
+                
+                <div class="card-body">
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            @TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form asp-controller="Estudiante" asp-action="GuardarAnexo5" method="post" id="anexo5Form">
+                        <input type="hidden" name="entregaId" value="@entrega?.Identificacion" />
+                        
+                        <!-- Información del Proyecto -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2">
+                                    <i class="fas fa-project-diagram"></i>
+                                    Información del Proyecto
+                                </h5>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group mb-3">
+                                    <label asp-for="NombreDelProyecto" class="form-label fw-bold">
+                                        Nombre del Proyecto <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="NombreDelProyecto" class="form-control" required 
+                                           placeholder="Nombre del proyecto evaluado">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Información del Tutor -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2">
+                                    <i class="fas fa-user-tie"></i>
+                                    Información del Tutor
+                                </h5>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Tutor" class="form-label fw-bold">
+                                        Nombre del Tutor <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Tutor" class="form-control" required 
+                                           placeholder="Nombre completo del tutor">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="CarnetYEmail" class="form-label fw-bold">
+                                        Carnet y Email <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="CarnetYEmail" class="form-control" required 
+                                           placeholder="Carnet y dirección de email del tutor">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Estudiantes -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2">
+                                    <i class="fas fa-users"></i>
+                                    Estudiantes Participantes
+                                </h5>
+                            </div>
+                            @for (int i = 1; i <= 4; i++)
+                            {
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label class="form-label fw-bold">
+                                            Nombre Estudiante @i @(i == 1 ? "*" : "")
+                                        </label>
+                                        <input name="NombreEstudiante@(i)" class="form-control" 
+                                               @(i == 1 ? "required" : "") 
+                                               placeholder="Nombre completo del estudiante">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label class="form-label fw-bold">
+                                            Carnet Estudiante @i @(i == 1 ? "*" : "")
+                                        </label>
+                                        <input name="CarnetEstudiante@(i)" class="form-control" 
+                                               @(i == 1 ? "required" : "") 
+                                               placeholder="Número de carnet">
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Información del Proyecto -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    Ubicación y Fechas
+                                </h5>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Sede" class="form-label fw-bold">
+                                        Sede <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Sede" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label asp-for="FechaInicio" class="form-label fw-bold">
+                                        Fecha de Inicio <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="FechaInicio" type="date" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label asp-for="FechaFinalizacion" class="form-label fw-bold">
+                                        Fecha de Finalización <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="FechaFinalizacion" type="date" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="TotalHoras" class="form-label fw-bold">
+                                        Total de Horas <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="TotalHoras" type="number" min="0" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="ProyectoComunal" class="form-label fw-bold">
+                                        Proyecto Comunal <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="ProyectoComunal" class="form-control" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Evaluación del Proyecto -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2">
+                                    <i class="fas fa-star"></i>
+                                    Evaluación del Proyecto
+                                </h5>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group mb-3">
+                                    <label asp-for="ObjetivosAlcanzados" class="form-label fw-bold">
+                                        Objetivos Alcanzados <span class="text-danger">*</span>
+                                    </label>
+                                    <textarea asp-for="ObjetivosAlcanzados" class="form-control" rows="4" required
+                                              placeholder="Describa los objetivos que se lograron alcanzar durante el proyecto"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group mb-3">
+                                    <label asp-for="ActividadesRealizadas" class="form-label fw-bold">
+                                        Actividades Realizadas <span class="text-danger">*</span>
+                                    </label>
+                                    <textarea asp-for="ActividadesRealizadas" class="form-control" rows="4" required
+                                              placeholder="Detalle las principales actividades realizadas durante el proyecto"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group mb-3">
+                                    <label asp-for="ImpactoEnLaComunidad" class="form-label fw-bold">
+                                        Impacto en la Comunidad <span class="text-danger">*</span>
+                                    </label>
+                                    <textarea asp-for="ImpactoEnLaComunidad" class="form-control" rows="4" required
+                                              placeholder="Describa el impacto que tuvo el proyecto en la comunidad beneficiada"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group mb-3">
+                                    <label asp-for="AprendizajesObtenidos" class="form-label fw-bold">
+                                        Aprendizajes Obtenidos <span class="text-danger">*</span>
+                                    </label>
+                                    <textarea asp-for="AprendizajesObtenidos" class="form-control" rows="4" required
+                                              placeholder="Describa los principales aprendizajes obtenidos por los estudiantes"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Recomendaciones" class="form-label fw-bold">
+                                        Recomendaciones para Futuros Proyectos
+                                    </label>
+                                    <textarea asp-for="Recomendaciones" class="form-control" rows="3"
+                                              placeholder="Proporcione recomendaciones para mejorar futuros proyectos similares"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Calificación -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2">
+                                    <i class="fas fa-award"></i>
+                                    Calificación Final
+                                </h5>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="CalificacionNumerica" class="form-label fw-bold">
+                                        Calificación Numérica (0-100) <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="CalificacionNumerica" type="number" min="0" max="100" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="CalificacionAlfabetica" class="form-label fw-bold">
+                                        Calificación Alfabética <span class="text-danger">*</span>
+                                    </label>
+                                    <select asp-for="CalificacionAlfabetica" class="form-select" required>
+                                        <option value="">Seleccione una calificación</option>
+                                        <option value="A">A (Excelente)</option>
+                                        <option value="B">B (Muy Bueno)</option>
+                                        <option value="C">C (Bueno)</option>
+                                        <option value="D">D (Regular)</option>
+                                        <option value="F">F (Insuficiente)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botones de Acción -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                                    <a href="@Url.Action("DetalleEntrega", "Estudiante", new { id = entrega?.Identificacion })" 
+                                       class="btn btn-outline-secondary">
+                                        <i class="fas fa-arrow-left"></i>
+                                        Volver
+                                    </a>
+                                    
+                                    <div>
+                                        <button type="button" class="btn btn-outline-primary me-2" onclick="guardarBorrador()">
+                                            <i class="fas fa-save"></i>
+                                            Guardar Borrador
+                                        </button>
+                                        
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="fas fa-file-pdf"></i>
+                                            Generar PDF Final
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function guardarBorrador() {
+    alert('Funcionalidad de guardar borrador pendiente de implementar');
+}
+</script>

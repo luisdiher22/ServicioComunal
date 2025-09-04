@@ -44,6 +44,12 @@ namespace ServicioComunal.Models
         [Column("FORMULARIO_Identificacion")]
         public int? FormularioIdentificacion { get; set; }
 
+        [Column("TipoAnexo")]
+        public int TipoAnexo { get; set; } // 1, 2, 3, 5 para los anexos correspondientes
+
+        [Column("DatosFormularioJson")]
+        public string? DatosFormularioJson { get; set; } // JSON con los datos llenados por los estudiantes
+
         // Propiedades de navegación
         [ForeignKey("GrupoNumero")]
         public virtual Grupo Grupo { get; set; } = null!;

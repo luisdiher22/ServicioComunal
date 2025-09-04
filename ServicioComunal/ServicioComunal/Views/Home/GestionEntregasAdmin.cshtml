@@ -1,0 +1,501 @@
+@{
+    ViewData["Title"] = "Gestión de Entregas";
+    var grupos = ViewBag.Grupos as List<ServicioComunal.Models.Grupo>;
+    var profesores = ViewBag.Profesores as List<ServicioComunal.Models.Profesor>;
+    var formularios = ViewBag.Formularios as List<ServicioComunal.Models.Formulario>;
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-tasks"></i>
+                    Gestión de Entregas
+                </h2>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCrearEntrega">
+                    <i class="fas fa-plus"></i>
+                    Nueva Entrega
+                </button>
+            </div>
+
+            <!-- Filtros -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="form-label">Filtrar por estado:</label>
+                            <select id="filtroEstado" class="form-select">
+                                <option value="">Todos los estados</option>
+                                <option value="Pendiente">Pendiente</option>
+                                <option value="Enviada">Enviada</option>
+                                <option value="Revisada">Revisada</option>
+                                <option value="Requiere Cambios">Requiere Cambios</option>
+                                <option value="Vencida">Vencida</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Filtrar por grupo:</label>
+                            <select id="filtroGrupo" class="form-select">
+                                <option value="">Todos los grupos</option>
+                                @if (grupos != null)
+                                {
+                                    @foreach (var grupo in grupos)
+                                    {
+                                        <option value="@grupo.Numero">Grupo @grupo.Numero</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Filtrar por tipo:</label>
+                            <select id="filtroTipoAnexo" class="form-select">
+                                <option value="">Todos los tipos</option>
+                                <option value="0">Sin anexo</option>
+                                <option value="1">Anexo #1</option>
+                                <option value="2">Anexo #2</option>
+                                <option value="3">Anexo #3</option>
+                                <option value="5">Anexo #5</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <button id="btnLimpiarFiltros" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-times"></i>
+                                Limpiar Filtros
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de entregas -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list"></i>
+                        Lista de Entregas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="tablaEntregas" class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Grupo</th>
+                                    <th>Fecha Límite</th>
+                                    <th>Estado</th>
+                                    <th>Tipo</th>
+                                    <th>Profesor</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Se llena vía JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para crear entrega -->
+<div class="modal fade" id="modalCrearEntrega" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus"></i>
+                    Nueva Entrega
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formCrearEntrega">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nombreEntrega" class="form-label">Nombre <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="nombreEntrega" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="grupoEntrega" class="form-label">Grupo <span class="text-danger">*</span></label>
+                                <select class="form-select" id="grupoEntrega" required>
+                                    <option value="">Seleccionar grupo...</option>
+                                    @if (grupos != null)
+                                    {
+                                        @foreach (var grupo in grupos)
+                                        {
+                                            <option value="@grupo.Numero">
+                                                Grupo @grupo.Numero (@grupo.GruposEstudiantes.Count estudiantes)
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="descripcionEntrega" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="descripcionEntrega" rows="3"></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="fechaLimiteEntrega" class="form-label">Fecha Límite <span class="text-danger">*</span></label>
+                                <input type="datetime-local" class="form-control" id="fechaLimiteEntrega" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="tipoAnexoEntrega" class="form-label">Tipo de Anexo</label>
+                                <select class="form-select" id="tipoAnexoEntrega">
+                                    <option value="0">Sin anexo (subida manual)</option>
+                                    <option value="1">Anexo #1 - Información Básica</option>
+                                    <option value="2">Anexo #2 - Propuesta de Proyecto</option>
+                                    <option value="3">Anexo #3 - Plan de Trabajo</option>
+                                    <option value="5">Anexo #5 - Evaluación Final</option>
+                                </select>
+                                <div class="form-text">
+                                    Los anexos se llenan automáticamente por los estudiantes.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="profesorEntrega" class="form-label">Profesor Asignado</label>
+                                <select class="form-select" id="profesorEntrega">
+                                    <option value="0">Sin asignar</option>
+                                    @if (profesores != null)
+                                    {
+                                        @foreach (var profesor in profesores)
+                                        {
+                                            <option value="@profesor.Identificacion">
+                                                @profesor.Nombre @profesor.Apellidos
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="formularioEntrega" class="form-label">Formulario Base</label>
+                                <select class="form-select" id="formularioEntrega">
+                                    <option value="0">Sin formulario</option>
+                                    @if (formularios != null)
+                                    {
+                                        @foreach (var formulario in formularios)
+                                        {
+                                            <option value="@formulario.Identificacion">
+                                                @formulario.Nombre
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                                <div class="form-text">
+                                    Formulario adicional para complementar el anexo.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" form="formCrearEntrega" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    Crear Entrega
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación para eliminar -->
+<div class="modal fade" id="modalConfirmarEliminar" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar esta entrega?</p>
+                <p class="text-muted">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="btnConfirmarEliminar" class="btn btn-danger">
+                    <i class="fas fa-trash"></i>
+                    Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .badge-estado {
+        font-size: 0.8em;
+        padding: 0.4em 0.8em;
+    }
+    
+    .estado-pendiente { background-color: #ffc107; color: #000; }
+    .estado-enviada { background-color: #17a2b8; color: #fff; }
+    .estado-revisada { background-color: #28a745; color: #fff; }
+    .estado-cambios { background-color: #dc3545; color: #fff; }
+    .estado-vencida { background-color: #6c757d; color: #fff; }
+
+    .tipo-anexo {
+        font-size: 0.8em;
+        padding: 0.3em 0.6em;
+        border-radius: 0.375rem;
+    }
+    
+    .tipo-manual { background-color: #e9ecef; color: #495057; }
+    .tipo-anexo1 { background-color: #d1ecf1; color: #0c5460; }
+    .tipo-anexo2 { background-color: #d4edda; color: #155724; }
+    .tipo-anexo3 { background-color: #fff3cd; color: #856404; }
+    .tipo-anexo5 { background-color: #f8d7da; color: #721c24; }
+</style>
+
+<script>
+let entregasData = [];
+let entregaAEliminar = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    cargarEntregas();
+    
+    // Configurar filtros
+    document.getElementById('filtroEstado').addEventListener('change', aplicarFiltros);
+    document.getElementById('filtroGrupo').addEventListener('change', aplicarFiltros);
+    document.getElementById('filtroTipoAnexo').addEventListener('change', aplicarFiltros);
+    document.getElementById('btnLimpiarFiltros').addEventListener('click', limpiarFiltros);
+    
+    // Configurar formulario de crear entrega
+    document.getElementById('formCrearEntrega').addEventListener('submit', crearEntrega);
+    
+    // Configurar modal de eliminar
+    document.getElementById('btnConfirmarEliminar').addEventListener('click', confirmarEliminar);
+});
+
+async function cargarEntregas() {
+    try {
+        const response = await fetch('/Home/ObtenerEntregasAdmin');
+        const data = await response.json();
+        
+        if (data.success) {
+            entregasData = data.entregas;
+            mostrarEntregas(entregasData);
+        } else {
+            alert('Error al cargar entregas: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al cargar entregas: ' + error.message);
+    }
+}
+
+function mostrarEntregas(entregas) {
+    const tbody = document.querySelector('#tablaEntregas tbody');
+    tbody.innerHTML = '';
+    
+    entregas.forEach(entrega => {
+        const fila = document.createElement('tr');
+        fila.innerHTML = `
+            <td>${entrega.identificacion}</td>
+            <td>
+                <strong>${entrega.nombre}</strong>
+                <br>
+                <small class="text-muted">${entrega.descripcion || 'Sin descripción'}</small>
+            </td>
+            <td>
+                <span class="badge bg-info">Grupo ${entrega.grupo.numero}</span>
+                <br>
+                <small>${entrega.grupo.cantidadEstudiantes} estudiantes</small>
+            </td>
+            <td>
+                ${new Date(entrega.fechaLimite).toLocaleDateString('es-ES', { 
+                    year: 'numeric', month: 'short', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                })}
+            </td>
+            <td>
+                <span class="badge badge-estado ${getEstadoClass(entrega.estado)}">
+                    ${entrega.estado}
+                </span>
+            </td>
+            <td>
+                <span class="tipo-anexo ${getTipoAnexoClass(entrega.tipoAnexo)}">
+                    ${getTipoAnexoTexto(entrega.tipoAnexo)}
+                </span>
+            </td>
+            <td>${entrega.profesor}</td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary" onclick="verDetalleEntrega(${entrega.identificacion})">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-outline-danger" onclick="eliminarEntrega(${entrega.identificacion})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(fila);
+    });
+}
+
+function getEstadoClass(estado) {
+    switch (estado) {
+        case 'Pendiente': return 'estado-pendiente';
+        case 'Enviada': return 'estado-enviada';
+        case 'Revisada': return 'estado-revisada';
+        case 'Requiere Cambios': return 'estado-cambios';
+        case 'Vencida': return 'estado-vencida';
+        default: return 'estado-pendiente';
+    }
+}
+
+function getTipoAnexoClass(tipo) {
+    switch (tipo) {
+        case 0: return 'tipo-manual';
+        case 1: return 'tipo-anexo1';
+        case 2: return 'tipo-anexo2';
+        case 3: return 'tipo-anexo3';
+        case 5: return 'tipo-anexo5';
+        default: return 'tipo-manual';
+    }
+}
+
+function getTipoAnexoTexto(tipo) {
+    switch (tipo) {
+        case 0: return 'Manual';
+        case 1: return 'Anexo #1';
+        case 2: return 'Anexo #2';
+        case 3: return 'Anexo #3';
+        case 5: return 'Anexo #5';
+        default: return 'Manual';
+    }
+}
+
+function aplicarFiltros() {
+    const filtroEstado = document.getElementById('filtroEstado').value;
+    const filtroGrupo = document.getElementById('filtroGrupo').value;
+    const filtroTipoAnexo = document.getElementById('filtroTipoAnexo').value;
+    
+    let entregasFiltradas = entregasData;
+    
+    if (filtroEstado) {
+        entregasFiltradas = entregasFiltradas.filter(e => e.estado === filtroEstado);
+    }
+    
+    if (filtroGrupo) {
+        entregasFiltradas = entregasFiltradas.filter(e => e.grupo.numero.toString() === filtroGrupo);
+    }
+    
+    if (filtroTipoAnexo) {
+        entregasFiltradas = entregasFiltradas.filter(e => e.tipoAnexo.toString() === filtroTipoAnexo);
+    }
+    
+    mostrarEntregas(entregasFiltradas);
+}
+
+function limpiarFiltros() {
+    document.getElementById('filtroEstado').value = '';
+    document.getElementById('filtroGrupo').value = '';
+    document.getElementById('filtroTipoAnexo').value = '';
+    mostrarEntregas(entregasData);
+}
+
+async function crearEntrega(e) {
+    e.preventDefault();
+    
+    const request = {
+        Nombre: document.getElementById('nombreEntrega').value,
+        Descripcion: document.getElementById('descripcionEntrega').value,
+        FechaLimite: document.getElementById('fechaLimiteEntrega').value,
+        GrupoNumero: parseInt(document.getElementById('grupoEntrega').value),
+        ProfesorId: parseInt(document.getElementById('profesorEntrega').value),
+        FormularioId: parseInt(document.getElementById('formularioEntrega').value),
+        TipoAnexo: parseInt(document.getElementById('tipoAnexoEntrega').value)
+    };
+    
+    try {
+        const response = await fetch('/Home/CrearEntregaAdmin', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(request)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Entrega creada exitosamente');
+            bootstrap.Modal.getInstance(document.getElementById('modalCrearEntrega')).hide();
+            document.getElementById('formCrearEntrega').reset();
+            cargarEntregas();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    } catch (error) {
+        alert('Error al crear entrega: ' + error.message);
+    }
+}
+
+function eliminarEntrega(entregaId) {
+    entregaAEliminar = entregaId;
+    const modal = new bootstrap.Modal(document.getElementById('modalConfirmarEliminar'));
+    modal.show();
+}
+
+async function confirmarEliminar() {
+    if (!entregaAEliminar) return;
+    
+    try {
+        const response = await fetch('/Home/EliminarEntregaAdmin', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ EntregaId: entregaAEliminar })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Entrega eliminada exitosamente');
+            bootstrap.Modal.getInstance(document.getElementById('modalConfirmarEliminar')).hide();
+            cargarEntregas();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    } catch (error) {
+        alert('Error al eliminar entrega: ' + error.message);
+    } finally {
+        entregaAEliminar = null;
+    }
+}
+
+function verDetalleEntrega(entregaId) {
+    // Implementar según necesidades
+    alert('Ver detalle de entrega ' + entregaId);
+}
+</script>

@@ -36,6 +36,10 @@ namespace ServicioComunal.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("ArchivoRuta");
 
+                    b.Property<string>("DatosFormularioJson")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("DatosFormularioJson");
+
                     b.Property<string>("Descripcion")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
@@ -74,6 +78,10 @@ namespace ServicioComunal.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("Retroalimentacion");
+
+                    b.Property<int>("TipoAnexo")
+                        .HasColumnType("int")
+                        .HasColumnName("TipoAnexo");
 
                     b.HasKey("Identificacion");
 

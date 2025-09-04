@@ -154,6 +154,58 @@
                     </div>
                 </div>
 
+                <!-- Formulario Anexo Interactivo (si aplica) -->
+                @if (Model.TipoAnexo > 0)
+                {
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-file-pdf"></i> Anexo #@Model.TipoAnexo Interactivo
+                                </h6>
+                            </div>
+                            <div class="card-body d-flex flex-column">
+                                @if (!string.IsNullOrEmpty(Model.DatosFormularioJson))
+                                {
+                                    <div class="text-center mb-3">
+                                        <i class="fas fa-check-circle fa-3x text-success mb-2"></i>
+                                        <h6 class="text-success">Anexo Completado</h6>
+                                        <p class="text-muted">Ya llenaste los campos del Anexo #@Model.TipoAnexo</p>
+                                    </div>
+                                    
+                                    <div class="d-flex gap-2 justify-content-center">
+                                        <a href="@Url.Action("FormularioAnexo", "Estudiante", new { entregaId = Model.Identificacion })" 
+                                           class="btn btn-outline-primary">
+                                            <i class="fas fa-edit"></i> Editar Datos
+                                        </a>
+                                        
+                                        <a href="@Url.Action("DescargarArchivo", "Estudiante", new { entregaId = Model.Identificacion })" 
+                                           class="btn btn-success">
+                                            <i class="fas fa-download"></i> Descargar PDF
+                                        </a>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="text-center flex-grow-1 d-flex flex-column justify-content-center">
+                                        <i class="fas fa-file-alt fa-3x text-primary mb-3"></i>
+                                        <h6>Llenar Anexo #@Model.TipoAnexo</h6>
+                                        <p class="text-muted mb-4">
+                                            Esta entrega requiere completar un formulario interactivo 
+                                            que generará automáticamente un PDF.
+                                        </p>
+                                        
+                                        <a href="@Url.Action("FormularioAnexo", "Estudiante", new { entregaId = Model.Identificacion })" 
+                                           class="btn btn-primary btn-lg">
+                                            <i class="fas fa-edit"></i> Llenar Formulario
+                                        </a>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+
                 <!-- Subir entrega -->
                 <div class="col-md-6 mb-4">
                     <div class="card h-100">
@@ -207,29 +259,40 @@
                                 (!string.IsNullOrEmpty(Model.Retroalimentacion) && Model.Retroalimentacion.StartsWith("CAMBIOS SOLICITADOS:")) ||
                                 string.IsNullOrEmpty(Model.Retroalimentacion))
                             {
-                                <form id="formSubirEntrega" enctype="multipart/form-data" class="flex-grow-1 d-flex flex-column">
-                                    <div class="mb-3 flex-grow-1">
-                                        <label for="archivoEntrega" class="form-label">Seleccionar archivo:</label>
-                                        <input type="file" class="form-control" id="archivoEntrega" name="archivo" 
-                                               accept=".pdf,.doc,.docx,.txt,.zip,.rar" required>
-                                        <small class="form-text text-muted">
-                                            Formatos permitidos: PDF, DOC, DOCX, TXT, ZIP, RAR (Máx. 50MB)
-                                        </small>
+                                @if (Model.TipoAnexo > 0)
+                                {
+                                    <div class="alert alert-info text-center">
+                                        <i class="fas fa-info-circle"></i>
+                                        <strong>Nota:</strong> Esta entrega utiliza un formulario interactivo. 
+                                        Completa el Anexo #@Model.TipoAnexo arriba para generar automáticamente tu entrega.
                                     </div>
-                                    <div class="text-center">
-                                        <button type="submit" class="btn btn-primary btn-lg" id="btnSubir">
-                                            <i class="fas fa-upload"></i> 
-                                            @if (!string.IsNullOrEmpty(Model.ArchivoRuta))
-                                            {
-                                                <text>Subir Nueva Versión</text>
-                                            }
-                                            else
-                                            {
-                                                <text>Subir Entrega</text>
-                                            }
-                                        </button>
-                                    </div>
-                                </form>
+                                }
+                                else
+                                {
+                                    <form id="formSubirEntrega" enctype="multipart/form-data" class="flex-grow-1 d-flex flex-column">
+                                        <div class="mb-3 flex-grow-1">
+                                            <label for="archivoEntrega" class="form-label">Seleccionar archivo:</label>
+                                            <input type="file" class="form-control" id="archivoEntrega" name="archivo" 
+                                                   accept=".pdf,.doc,.docx,.txt,.zip,.rar" required>
+                                            <small class="form-text text-muted">
+                                                Formatos permitidos: PDF, DOC, DOCX, TXT, ZIP, RAR (Máx. 50MB)
+                                            </small>
+                                        </div>
+                                        <div class="text-center">
+                                            <button type="submit" class="btn btn-primary btn-lg" id="btnSubir">
+                                                <i class="fas fa-upload"></i> 
+                                                @if (!string.IsNullOrEmpty(Model.ArchivoRuta))
+                                                {
+                                                    <text>Subir Nueva Versión</text>
+                                                }
+                                                else
+                                                {
+                                                    <text>Subir Entrega</text>
+                                                }
+                                            </button>
+                                        </div>
+                                    </form>
+                                }
                             }
                         </div>
                     </div>
@@ -340,6 +403,18 @@
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('formSubirEntrega');
     const btnSubir = document.getElementById('btnSubir');
+    
+    // Verificar que los elementos existan antes de continuar
+    if (!form) {
+        console.log('Elemento formSubirEntrega no encontrado');
+        return;
+    }
+    
+    if (!btnSubir) {
+        console.log('Elemento btnSubir no encontrado');
+        return;
+    }
+    
     const modalProgreso = new bootstrap.Modal(document.getElementById('modalProgreso'));
 
     form.addEventListener('submit', async function(e) {

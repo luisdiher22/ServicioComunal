@@ -38,7 +38,7 @@
                     <th>Descripción</th>
                     <th>Fecha Límite</th>
                     <th>Grupo</th>
-                    <th>Formulario</th>
+                    <th>Recurso</th>
                     <th>Estado</th>
                     <th>Acciones</th>
                 </tr>
@@ -72,10 +72,33 @@
                                     <i class="fas fa-file-download"></i> @entrega.Formulario.Nombre
                                 </a>
                             }
+                            else if (entrega.TipoAnexo > 0)
+                            {
+                                var nombreAnexo = entrega.TipoAnexo switch
+                                {
+                                    1 => "Anexo #1 - Información Básica",
+                                    2 => "Anexo #2 - Propuesta de Proyecto",
+                                    3 => "Anexo #3 - Plan de Trabajo",
+                                    5 => "Anexo #5 - Evaluación Final",
+                                    _ => $"Anexo #{entrega.TipoAnexo}"
+                                };
+                                var archivoAnexo = entrega.TipoAnexo switch
+                                {
+                                    1 => "Anexo #1 Interactivo.pdf",
+                                    2 => "Anexo #2 Interactivo.pdf",
+                                    3 => "Anexo #3 Interactivo.pdf",
+                                    5 => "Anexo #5 Interactivo.pdf",
+                                    _ => ""
+                                };
+                                <a href="/uploads/formularios/@Uri.EscapeDataString(archivoAnexo)" 
+                                   class="btn btn-sm btn-outline-success" title="Descargar anexo interactivo" target="_blank">
+                                    <i class="fas fa-file-pdf"></i> @nombreAnexo
+                                </a>
+                            }
                             else
                             {
                                 <span class="text-muted">
-                                    <i class="fas fa-minus"></i> Sin formulario
+                                    <i class="fas fa-minus"></i> Sin recurso
                                 </span>
                             }
                         </td>
@@ -140,6 +163,30 @@
                             <textarea class="form-control" id="entregaDescripcion" name="descripcion" rows="3" required></textarea>
                         </div>
                         <div class="col-md-4 mb-3">
+                            <label class="form-label">Tipo de Recurso</label>
+                            <div class="form-check">
+                                <input type="radio" class="form-check-input" id="tipoFormulario" name="tipoRecurso" value="formulario" checked>
+                                <label class="form-check-label" for="tipoFormulario">
+                                    Formulario
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="radio" class="form-check-input" id="tipoAnexo" name="tipoRecurso" value="anexo">
+                                <label class="form-check-label" for="tipoAnexo">
+                                    Anexo Interactivo
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="radio" class="form-check-input" id="tipoNinguno" name="tipoRecurso" value="ninguno">
+                                <label class="form-check-label" for="tipoNinguno">
+                                    Sin recurso
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3" id="seccionFormulario">
                             <label for="entregaFormulario" class="form-label">Formulario Asociado</label>
                             <select class="form-select" id="entregaFormulario" name="formularioIdentificacion">
                                 <option value="">-- Sin formulario --</option>
@@ -152,6 +199,17 @@
                                 }
                             </select>
                             <div class="form-text">Formulario que los estudiantes necesitarán para esta entrega</div>
+                        </div>
+                        <div class="col-md-6 mb-3" id="seccionAnexo" style="display: none;">
+                            <label for="entregaAnexo" class="form-label">Anexo Interactivo</label>
+                            <select class="form-select" id="entregaAnexo" name="tipoAnexo">
+                                <option value="">-- Seleccionar Anexo --</option>
+                                <option value="1">Anexo #1 - Información Básica</option>
+                                <option value="2">Anexo #2 - Propuesta de Proyecto</option>
+                                <option value="3">Anexo #3 - Plan de Trabajo</option>
+                                <option value="5">Anexo #5 - Evaluación Final</option>
+                            </select>
+                            <div class="form-text">Anexo interactivo que los estudiantes deberán completar</div>
                         </div>
                     </div>
 

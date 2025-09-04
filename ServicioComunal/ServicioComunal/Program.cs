@@ -28,6 +28,7 @@ builder.Services.AddSession(options =>
 // Registro de servicios personalizados
 builder.Services.AddScoped<DataSeederService>();
 builder.Services.AddScoped<UsuarioService>();
+builder.Services.AddScoped<IPdfFillerService, PdfFillerService>();
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();

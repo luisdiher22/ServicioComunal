@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="utf-8" />
+    <m                        <a href="@Url.Action("MisEntregas", "Estudiante")" class="nav-item @((ViewContext.RouteData.Values["controller"]?.ToString() == "Estudiante" || ViewContext.RouteData.Values["controller"]?.ToString() == "Anexo") && (ViewContext.RouteData.Values["action"]?.ToString() == "MisEntregas" || ViewContext.RouteData.Values["action"]?.ToString() == "DetalleEntrega" || (ViewContext.RouteData.Values["action"]?.ToString()?.Contains("FormularioAnexo") ?? false)) ? "active" : "")")ta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Servicio Comunal</title>
     
@@ -69,6 +69,25 @@
                         <a href="@Url.Action("Progreso", "Tutor")" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Tutor" && ViewContext.RouteData.Values["action"]?.ToString() == "Progreso" ? "active" : "")">
                             <i class="fas fa-chart-line"></i>
                             <span>Progreso</span>
+                        </a>
+                    }
+                    else if (Context.Session.GetString("UsuarioRol") == "Estudiante")
+                    {
+                        <a href="@Url.Action("Dashboard", "Estudiante")" class="nav-item @((ViewContext.RouteData.Values["controller"]?.ToString() == "Estudiante" || ViewContext.RouteData.Values["controller"]?.ToString() == "Anexo") && ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")">
+                            <i class="fas fa-home"></i>
+                            <span>Mi Dashboard</span>
+                        </a>
+                        <a href="@Url.Action("MiGrupo", "Estudiante")" class="nav-item @((ViewContext.RouteData.Values["controller"]?.ToString() == "Estudiante" || ViewContext.RouteData.Values["controller"]?.ToString() == "Anexo") && ViewContext.RouteData.Values["action"]?.ToString() == "MiGrupo" ? "active" : "")">
+                            <i class="fas fa-users"></i>
+                            <span>Mi Grupo</span>
+                        </a>
+                        <a href="@Url.Action("MisEntregas", "Estudiante")" class="nav-item @((ViewContext.RouteData.Values["controller"]?.ToString() == "Estudiante" || ViewContext.RouteData.Values["controller"]?.ToString() == "Anexo") && (ViewContext.RouteData.Values["action"]?.ToString() == "MisEntregas" || ViewContext.RouteData.Values["action"]?.ToString() == "DetalleEntrega" || ViewContext.RouteData.Values["action"]?.ToString().Contains("FormularioAnexo") == true) ? "active" : "")">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Mis Entregas</span>
+                        </a>
+                        <a href="@Url.Action("GestionGrupos", "Estudiante")" class="nav-item @((ViewContext.RouteData.Values["controller"]?.ToString() == "Estudiante" || ViewContext.RouteData.Values["controller"]?.ToString() == "Anexo") && ViewContext.RouteData.Values["action"]?.ToString() == "GestionGrupos" ? "active" : "")">
+                            <i class="fas fa-cogs"></i>
+                            <span>Gestión Grupos</span>
                         </a>
                     }
                     else

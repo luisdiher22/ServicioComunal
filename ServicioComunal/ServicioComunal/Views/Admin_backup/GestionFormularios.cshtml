@@ -1,0 +1,292 @@
+@{
+    ViewData["Title"] = "Gestión de Formularios y Anexos";
+    var formularios = ViewBag.Formularios as List<ServicioComunal.Models.Formulario>;
+    var profesores = ViewBag.Profesores as List<ServicioComunal.Models.Profesor>;
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">
+                <i class="fas fa-file-alt"></i>
+                Gestión de Formularios y Anexos
+            </h2>
+
+            <!-- Sección de Anexos Interactivos -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-pdf"></i>
+                        Anexos Interactivos Disponibles
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">
+                        Estos son los anexos interactivos que los estudiantes pueden llenar automáticamente.
+                        Los profesores pueden descargar las versiones vacías como referencia.
+                    </p>
+                    
+                    <div class="row" id="anexosContainer">
+                        <!-- Se llena vía JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección de Formularios Adicionales -->
+            <div class="card">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-upload"></i>
+                        Formularios Adicionales
+                    </h5>
+                    <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#modalSubirFormulario">
+                        <i class="fas fa-plus"></i>
+                        Subir Formulario
+                    </button>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">
+                        Formularios adicionales que pueden acompañar a las entregas (instrucciones, rúbricas, etc.).
+                    </p>
+
+                    @if (formularios != null && formularios.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Descripción</th>
+                                        <th>Subido por</th>
+                                        <th>Fecha</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var formulario in formularios)
+                                    {
+                                        <tr>
+                                            <td><strong>@formulario.Nombre</strong></td>
+                                            <td>@formulario.Descripcion</td>
+                                            <td>@formulario.Profesor.Nombre @formulario.Profesor.Apellidos</td>
+                                            <td>@formulario.FechaIngreso.ToString("dd/MM/yyyy")</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="/@formulario.ArchivoRuta" class="btn btn-outline-primary" target="_blank">
+                                                        <i class="fas fa-download"></i>
+                                                        Descargar
+                                                    </a>
+                                                    <button class="btn btn-outline-danger" onclick="eliminarFormulario(@formulario.Identificacion)">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No hay formularios adicionales subidos.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para subir formulario -->
+<div class="modal fade" id="modalSubirFormulario" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-upload"></i>
+                    Subir Nuevo Formulario
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formSubirFormulario" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="nombreFormulario" class="form-label">Nombre <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="nombreFormulario" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="descripcionFormulario" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="descripcionFormulario" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="profesorFormulario" class="form-label">Profesor <span class="text-danger">*</span></label>
+                        <select class="form-select" id="profesorFormulario" required>
+                            <option value="">Seleccionar profesor...</option>
+                            @if (profesores != null)
+                            {
+                                @foreach (var profesor in profesores)
+                                {
+                                    <option value="@profesor.Identificacion">
+                                        @profesor.Nombre @profesor.Apellidos
+                                    </option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="archivoFormulario" class="form-label">Archivo <span class="text-danger">*</span></label>
+                        <input type="file" class="form-control" id="archivoFormulario" 
+                               accept=".pdf,.doc,.docx,.txt" required>
+                        <div class="form-text">
+                            Formatos permitidos: PDF, DOC, DOCX, TXT. Máximo 10MB.
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" form="formSubirFormulario" class="btn btn-primary">
+                    <i class="fas fa-upload"></i>
+                    Subir Formulario
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .anexo-card {
+        transition: transform 0.2s;
+    }
+    
+    .anexo-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .anexo-disponible {
+        border-left: 4px solid #28a745;
+    }
+    
+    .anexo-no-disponible {
+        border-left: 4px solid #dc3545;
+        opacity: 0.7;
+    }
+    
+    .anexo-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    cargarAnexos();
+    
+    // Configurar formulario de subir
+    document.getElementById('formSubirFormulario').addEventListener('submit', subirFormulario);
+});
+
+async function cargarAnexos() {
+    try {
+        const response = await fetch('/Admin/ObtenerAnexosDisponibles');
+        const data = await response.json();
+        
+        if (data.success) {
+            mostrarAnexos(data.anexos);
+        } else {
+            console.error('Error al cargar anexos:', data.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+function mostrarAnexos(anexos) {
+    const container = document.getElementById('anexosContainer');
+    container.innerHTML = '';
+    
+    anexos.forEach(anexo => {
+        const col = document.createElement('div');
+        col.className = 'col-md-6 col-lg-3 mb-3';
+        
+        const disponibleClass = anexo.existe ? 'anexo-disponible' : 'anexo-no-disponible';
+        const iconColor = anexo.existe ? 'text-success' : 'text-danger';
+        const btnClass = anexo.existe ? 'btn-success' : 'btn-secondary';
+        const btnDisabled = anexo.existe ? '' : 'disabled';
+        
+        col.innerHTML = `
+            <div class="card anexo-card h-100 ${disponibleClass}">
+                <div class="card-body text-center">
+                    <i class="fas fa-file-pdf anexo-icon ${iconColor}"></i>
+                    <h6 class="card-title">${anexo.nombre}</h6>
+                    <p class="card-text">
+                        <small class="text-muted">${anexo.archivo}</small>
+                    </p>
+                    
+                    ${anexo.existe ? 
+                        `<span class="badge bg-success mb-2">Disponible</span>` : 
+                        `<span class="badge bg-danger mb-2">No encontrado</span>`
+                    }
+                    
+                    <div class="d-grid">
+                        <a href="${anexo.rutaDescarga}" 
+                           class="btn ${btnClass} btn-sm" 
+                           ${btnDisabled}
+                           ${anexo.existe ? 'target="_blank"' : ''}>
+                            <i class="fas fa-download"></i>
+                            ${anexo.existe ? 'Descargar' : 'No disponible'}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(col);
+    });
+}
+
+async function subirFormulario(e) {
+    e.preventDefault();
+    
+    const formData = new FormData();
+    formData.append('nombre', document.getElementById('nombreFormulario').value);
+    formData.append('descripcion', document.getElementById('descripcionFormulario').value);
+    formData.append('profesorId', document.getElementById('profesorFormulario').value);
+    formData.append('archivo', document.getElementById('archivoFormulario').files[0]);
+    
+    try {
+        const response = await fetch('/Admin/SubirFormulario', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Formulario subido exitosamente');
+            bootstrap.Modal.getInstance(document.getElementById('modalSubirFormulario')).hide();
+            location.reload(); // Recargar para mostrar el nuevo formulario
+        } else {
+            alert('Error: ' + data.message);
+        }
+    } catch (error) {
+        alert('Error al subir formulario: ' + error.message);
+    }
+}
+
+function eliminarFormulario(formularioId) {
+    if (!confirm('¿Estás seguro de que deseas eliminar este formulario?')) {
+        return;
+    }
+    
+    // Implementar eliminación de formulario
+    alert('Función de eliminar formulario pendiente de implementar');
+}
+</script>

@@ -1,0 +1,229 @@
+@model ServicioComunal.Models.Anexo3FormularioDto
+@{
+    ViewData["Title"] = "Formulario Anexo #3";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var entrega = ViewBag.Entrega as ServicioComunal.Models.Entrega;
+    var estudiantes = ViewBag.Estudiantes as List<ServicioComunal.Models.Estudiante>;
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-file-alt"></i>
+                        Anexo #3: @entrega?.Nombre
+                    </h4>
+                    <p class="mb-0">Plan de Trabajo - Completar la información solicitada</p>
+                </div>
+                
+                <div class="card-body">
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            @TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form asp-controller="Estudiante" asp-action="GuardarAnexo3" method="post" id="anexo3Form">
+                        <input type="hidden" name="entregaId" value="@entrega?.Identificacion" />
+                        
+                        <!-- Información del Proyecto -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2">
+                                    <i class="fas fa-project-diagram"></i>
+                                    Información del Proyecto
+                                </h5>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group mb-3">
+                                    <label asp-for="NombreDelProyecto" class="form-label fw-bold">
+                                        Nombre del Proyecto <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="NombreDelProyecto" class="form-control" required 
+                                           placeholder="Ingrese el nombre del proyecto">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Información del Tutor -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2">
+                                    <i class="fas fa-user-tie"></i>
+                                    Información del Tutor
+                                </h5>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Tutor" class="form-label fw-bold">
+                                        Nombre del Tutor <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Tutor" class="form-control" required 
+                                           placeholder="Nombre completo del tutor">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Telefono" class="form-label fw-bold">
+                                        Teléfono del Tutor
+                                    </label>
+                                    <input asp-for="Telefono" class="form-control" 
+                                           placeholder="Número de teléfono">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Estudiantes -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2">
+                                    <i class="fas fa-users"></i>
+                                    Estudiantes Participantes
+                                </h5>
+                            </div>
+                            @for (int i = 1; i <= 4; i++)
+                            {
+                                <div class="col-md-4">
+                                    <div class="form-group mb-3">
+                                        <label class="form-label fw-bold">
+                                            Estudiante @i @(i == 1 ? "*" : "")
+                                        </label>
+                                        <input name="NombreEstudiante@(i)" class="form-control" 
+                                               @(i == 1 ? "required" : "") 
+                                               placeholder="Nombre completo">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group mb-3">
+                                        <label class="form-label fw-bold">
+                                            Sección @i @(i == 1 ? "*" : "")
+                                        </label>
+                                        <input name="Seccion0@(i)" class="form-control" 
+                                               @(i == 1 ? "required" : "") 
+                                               placeholder="Sección">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group mb-3">
+                                        <label class="form-label fw-bold">
+                                            Teléfono @i
+                                        </label>
+                                        <input name="Telefono0@(i)" class="form-control" 
+                                               placeholder="Número de teléfono">
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Ubicación del Proyecto -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    Ubicación del Proyecto
+                                </h5>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Provincia" class="form-label fw-bold">
+                                        Provincia <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Provincia" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Canton" class="form-label fw-bold">
+                                        Cantón <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Canton" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Distrito" class="form-label fw-bold">
+                                        Distrito <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Distrito" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group mb-3">
+                                    <label asp-for="DireccionExacta" class="form-label fw-bold">
+                                        Dirección Exacta <span class="text-danger">*</span>
+                                    </label>
+                                    <textarea asp-for="DireccionExacta" class="form-control" rows="2" required
+                                              placeholder="Descripción detallada de la ubicación"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Objetivos -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2">
+                                    <i class="fas fa-bullseye"></i>
+                                    Objetivos del Proyecto
+                                </h5>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group mb-3">
+                                    <label asp-for="ObjetivoGeneral1" class="form-label fw-bold">
+                                        Objetivo General <span class="text-danger">*</span>
+                                    </label>
+                                    <textarea asp-for="ObjetivoGeneral1" class="form-control" rows="3" required
+                                              placeholder="Describa el objetivo general del proyecto"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group mb-3">
+                                    <label asp-for="ObjetivosEspecificos" class="form-label fw-bold">
+                                        Objetivos Específicos <span class="text-danger">*</span>
+                                    </label>
+                                    <textarea asp-for="ObjetivosEspecificos" class="form-control" rows="4" required
+                                              placeholder="Liste los objetivos específicos del proyecto"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botones de Acción -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                                    <a href="@Url.Action("DetalleEntrega", "Estudiante", new { id = entrega?.Identificacion })" 
+                                       class="btn btn-outline-secondary">
+                                        <i class="fas fa-arrow-left"></i>
+                                        Volver
+                                    </a>
+                                    
+                                    <div>
+                                        <button type="button" class="btn btn-outline-primary me-2" onclick="guardarBorrador()">
+                                            <i class="fas fa-save"></i>
+                                            Guardar Borrador
+                                        </button>
+                                        
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="fas fa-file-pdf"></i>
+                                            Generar PDF Final
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function guardarBorrador() {
+    alert('Funcionalidad de guardar borrador pendiente de implementar');
+}
+</script>

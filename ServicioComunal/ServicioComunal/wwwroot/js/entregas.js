@@ -1,6 +1,43 @@
 // Variables globales
 let esEdicion = false;
 
+// Función para mostrar/ocultar secciones según el tipo de recurso seleccionado
+function mostrarSeccionTipoRecurso() {
+    const tipoSeleccionado = document.querySelector('input[name="tipoRecurso"]:checked');
+    console.log('Tipo seleccionado:', tipoSeleccionado ? tipoSeleccionado.value : 'ninguno');
+    
+    const seccionFormulario = document.getElementById('seccionFormulario');
+    const seccionAnexo = document.getElementById('seccionAnexo');
+    
+    if (!tipoSeleccionado) {
+        console.log('No hay tipo seleccionado');
+        return;
+    }
+    
+    const valor = tipoSeleccionado.value;
+    
+    if (valor === 'formulario') {
+        seccionFormulario.style.display = 'block';
+        seccionAnexo.style.display = 'none';
+        // Limpiar anexo seleccionado
+        document.getElementById('entregaAnexo').value = '';
+        console.log('Mostrando sección formulario');
+    } else if (valor === 'anexo') {
+        seccionFormulario.style.display = 'none';
+        seccionAnexo.style.display = 'block';
+        // Limpiar formulario seleccionado
+        document.getElementById('entregaFormulario').value = '';
+        console.log('Mostrando sección anexo');
+    } else {
+        seccionFormulario.style.display = 'none';
+        seccionAnexo.style.display = 'none';
+        // Limpiar ambos
+        document.getElementById('entregaFormulario').value = '';
+        document.getElementById('entregaAnexo').value = '';
+        console.log('Ocultando ambas secciones');
+    }
+}
+
 // Función para limpiar el formulario
 function limpiarFormulario() {
     document.getElementById('formEntrega').reset();
@@ -8,6 +45,15 @@ function limpiarFormulario() {
     document.getElementById('modalEntregaLabel').textContent = 'Nueva Entrega';
     document.getElementById('modoEdicion').style.display = 'none';
     document.getElementById('infoNuevaEntrega').style.display = 'block';
+    
+    // Restablecer tipo de recurso a formulario
+    document.getElementById('tipoFormulario').checked = true;
+    
+    // Asegurar que las secciones se muestren correctamente
+    setTimeout(() => {
+        mostrarSeccionTipoRecurso();
+    }, 100);
+    
     esEdicion = false;
 }
 
@@ -66,7 +112,8 @@ async function guardarEntrega() {
             nombre: formData.get('nombre'),
             descripcion: formData.get('descripcion'),
             fechaLimite: formData.get('fechaLimite'),
-            formularioIdentificacion: formData.get('formularioIdentificacion') ? parseInt(formData.get('formularioIdentificacion')) : null
+            formularioIdentificacion: formData.get('formularioIdentificacion') ? parseInt(formData.get('formularioIdentificacion')) : null,
+            tipoAnexo: formData.get('tipoAnexo') ? parseInt(formData.get('tipoAnexo')) : null
         };
 
         // Validaciones
@@ -280,6 +327,8 @@ function mostrarAlerta(mensaje, tipo) {
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM cargado, configurando event listeners');
+    
     // Event listener para limpiar formulario al abrir modal
     document.getElementById('modalEntrega').addEventListener('show.bs.modal', function () {
         if (!esEdicion) {
@@ -292,6 +341,24 @@ document.addEventListener('DOMContentLoaded', function() {
         limpiarFormulario();
     });
 
+    // Event listeners para los radio buttons de tipo de recurso
+    const radioButtons = document.querySelectorAll('input[name="tipoRecurso"]');
+    console.log('Radio buttons encontrados:', radioButtons.length);
+    
+    radioButtons.forEach((radio, index) => {
+        console.log(`Configurando radio ${index}: ${radio.value}`);
+        radio.addEventListener('change', function() {
+            console.log('Radio cambiado a:', this.value);
+            mostrarSeccionTipoRecurso();
+        });
+        
+        // También agregar evento click como respaldo
+        radio.addEventListener('click', function() {
+            console.log('Radio clickeado:', this.value);
+            mostrarSeccionTipoRecurso();
+        });
+    });
+
     // Event listener para tecla Enter en campos del formulario
     const inputs = document.querySelectorAll('#formEntrega input, #formEntrega textarea, #formEntrega select');
     inputs.forEach(input => {
@@ -302,4 +369,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+    
+    // Inicializar la visualización de secciones
+    console.log('Inicializando visualización de secciones');
+    mostrarSeccionTipoRecurso();
 });

@@ -1314,16 +1314,34 @@ namespace ServicioComunal.Controllers
         {
             try
             {
-                var formularios = await _context.Formularios
-                    .Include(f => f.Profesor)
-                    .OrderByDescending(f => f.FechaIngreso)
+                // Versión simplificada para debug
+                var formularios = new List<Formulario>();
+                
+                // Intentar cargar formularios de la base de datos
+                try
+                {
+                    formularios = await _context.Formularios
+                        .Include(f => f.Profesor)
+                        .OrderByDescending(f => f.FechaIngreso)
+                        .ToListAsync();
+                }
+                catch (Exception dbEx)
+                {
+                    ViewBag.Error = $"Error de base de datos: {dbEx.Message}";
+                }
+
+                ViewBag.Profesores = await _context.Profesores
+                    .OrderBy(p => p.Apellidos)
+                    .ThenBy(p => p.Nombre)
                     .ToListAsync();
+
+                ViewBag.Formularios = formularios;
 
                 return View(formularios);
             }
             catch (Exception ex)
             {
-                ViewBag.Error = $"Error al cargar formularios: {ex.Message}";
+                ViewBag.Error = $"Error general: {ex.Message}";
                 return View(new List<Formulario>());
             }
         }
@@ -1346,6 +1364,11 @@ namespace ServicioComunal.Controllers
 
                 ViewBag.Formularios = await _context.Formularios
                     .OrderBy(f => f.Nombre)
+                    .ToListAsync();
+
+                ViewBag.Profesores = await _context.Profesores
+                    .OrderBy(p => p.Apellidos)
+                    .ThenBy(p => p.Nombre)
                     .ToListAsync();
 
                 return View(entregas);
@@ -2227,6 +2250,21 @@ namespace ServicioComunal.Controllers
                     }
                 }
 
+                // Verificar que el tipo de anexo es válido si se especificó uno
+                if (entregaDto.TipoAnexo.HasValue)
+                {
+                    if (!new[] { 1, 2, 3, 5 }.Contains(entregaDto.TipoAnexo.Value))
+                    {
+                        return Json(new { success = false, message = "El tipo de anexo seleccionado no es válido" });
+                    }
+                }
+
+                // Verificar que no se especifiquen ambos (formulario y anexo)
+                if (entregaDto.FormularioIdentificacion.HasValue && entregaDto.TipoAnexo.HasValue)
+                {
+                    return Json(new { success = false, message = "No se puede especificar tanto un formulario como un anexo para la misma entrega" });
+                }
+
                 // Obtener todos los grupos existentes
                 var grupos = await _context.Grupos
                     .Include(g => g.GruposProfesores)
@@ -2251,9 +2289,10 @@ namespace ServicioComunal.Controllers
                         GrupoNumero = grupo.Numero,
                         ProfesorIdentificacion = null, // Sin profesor asignado
                         FormularioIdentificacion = entregaDto.FormularioIdentificacion,
+                        TipoAnexo = entregaDto.TipoAnexo ?? 0, // Asignar el tipo de anexo si se especificó
                         ArchivoRuta = "", // Se llenará cuando se adjunte archivo
                         Retroalimentacion = "", // Se llenará por el tutor
-                        FechaRetroalimentacion = DateTime.MinValue
+                        FechaRetroalimentacion = null
                     };
                     
                     entregas.Add(entrega);
@@ -2269,6 +2308,18 @@ namespace ServicioComunal.Controllers
                     var formulario = await _context.Formularios
                         .FirstOrDefaultAsync(f => f.Identificacion == entregaDto.FormularioIdentificacion);
                     mensaje += $" con formulario asociado: {formulario?.Nombre}";
+                }
+                else if (entregaDto.TipoAnexo.HasValue)
+                {
+                    string nombreAnexo = entregaDto.TipoAnexo.Value switch
+                    {
+                        1 => "Anexo #1 - Información Básica",
+                        2 => "Anexo #2 - Propuesta de Proyecto", 
+                        3 => "Anexo #3 - Plan de Trabajo",
+                        5 => "Anexo #5 - Evaluación Final",
+                        _ => $"Anexo #{entregaDto.TipoAnexo.Value}"
+                    };
+                    mensaje += $" con anexo asociado: {nombreAnexo}";
                 }
 
                 return Json(new { 
@@ -3223,6 +3274,287 @@ namespace ServicioComunal.Controllers
                 });
             }
         }
+
+        // ===== NUEVAS FUNCIONES MOVIDAS DESDE ADMIN =====
+
+        // API para obtener entregas con filtros
+        [HttpGet]
+        public async Task<IActionResult> ObtenerEntregasAdmin()
+        {
+            try
+            {
+                var entregas = await _context.Entregas
+                    .Include(e => e.Grupo)
+                        .ThenInclude(g => g.GruposEstudiantes)
+                        .ThenInclude(ge => ge.Estudiante)
+                    .Include(e => e.Profesor)
+                    .Include(e => e.Formulario)
+                    .OrderByDescending(e => e.FechaLimite)
+                    .ToListAsync();
+
+                var resultado = entregas.Select(e => new
+                {
+                    e.Identificacion,
+                    e.Nombre,
+                    e.Descripcion,
+                    e.FechaLimite,
+                    e.FechaEntrega,
+                    e.TipoAnexo,
+                    TieneAnexo = e.TipoAnexo > 0,
+                    Estado = GetEstadoEntregaAdmin(e),
+                    Grupo = new
+                    {
+                        Numero = e.Grupo.Numero,
+                        CantidadEstudiantes = e.Grupo.GruposEstudiantes.Count,
+                        Estudiantes = e.Grupo.GruposEstudiantes.Select(ge => $"{ge.Estudiante.Nombre} {ge.Estudiante.Apellidos}").ToList()
+                    },
+                    Profesor = e.Profesor != null ? $"{e.Profesor.Nombre} {e.Profesor.Apellidos}" : "Sin asignar",
+                    Formulario = e.Formulario != null ? e.Formulario.Nombre : "Sin formulario",
+                    TieneEntrega = !string.IsNullOrEmpty(e.ArchivoRuta)
+                }).ToList();
+
+                return Json(new { success = true, entregas = resultado });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al cargar entregas: " + ex.Message });
+            }
+        }
+
+        private string GetEstadoEntregaAdmin(Entrega entrega)
+        {
+            if (!string.IsNullOrEmpty(entrega.Retroalimentacion))
+            {
+                return entrega.Retroalimentacion.StartsWith("CAMBIOS SOLICITADOS:") ? "Requiere Cambios" : "Revisada";
+            }
+            else if (!string.IsNullOrEmpty(entrega.ArchivoRuta))
+            {
+                return "Enviada";
+            }
+            else if (entrega.FechaLimite < DateTime.Now)
+            {
+                return "Vencida";
+            }
+            else
+            {
+                return "Pendiente";
+            }
+        }
+
+        // Crear nueva entrega con todos los grupos
+        [HttpPost]
+        public async Task<IActionResult> CrearEntregaAdmin([FromBody] CrearEntregaAdminRequest request)
+        {
+            try
+            {
+                var entrega = new Entrega
+                {
+                    Nombre = request.Nombre,
+                    Descripcion = request.Descripcion,
+                    FechaLimite = request.FechaLimite,
+                    GrupoNumero = request.GrupoNumero,
+                    ProfesorIdentificacion = request.ProfesorId > 0 ? request.ProfesorId : null,
+                    FormularioIdentificacion = request.FormularioId > 0 ? request.FormularioId : null,
+                    TipoAnexo = request.TipoAnexo,
+                    ArchivoRuta = string.Empty,
+                    Retroalimentacion = string.Empty
+                };
+
+                _context.Entregas.Add(entrega);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Entrega creada exitosamente" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al crear entrega: " + ex.Message });
+            }
+        }
+
+        // Eliminar entrega específica
+        [HttpPost]
+        public async Task<IActionResult> EliminarEntregaAdmin([FromBody] EliminarEntregaAdminRequest request)
+        {
+            try
+            {
+                var entrega = await _context.Entregas.FindAsync(request.EntregaId);
+                if (entrega == null)
+                {
+                    return Json(new { success = false, message = "Entrega no encontrada" });
+                }
+
+                // Eliminar archivo si existe
+                if (!string.IsNullOrEmpty(entrega.ArchivoRuta))
+                {
+                    var rutaCompleta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", entrega.ArchivoRuta);
+                    if (System.IO.File.Exists(rutaCompleta))
+                    {
+                        System.IO.File.Delete(rutaCompleta);
+                    }
+                }
+
+                _context.Entregas.Remove(entrega);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Entrega eliminada exitosamente" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al eliminar entrega: " + ex.Message });
+            }
+        }
+
+        // Obtener anexos disponibles
+        [HttpGet]
+        public IActionResult ObtenerAnexosDisponibles()
+        {
+            var anexos = new[]
+            {
+                new { Id = 1, Nombre = "Anexo #1 - Información Básica", Archivo = "Anexo #1 Interactivo.pdf" },
+                new { Id = 2, Nombre = "Anexo #2 - Propuesta de Proyecto", Archivo = "Anexo #2 Interactivo.pdf" },
+                new { Id = 3, Nombre = "Anexo #3 - Plan de Trabajo", Archivo = "Anexo #3 Interactivo.pdf" },
+                new { Id = 5, Nombre = "Anexo #5 - Evaluación Final", Archivo = "Anexo #5 Interactivo.pdf" }
+            };
+
+            var anexosConInfo = anexos.Select(a => new
+            {
+                a.Id,
+                a.Nombre,
+                a.Archivo,
+                Existe = System.IO.File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "formularios", a.Archivo)),
+                RutaDescarga = $"/uploads/formularios/{Uri.EscapeDataString(a.Archivo)}"
+            }).ToList();
+
+            return Json(new { success = true, anexos = anexosConInfo });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> VerificarEstadoGrupos()
+        {
+            try
+            {
+                var grupos = await _context.Grupos
+                    .Include(g => g.GruposEstudiantes)
+                        .ThenInclude(ge => ge.Estudiante)
+                    .Include(g => g.Lider)
+                    .ToListAsync();
+
+                var gruposSinLider = grupos.Where(g => g.LiderIdentificacion == null).ToList();
+                var gruposConLider = grupos.Where(g => g.LiderIdentificacion != null).ToList();
+
+                var solicitudes = await _context.Solicitudes.CountAsync();
+                var totalEstudiantes = await _context.Estudiantes.CountAsync();
+                var estudiantesEnGrupos = await _context.GruposEstudiantes.CountAsync();
+
+                var resultado = new
+                {
+                    TotalGrupos = grupos.Count,
+                    GruposSinLider = gruposSinLider.Count,
+                    GruposConLider = gruposConLider.Count,
+                    TotalSolicitudes = solicitudes,
+                    TotalEstudiantes = totalEstudiantes,
+                    EstudiantesEnGrupos = estudiantesEnGrupos,
+                    EstudiantesSinGrupo = totalEstudiantes - estudiantesEnGrupos,
+                    Grupos = grupos.Select(g => new
+                    {
+                        Numero = g.Numero,
+                        TieneLider = g.LiderIdentificacion != null,
+                        NombreLider = g.Lider != null ? $"{g.Lider.Nombre} {g.Lider.Apellidos}" : "Sin líder",
+                        CantidadMiembros = g.GruposEstudiantes.Count,
+                        Miembros = g.GruposEstudiantes.Select(ge => new
+                        {
+                            Nombre = $"{ge.Estudiante.Nombre} {ge.Estudiante.Apellidos}",
+                            EsLider = ge.EstudianteIdentificacion == g.LiderIdentificacion
+                        }).ToList()
+                    }).ToList()
+                };
+
+                return Json(resultado);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> UsuariosSinContraseñaNueva()
+        {
+            try
+            {
+                var usuariosSinCambio = await _context.Usuarios
+                    .Where(u => u.RequiereCambioContraseña == true)
+                    .OrderBy(u => u.Rol)
+                    .ThenBy(u => u.NombreUsuario)
+                    .ToListAsync();
+
+                var resultado = usuariosSinCambio.Select(u => new {
+                    Identificacion = u.Identificacion,
+                    NombreUsuario = u.NombreUsuario,
+                    Rol = u.Rol,
+                    FechaCreacion = u.FechaCreacion.ToString("dd/MM/yyyy"),
+                    UltimoAcceso = u.UltimoAcceso?.ToString("dd/MM/yyyy HH:mm") ?? "Nunca",
+                    ContraseñaInicial = u.Identificacion.ToString(), // La contraseña inicial es la cédula
+                    Activo = u.Activo
+                }).ToList();
+
+                var resumen = new
+                {
+                    TotalUsuarios = await _context.Usuarios.CountAsync(),
+                    UsuariosSinCambioContraseña = usuariosSinCambio.Count,
+                    UsuariosConContraseñaNueva = await _context.Usuarios.CountAsync(u => u.RequiereCambioContraseña == false),
+                    Usuarios = resultado
+                };
+
+                return Json(resumen);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { 
+                    success = false, 
+                    message = "Error al consultar usuarios: " + ex.Message 
+                });
+            }
+        }
+
+        // Endpoint temporal para regenerar datos
+        public async Task<IActionResult> RegenerarDatos()
+        {
+            try
+            {
+                await _seeder.LimpiarYRegenerarAsync();
+                return Json(new { 
+                    success = true, 
+                    message = "✅ Datos regenerados exitosamente. Ahora puedes probar con los usuarios tutores: patricia.rodriguez, miguel.sanchez, elena.castro (contraseña: password123)" 
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { 
+                    success = false, 
+                    message = $"❌ Error: {ex.Message}" 
+                });
+            }
+        }
+
+        // Ver estado de usuarios
+        public async Task<IActionResult> VerUsuarios()
+        {
+            var usuarios = await _context.Usuarios
+                .OrderBy(u => u.Rol)
+                .ThenBy(u => u.NombreUsuario)
+                .ToListAsync();
+            
+            var resultado = usuarios.Select(u => new {
+                u.Identificacion,
+                u.NombreUsuario,
+                u.Rol,
+                u.Activo,
+                u.FechaCreacion
+            }).ToList();
+            
+            return Json(new { success = true, usuarios = resultado });
+        }
     }
 
     // Clases para requests
@@ -3259,5 +3591,21 @@ namespace ServicioComunal.Controllers
     {
         public int GrupoNumero { get; set; }
         public int NuevoLiderId { get; set; }
+    }
+
+    public class CrearEntregaAdminRequest
+    {
+        public string Nombre { get; set; } = string.Empty;
+        public string Descripcion { get; set; } = string.Empty;
+        public DateTime FechaLimite { get; set; }
+        public int GrupoNumero { get; set; }
+        public int ProfesorId { get; set; }
+        public int FormularioId { get; set; }
+        public int TipoAnexo { get; set; }
+    }
+
+    public class EliminarEntregaAdminRequest
+    {
+        public int EntregaId { get; set; }
     }
 }
