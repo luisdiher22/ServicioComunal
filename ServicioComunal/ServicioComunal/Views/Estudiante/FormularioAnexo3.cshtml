@@ -45,7 +45,7 @@
                                     <label asp-for="NombreDelProyecto" class="form-label fw-bold">
                                         Nombre del Proyecto <span class="text-danger">*</span>
                                     </label>
-                                    <input asp-for="NombreDelProyecto" name="NombreDelProyecto" class="form-control" required 
+                                    <input asp-for="NombreDelProyecto" id="NombreDelProyecto" name="NombreDelProyecto" class="form-control" required 
                                            placeholder="Ingrese el nombre del proyecto">
                                 </div>
                             </div>
@@ -64,7 +64,7 @@
                                     <label asp-for="Tutor" class="form-label fw-bold">
                                         Nombre del Tutor <span class="text-danger">*</span>
                                     </label>
-                                    <input asp-for="Tutor" name="Tutor" class="form-control" required 
+                                    <input asp-for="Tutor" id="Tutor" name="Tutor" class="form-control" required 
                                            placeholder="Nombre completo del tutor">
                                 </div>
                             </div>
@@ -87,38 +87,121 @@
                                     Estudiantes Participantes
                                 </h5>
                             </div>
-                            @for (int i = 1; i <= 4; i++)
-                            {
-                                <div class="col-md-4">
-                                    <div class="form-group mb-3">
-                                        <label class="form-label fw-bold">
-                                            Estudiante @i @(i == 1 ? "*" : "")
-                                        </label>
-                                        <input name="NombreEstudiante@(i)" class="form-control" 
-                                               @(i == 1 ? "required" : "") 
-                                               placeholder="Nombre completo">
-                                    </div>
+                            @* Estudiante 1 *@
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label class="form-label fw-bold">
+                                        Estudiante 1 <span class="text-danger">*</span>
+                                    </label>
+                                    <input id="NombreEstudiante1" name="NombreEstudiante1" class="form-control" required 
+                                           placeholder="Nombre completo">
                                 </div>
-                                <div class="col-md-4">
-                                    <div class="form-group mb-3">
-                                        <label class="form-label fw-bold">
-                                            Sección @i @(i == 1 ? "*" : "")
-                                        </label>
-                                        <input name="Seccion0@(i)" class="form-control" 
-                                               @(i == 1 ? "required" : "") 
-                                               placeholder="Sección">
-                                    </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label class="form-label fw-bold">
+                                        Sección 1 <span class="text-danger">*</span>
+                                    </label>
+                                    <input id="Seccion01" name="Seccion01" class="form-control" required 
+                                           placeholder="Sección">
                                 </div>
-                                <div class="col-md-4">
-                                    <div class="form-group mb-3">
-                                        <label class="form-label fw-bold">
-                                            Teléfono @i
-                                        </label>
-                                        <input name="Telefono0@(i)" class="form-control" 
-                                               placeholder="Número de teléfono">
-                                    </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label class="form-label fw-bold">
+                                        Teléfono 1
+                                    </label>
+                                    <input id="Telefono01" name="Telefono01" class="form-control" 
+                                           placeholder="Número de teléfono">
                                 </div>
-                            }
+                            </div>
+                            
+                            @* Estudiante 2 *@
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label class="form-label fw-bold">
+                                        Estudiante 2
+                                    </label>
+                                    <input id="NombreEstudiante2" name="NombreEstudiante2" class="form-control" 
+                                           placeholder="Nombre completo">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label class="form-label fw-bold">
+                                        Sección 2
+                                    </label>
+                                    <input id="Seccion02" name="Seccion02" class="form-control" 
+                                           placeholder="Sección">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label class="form-label fw-bold">
+                                        Teléfono 2
+                                    </label>
+                                    <input id="Telefono02" name="Telefono02" class="form-control" 
+                                           placeholder="Número de teléfono">
+                                </div>
+                            </div>
+                            
+                            @* Estudiante 3 *@
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label class="form-label fw-bold">
+                                        Estudiante 3
+                                    </label>
+                                    <input id="NombreEstudiante3" name="NombreEstudiante3" class="form-control" 
+                                           placeholder="Nombre completo">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label class="form-label fw-bold">
+                                        Sección 3
+                                    </label>
+                                    <input id="Seccion03" name="Seccion03" class="form-control" 
+                                           placeholder="Sección">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label class="form-label fw-bold">
+                                        Teléfono 3
+                                    </label>
+                                    <input id="Telefono03" name="Telefono03" class="form-control" 
+                                           placeholder="Número de teléfono">
+                                </div>
+                            </div>
+                            
+                            @* Estudiante 4 *@
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label class="form-label fw-bold">
+                                        Estudiante 4
+                                    </label>
+                                    <input id="NombreEstudiante4" name="NombreEstudiante4" class="form-control" 
+                                           placeholder="Nombre completo">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label class="form-label fw-bold">
+                                        Sección 4
+                                    </label>
+                                    <input id="Seccion04" name="Seccion04" class="form-control" 
+                                           placeholder="Sección">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label class="form-label fw-bold">
+                                        Teléfono 4
+                                    </label>
+                                    <input id="Telefono04" name="Telefono04" class="form-control" 
+                                           placeholder="Número de teléfono">
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Ubicación del Proyecto -->
@@ -134,7 +217,7 @@
                                     <label asp-for="Provincia" class="form-label fw-bold">
                                         Provincia <span class="text-danger">*</span>
                                     </label>
-                                    <input asp-for="Provincia" name="Provincia" class="form-control" required>
+                                    <input asp-for="Provincia" id="Provincia" name="Provincia" class="form-control" required>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -142,7 +225,7 @@
                                     <label asp-for="Canton" class="form-label fw-bold">
                                         Cantón <span class="text-danger">*</span>
                                     </label>
-                                    <input asp-for="Canton" name="Canton" class="form-control" required>
+                                    <input asp-for="Canton" id="Canton" name="Canton" class="form-control" required>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -150,7 +233,7 @@
                                     <label asp-for="Distrito" class="form-label fw-bold">
                                         Distrito <span class="text-danger">*</span>
                                     </label>
-                                    <input asp-for="Distrito" name="Distrito" class="form-control" required>
+                                    <input asp-for="Distrito" id="Distrito" name="Distrito" class="form-control" required>
                                 </div>
                             </div>
                             <div class="col-12">
@@ -158,7 +241,7 @@
                                     <label asp-for="DireccionExacta" class="form-label fw-bold">
                                         Dirección Exacta <span class="text-danger">*</span>
                                     </label>
-                                    <textarea asp-for="DireccionExacta" name="DireccionExacta" class="form-control" rows="2" required
+                                    <textarea asp-for="DireccionExacta" id="DireccionExacta" name="DireccionExacta" class="form-control" rows="2" required
                                               placeholder="Descripción detallada de la ubicación"></textarea>
                                 </div>
                             </div>
@@ -177,7 +260,7 @@
                                     <label asp-for="ObjetivoGeneral1" class="form-label fw-bold">
                                         Objetivo General <span class="text-danger">*</span>
                                     </label>
-                                    <textarea asp-for="ObjetivoGeneral1" name="ObjetivoGeneral1" class="form-control" rows="3" required
+                                    <textarea asp-for="ObjetivoGeneral1" id="ObjetivoGeneral1" name="ObjetivoGeneral1" class="form-control" rows="3" required
                                               placeholder="Describa el objetivo general del proyecto"></textarea>
                                 </div>
                             </div>
@@ -186,7 +269,7 @@
                                     <label asp-for="ObjetivosEspecificos" class="form-label fw-bold">
                                         Objetivos Específicos <span class="text-danger">*</span>
                                     </label>
-                                    <textarea asp-for="ObjetivosEspecificos" name="ObjetivosEspecificos" class="form-control" rows="4" required
+                                    <textarea asp-for="ObjetivosEspecificos" id="ObjetivosEspecificos" name="ObjetivosEspecificos" class="form-control" rows="4" required
                                               placeholder="Liste los objetivos específicos del proyecto"></textarea>
                                 </div>
                             </div>
@@ -230,129 +313,150 @@ function guardarBorrador() {
 
 // Prevent default form submission and use fetch API instead
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('anexo3Form');
+    console.log('DOM cargado para FormularioAnexo3');
     
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault(); // Prevent default form submission
-            
-            // Validate required fields
-            const nombreDelProyecto = document.querySelector('input[name="NombreDelProyecto"]');
-            const tutor = document.querySelector('input[name="Tutor"]');
-            const nombreEstudiante1 = document.querySelector('input[name="NombreEstudiante1"]');
-            const seccion01 = document.querySelector('input[name="Seccion01"]');
-            const provincia = document.querySelector('input[name="Provincia"]');
-            const canton = document.querySelector('input[name="Canton"]');
-            const distrito = document.querySelector('input[name="Distrito"]');
-            const direccionExacta = document.querySelector('textarea[name="DireccionExacta"]');
-            const objetivoGeneral1 = document.querySelector('textarea[name="ObjetivoGeneral1"]');
-            const objetivosEspecificos = document.querySelector('textarea[name="ObjetivosEspecificos"]');
-            
-            if (!nombreDelProyecto || !nombreDelProyecto.value.trim()) {
-                alert('Por favor, ingrese el nombre del proyecto.');
-                if (nombreDelProyecto) nombreDelProyecto.focus();
-                return;
-            }
-            
-            if (!tutor || !tutor.value.trim()) {
-                alert('Por favor, ingrese el nombre del tutor.');
-                if (tutor) tutor.focus();
-                return;
-            }
-            
-            if (!nombreEstudiante1 || !nombreEstudiante1.value.trim()) {
-                alert('Por favor, ingrese el nombre del estudiante 1.');
-                if (nombreEstudiante1) nombreEstudiante1.focus();
-                return;
-            }
-            
-            if (!seccion01 || !seccion01.value.trim()) {
-                alert('Por favor, ingrese la sección del estudiante 1.');
-                if (seccion01) seccion01.focus();
-                return;
-            }
-            
-            if (!provincia || !provincia.value.trim()) {
-                alert('Por favor, ingrese la provincia.');
-                if (provincia) provincia.focus();
-                return;
-            }
-            
-            if (!canton || !canton.value.trim()) {
-                alert('Por favor, ingrese el cantón.');
-                if (canton) canton.focus();
-                return;
-            }
-            
-            if (!distrito || !distrito.value.trim()) {
-                alert('Por favor, ingrese el distrito.');
-                if (distrito) distrito.focus();
-                return;
-            }
-            
-            if (!direccionExacta || !direccionExacta.value.trim()) {
-                alert('Por favor, ingrese la dirección exacta.');
-                if (direccionExacta) direccionExacta.focus();
-                return;
-            }
-            
-            if (!objetivoGeneral1 || !objetivoGeneral1.value.trim()) {
-                alert('Por favor, ingrese el objetivo general.');
-                if (objetivoGeneral1) objetivoGeneral1.focus();
-                return;
-            }
-            
-            if (!objetivosEspecificos || !objetivosEspecificos.value.trim()) {
-                alert('Por favor, ingrese los objetivos específicos.');
-                if (objetivosEspecificos) objetivosEspecificos.focus();
-                return;
-            }
-            
-            // Create FormData from the form
-            const formData = new FormData(form);
-            
-            // Show loading state
-            const submitButton = form.querySelector('button[type="submit"]');
-            const originalText = submitButton.innerHTML;
-            submitButton.disabled = true;
-            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando PDF...';
-            
-            // Submit using fetch API
-            fetch('@Url.Action("GuardarAnexo3", "Estudiante")', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    alert('Anexo 3 guardado y PDF generado exitosamente.');
-                    
-                    // Redirect to the specified URL if provided
-                    if (data.redirectUrl) {
-                        window.location.href = data.redirectUrl;
-                    } else {
-                        // Fallback: reload the page or redirect to a default location
-                        window.location.reload();
-                    }
-                } else {
-                    alert('Error: ' + (data.message || 'No se pudo guardar el anexo 3.'));
-                }
-            })
-            .catch(error => {
-                console.error('Error submitting form:', error);
-                alert('Error al enviar el formulario. Por favor, inténtelo de nuevo.');
-            })
-            .finally(() => {
-                // Restore button state
-                submitButton.disabled = false;
-                submitButton.innerHTML = originalText;
-            });
-        });
+    const form = document.getElementById('anexo3Form');
+    if (!form) {
+        console.error('Formulario anexo3Form no encontrado');
+        return;
     }
+    
+    console.log('Formulario encontrado:', form);
+    form.addEventListener('submit', function(e) {
+        e.preventDefault(); // Prevent default form submission
+        console.log('Submit event capturado para FormularioAnexo3');
+        
+        // Validate required fields using getElementById for consistency
+        const nombreDelProyecto = document.getElementById('NombreDelProyecto');
+        const tutor = document.getElementById('Tutor');
+        const nombreEstudiante1 = document.getElementById('NombreEstudiante1');
+        const seccion01 = document.getElementById('Seccion01');
+        const provincia = document.getElementById('Provincia');
+        const canton = document.getElementById('Canton');
+        const distrito = document.getElementById('Distrito');
+        const direccionExacta = document.getElementById('DireccionExacta');
+        const objetivoGeneral1 = document.getElementById('ObjetivoGeneral1');
+        const objetivosEspecificos = document.getElementById('ObjetivosEspecificos');
+        
+        console.log('Validando campos requeridos...');
+        console.log('NombreDelProyecto:', nombreDelProyecto?.value);
+        console.log('Tutor:', tutor?.value);
+        console.log('NombreEstudiante1:', nombreEstudiante1?.value);
+        console.log('Seccion01:', seccion01?.value);
+        console.log('Provincia:', provincia?.value);
+        console.log('Canton:', canton?.value);
+        console.log('Distrito:', distrito?.value);
+        console.log('DireccionExacta:', direccionExacta?.value);
+        console.log('ObjetivoGeneral1:', objetivoGeneral1?.value);
+        console.log('ObjetivosEspecificos:', objetivosEspecificos?.value);
+        
+        if (!nombreDelProyecto || !nombreDelProyecto.value.trim()) {
+            alert('Por favor, ingrese el nombre del proyecto.');
+            if (nombreDelProyecto) nombreDelProyecto.focus();
+            return;
+        }
+        
+        if (!tutor || !tutor.value.trim()) {
+            alert('Por favor, ingrese el nombre del tutor.');
+            if (tutor) tutor.focus();
+            return;
+        }
+        
+        if (!nombreEstudiante1 || !nombreEstudiante1.value.trim()) {
+            alert('Por favor, ingrese el nombre del estudiante 1.');
+            if (nombreEstudiante1) nombreEstudiante1.focus();
+            return;
+        }
+        
+        if (!seccion01 || !seccion01.value.trim()) {
+            alert('Por favor, ingrese la sección del estudiante 1.');
+            if (seccion01) seccion01.focus();
+            return;
+        }
+        
+        if (!provincia || !provincia.value.trim()) {
+            alert('Por favor, ingrese la provincia.');
+            if (provincia) provincia.focus();
+            return;
+        }
+        
+        if (!canton || !canton.value.trim()) {
+            alert('Por favor, ingrese el cantón.');
+            if (canton) canton.focus();
+            return;
+        }
+        
+        if (!distrito || !distrito.value.trim()) {
+            alert('Por favor, ingrese el distrito.');
+            if (distrito) distrito.focus();
+            return;
+        }
+        
+        if (!direccionExacta || !direccionExacta.value.trim()) {
+            alert('Por favor, ingrese la dirección exacta.');
+            if (direccionExacta) direccionExacta.focus();
+            return;
+        }
+        
+        if (!objetivoGeneral1 || !objetivoGeneral1.value.trim()) {
+            alert('Por favor, ingrese el objetivo general.');
+            if (objetivoGeneral1) objetivoGeneral1.focus();
+            return;
+        }
+        
+        if (!objetivosEspecificos || !objetivosEspecificos.value.trim()) {
+            alert('Por favor, ingrese los objetivos específicos.');
+            if (objetivosEspecificos) objetivosEspecificos.focus();
+            return;
+        }
+        
+        console.log('Validaciones pasadas, creando FormData...');
+        
+        // Create FormData from the form
+        const formData = new FormData(form);
+        
+        // Show loading state
+        const submitButton = form.querySelector('button[type="submit"]');
+        const originalText = submitButton.innerHTML;
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando PDF...';
+        
+        console.log('Estado de carga activado, preparando envío...');
+        
+        console.log('=== DATOS DEL FORMULARIO ===');
+        for (let [key, value] of formData.entries()) {
+            console.log(key + ':', value);
+        }
+        console.log('=== FIN DATOS DEL FORMULARIO ===');
+        
+        const actionUrl = '@Url.Action("GuardarAnexo3", "Estudiante")';
+        console.log('URL de destino:', actionUrl);
+        
+        console.log('Iniciando fetch request...');
+        
+        // Submit using fetch API
+        fetch(actionUrl, {
+            method: 'POST',
+            body: formData,
+            redirect: 'follow' // Seguir redirecciones automáticamente
+        })
+        .then(response => {
+            console.log('Respuesta recibida:', response.status, 'URL:', response.url);
+            if (response.ok) {
+                // Si la respuesta es exitosa, redirigir a la URL final
+                console.log('POST exitoso, redirigiendo a:', response.url);
+                window.location.href = response.url;
+            } else {
+                throw new Error('Error en la respuesta: ' + response.status);
+            }
+        })
+        .catch(error => {
+            console.error('Error al enviar formulario:', error);
+            alert('Error al procesar el formulario: ' + error.message);
+            // Restore button state
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalText;
+        });
+    });
 });
 </script>

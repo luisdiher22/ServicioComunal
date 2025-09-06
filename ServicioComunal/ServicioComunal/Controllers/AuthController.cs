@@ -232,10 +232,36 @@ namespace ServicioComunal.Controllers
         /// Cierra la sesión del usuario actual y lo redirige al login.
         /// </summary>
         /// <returns>Redirección a la página de login</returns>
+        /// <summary>
+        /// Cierra la sesión del usuario actual y redirige al login.
+        /// Limpia completamente todos los datos de sesión.
+        /// </summary>
+        /// <returns>Redirección a la página de login</returns>
         public IActionResult Logout()
         {
-            // Limpiar sesión
+            // Limpiar toda la sesión
             HttpContext.Session.Clear();
+            
+            // Opcional: También invalidar la sesión completamente
+            HttpContext.Session.Remove("UsuarioIdentificacion");
+            HttpContext.Session.Remove("UsuarioRol");
+            HttpContext.Session.Remove("UsuarioNombreCompleto");
+            HttpContext.Session.Remove("UsuarioNombre");
+            
+            // Limpiar cookies si existen
+            foreach (var cookie in Request.Cookies.Keys)
+            {
+                if (cookie.StartsWith("ServicioComunal") || cookie.Contains("Session"))
+                {
+                    Response.Cookies.Delete(cookie);
+                }
+            }
+            
+            // Agregar headers para evitar cache
+            Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+            Response.Headers["Pragma"] = "no-cache";
+            Response.Headers["Expires"] = "0";
+            
             return RedirectToAction("Login");
         }
     }

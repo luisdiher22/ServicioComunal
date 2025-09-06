@@ -1,0 +1,380 @@
+@model ServicioComunal.Models.InformeFinalTutorFormularioDto
+@{
+    ViewData["Title"] = "Formulario Informe Final Tutor";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var entrega = ViewBag.Entrega as ServicioComunal.Models.Entrega;
+    var estudiantes = ViewBag.Estudiantes as List<ServicioComunal.Models.Estudiante>;
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-file-alt"></i>
+                        Informe Final del Tutor: @entrega?.Nombre
+                    </h4>
+                    <p class="mb-0">Completar la información solicitada para generar el PDF</p>
+                </div>
+                
+                <div class="card-body">
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            @TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle"></i>
+                            @TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form id="formularioInformeFinalTutor" action="@Url.Action("GuardarInformeFinalTutor", "Estudiante")" method="post">
+                        <input type="hidden" name="entregaId" value="@entrega?.Identificacion" />
+                        
+                        <!-- Información Básica -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Información Básica</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="seccionRow1" class="form-label">Sección *</label>
+                                            <input type="text" class="form-control" id="seccionRow1" name="seccionRow1" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="numeroProyecto" class="form-label">Número de Proyecto *</label>
+                                            <input type="text" class="form-control" id="numeroProyecto" name="numeroProyecto" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="nombreTutor" class="form-label">Nombre del Tutor *</label>
+                                            <input type="text" class="form-control" id="nombreTutor" name="nombreTutor" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="cedulaTutor" class="form-label">Cédula del Tutor *</label>
+                                            <input type="text" class="form-control" id="cedulaTutor" name="cedulaTutor" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="nombreProyecto" class="form-label">Nombre del Proyecto *</label>
+                                    <input type="text" class="form-control" id="nombreProyecto" name="nombreProyecto" required>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="nombreEstudiante" class="form-label">Nombre del Estudiante *</label>
+                                            <input type="text" class="form-control" id="nombreEstudiante" name="nombreEstudiante" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="cedulaEstudiante" class="form-label">Cédula del Estudiante *</label>
+                                            <input type="text" class="form-control" id="cedulaEstudiante" name="cedulaEstudiante" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Evaluación -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-clipboard-check"></i> Evaluación del Estudiante</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Seleccione la evaluación correspondiente *</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="checboxSatisfactoria" name="checboxSatisfactoria">
+                                        <label class="form-check-label" for="checboxSatisfactoria">
+                                            Satisfactoria
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="checboxRegular" name="checboxRegular">
+                                        <label class="form-check-label" for="checboxRegular">
+                                            Regular
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="checkboxDeficiente" name="checkboxDeficiente">
+                                        <label class="form-check-label" for="checkboxDeficiente">
+                                            Deficiente
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="checkboxInsuficiente" name="checkboxInsuficiente">
+                                        <label class="form-check-label" for="checkboxInsuficiente">
+                                            Insuficiente
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Firma -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-signature"></i> Firma del Tutor</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="firmaTutor" class="form-label">Firma del Tutor *</label>
+                                    <div class="signature-container border rounded p-3">
+                                        <canvas id="canvasFirmaTutor" width="400" height="150" class="signature-canvas border"></canvas>
+                                        <div class="signature-controls mt-2">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="limpiarFirma('canvasFirmaTutor')">
+                                                <i class="fas fa-eraser"></i> Limpiar Firma
+                                            </button>
+                                            <small class="text-muted ms-3">Dibuje su firma en el área de arriba</small>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" id="firmaTutor" name="firmaTutor" required>
+                                    <div class="form-text">Dibuje su firma en el canvas. Se convertirá automáticamente en imagen para el PDF.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botones de Acción -->
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <button type="button" class="btn btn-secondary" onclick="guardarBorrador()">
+                                        <i class="fas fa-save"></i> Guardar Borrador
+                                    </button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-file-pdf"></i> Generar PDF
+                                    </button>
+                                </div>
+                                <div class="form-text mt-2">
+                                    <i class="fas fa-info-circle"></i>
+                                    Al generar el PDF, se creará automáticamente el documento con los datos ingresados.
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <style>
+        .signature-container {
+            background-color: #f8f9fa;
+        }
+        .signature-canvas {
+            background-color: white;
+            cursor: crosshair;
+            display: block;
+            margin: 0 auto;
+        }
+        .signature-controls {
+            text-align: center;
+        }
+    </style>
+
+    <script>
+        // Variables globales para el canvas de firma
+        let isDrawing = false;
+        let canvasFirma = null;
+        let ctxFirma = null;
+
+        function initializeSignatureCanvas(canvasId) {
+            canvasFirma = document.getElementById(canvasId);
+            ctxFirma = canvasFirma.getContext('2d');
+            
+            // Configurar el contexto
+            ctxFirma.strokeStyle = '#000000';
+            ctxFirma.lineWidth = 2;
+            ctxFirma.lineCap = 'round';
+            ctxFirma.lineJoin = 'round';
+
+            // Eventos del mouse
+            canvasFirma.addEventListener('mousedown', startDrawing);
+            canvasFirma.addEventListener('mousemove', draw);
+            canvasFirma.addEventListener('mouseup', stopDrawing);
+            canvasFirma.addEventListener('mouseout', stopDrawing);
+
+            // Eventos táctiles para móviles
+            canvasFirma.addEventListener('touchstart', handleTouch);
+            canvasFirma.addEventListener('touchmove', handleTouch);
+            canvasFirma.addEventListener('touchend', stopDrawing);
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            const rect = canvasFirma.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            ctxFirma.beginPath();
+            ctxFirma.moveTo(x, y);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            
+            const rect = canvasFirma.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            ctxFirma.lineTo(x, y);
+            ctxFirma.stroke();
+        }
+
+        function stopDrawing() {
+            if (isDrawing) {
+                isDrawing = false;
+                // Guardar la firma como base64
+                const firmaBase64 = canvasFirma.toDataURL('image/png');
+                document.getElementById('firmaTutor').value = firmaBase64;
+            }
+        }
+
+        function handleTouch(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : 
+                                            e.type === 'touchmove' ? 'mousemove' : 'mouseup', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            canvasFirma.dispatchEvent(mouseEvent);
+        }
+
+        function limpiarFirma(canvasId) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Limpiar el campo oculto
+            document.getElementById('firmaTutor').value = '';
+        }
+
+        function validarFirma() {
+            const firmaValue = document.getElementById('firmaTutor').value;
+            if (!firmaValue || firmaValue.trim() === '') {
+                alert('Por favor, dibuje su firma antes de enviar el formulario.');
+                return false;
+            }
+            return true;
+        }
+
+        function guardarBorrador() {
+            alert('Funcionalidad de borrador pendiente de implementar');
+        }
+
+        // Autocompletar datos del estudiante
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar canvas de firma
+            initializeSignatureCanvas('canvasFirmaTutor');
+
+            @if (estudiantes != null && estudiantes.Any())
+            {
+                <text>
+                const estudiantes = @Html.Raw(Json.Serialize(estudiantes.Select(e => new { 
+                    nombre = e.Nombre + " " + e.Apellidos, 
+                    identificacion = e.Identificacion,
+                    seccion = e.Clase 
+                }).ToList()));
+                
+                if (estudiantes.length > 0) {
+                    document.getElementById('nombreEstudiante').value = estudiantes[0].nombre || '';
+                    document.getElementById('cedulaEstudiante').value = estudiantes[0].identificacion || '';
+                    document.getElementById('seccionRow1').value = estudiantes[0].seccion || '';
+                }
+                </text>
+            }
+        });
+
+        // Manejo del envío del formulario
+        document.getElementById('formularioInformeFinalTutor').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Validar que se haya dibujado la firma
+            if (!validarFirma()) {
+                return;
+            }
+            
+            const form = this;
+            const formData = new FormData(form);
+            
+            // Mostrar estado de carga
+            const submitButton = form.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando PDF...';
+            
+            console.log('=== DATOS DEL FORMULARIO ===');
+            for (let [key, value] of formData.entries()) {
+                if (key === 'firmaTutor') {
+                    console.log(`${key}: [Firma como imagen base64, longitud: ${value.length} caracteres]`);
+                } else {
+                    console.log(`${key}: ${value}`);
+                }
+            }
+            console.log('=== FIN DATOS DEL FORMULARIO ===');
+            
+            const actionUrl = '@Url.Action("GuardarInformeFinalTutor", "Estudiante")';
+            console.log('URL de destino:', actionUrl);
+            
+            // Enviar usando fetch API
+            fetch(actionUrl, {
+                method: 'POST',
+                body: formData,
+                redirect: 'follow'
+            })
+            .then(response => {
+                console.log('Respuesta recibida:', response.status, 'URL:', response.url);
+                if (response.ok) {
+                    if (response.redirected) {
+                        console.log('Redirigiendo a:', response.url);
+                        window.location.href = response.url;
+                    } else {
+                        return response.text();
+                    }
+                } else {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+            })
+            .then(data => {
+                if (data) {
+                    console.log('Respuesta del servidor:', data);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al generar el PDF: ' + error.message);
+            })
+            .finally(() => {
+                // Restaurar botón
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalText;
+            });
+        });
+    </script>
+}

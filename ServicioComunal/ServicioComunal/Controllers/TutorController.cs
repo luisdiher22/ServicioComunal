@@ -2,10 +2,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ServicioComunal.Data;
 using ServicioComunal.Models;
+using ServicioComunal.Attributes;
 using System.Text.Json.Serialization;
 
 namespace ServicioComunal.Controllers
 {
+    [RequireAuth("Profesor")]
     public class TutorController : Controller
     {
         private readonly ServicioComunalDbContext _context;

@@ -45,7 +45,7 @@
                                     <label asp-for="NombreDelProyecto" class="form-label fw-bold">
                                         Nombre del Proyecto <span class="text-danger">*</span>
                                     </label>
-                                    <input asp-for="NombreDelProyecto" name="NombreDelProyecto" class="form-control" required 
+                                    <input asp-for="NombreDelProyecto" id="NombreDelProyecto" name="NombreDelProyecto" class="form-control" required 
                                            placeholder="Nombre del proyecto evaluado">
                                 </div>
                             </div>
@@ -64,7 +64,7 @@
                                     <label asp-for="Tutor" class="form-label fw-bold">
                                         Nombre del Tutor <span class="text-danger">*</span>
                                     </label>
-                                    <input asp-for="Tutor" name="Tutor" class="form-control" required 
+                                    <input asp-for="Tutor" id="Tutor" name="Tutor" class="form-control" required 
                                            placeholder="Nombre completo del tutor">
                                 </div>
                             </div>
@@ -73,7 +73,7 @@
                                     <label asp-for="CarnetYEmail" class="form-label fw-bold">
                                         Carnet y Email <span class="text-danger">*</span>
                                     </label>
-                                    <input asp-for="CarnetYEmail" name="CarnetYEmail" class="form-control" required 
+                                    <input asp-for="CarnetYEmail" id="CarnetYEmail" name="CarnetYEmail" class="form-control" required 
                                            placeholder="Carnet y dirección de email del tutor">
                                 </div>
                             </div>
@@ -87,29 +87,85 @@
                                     Estudiantes Participantes
                                 </h5>
                             </div>
-                            @for (int i = 1; i <= 4; i++)
-                            {
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label class="form-label fw-bold">
-                                            Nombre Estudiante @i @(i == 1 ? "*" : "")
-                                        </label>
-                                        <input name="NombreEstudiante@(i)" class="form-control" 
-                                               @(i == 1 ? "required" : "") 
-                                               placeholder="Nombre completo del estudiante">
-                                    </div>
+                            @* Estudiante 1 *@
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label fw-bold">
+                                        Nombre Estudiante 1 <span class="text-danger">*</span>
+                                    </label>
+                                    <input id="NombreEstudiante1" name="NombreEstudiante1" class="form-control" required 
+                                           placeholder="Nombre completo del estudiante">
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label class="form-label fw-bold">
-                                            Carnet Estudiante @i @(i == 1 ? "*" : "")
-                                        </label>
-                                        <input name="CarnetEstudiante@(i)" class="form-control" 
-                                               @(i == 1 ? "required" : "") 
-                                               placeholder="Número de carnet">
-                                    </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label fw-bold">
+                                        Carnet Estudiante 1 <span class="text-danger">*</span>
+                                    </label>
+                                    <input id="CarnetEstudiante1" name="CarnetEstudiante1" class="form-control" required 
+                                           placeholder="Número de carnet">
                                 </div>
-                            }
+                            </div>
+                            
+                            @* Estudiante 2 *@
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label fw-bold">
+                                        Nombre Estudiante 2
+                                    </label>
+                                    <input id="NombreEstudiante2" name="NombreEstudiante2" class="form-control" 
+                                           placeholder="Nombre completo del estudiante">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label fw-bold">
+                                        Carnet Estudiante 2
+                                    </label>
+                                    <input id="CarnetEstudiante2" name="CarnetEstudiante2" class="form-control" 
+                                           placeholder="Número de carnet">
+                                </div>
+                            </div>
+                            
+                            @* Estudiante 3 *@
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label fw-bold">
+                                        Nombre Estudiante 3
+                                    </label>
+                                    <input id="NombreEstudiante3" name="NombreEstudiante3" class="form-control" 
+                                           placeholder="Nombre completo del estudiante">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label fw-bold">
+                                        Carnet Estudiante 3
+                                    </label>
+                                    <input id="CarnetEstudiante3" name="CarnetEstudiante3" class="form-control" 
+                                           placeholder="Número de carnet">
+                                </div>
+                            </div>
+                            
+                            @* Estudiante 4 *@
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label fw-bold">
+                                        Nombre Estudiante 4
+                                    </label>
+                                    <input id="NombreEstudiante4" name="NombreEstudiante4" class="form-control" 
+                                           placeholder="Nombre completo del estudiante">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label fw-bold">
+                                        Carnet Estudiante 4
+                                    </label>
+                                    <input id="CarnetEstudiante4" name="CarnetEstudiante4" class="form-control" 
+                                           placeholder="Número de carnet">
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Información del Proyecto -->
@@ -125,7 +181,7 @@
                                     <label asp-for="Sede" class="form-label fw-bold">
                                         Sede <span class="text-danger">*</span>
                                     </label>
-                                    <input asp-for="Sede" name="Sede" class="form-control" required>
+                                    <input asp-for="Sede" id="Sede" name="Sede" class="form-control" required>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -133,7 +189,7 @@
                                     <label asp-for="FechaInicio" class="form-label fw-bold">
                                         Fecha de Inicio <span class="text-danger">*</span>
                                     </label>
-                                    <input asp-for="FechaInicio" name="FechaInicio" type="date" class="form-control" required>
+                                    <input asp-for="FechaInicio" id="FechaInicio" name="FechaInicio" type="date" class="form-control" required>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -141,7 +197,7 @@
                                     <label asp-for="FechaFinalizacion" class="form-label fw-bold">
                                         Fecha de Finalización <span class="text-danger">*</span>
                                     </label>
-                                    <input asp-for="FechaFinalizacion" name="FechaFinalizacion" type="date" class="form-control" required>
+                                    <input asp-for="FechaFinalizacion" id="FechaFinalizacion" name="FechaFinalizacion" type="date" class="form-control" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -149,7 +205,7 @@
                                     <label asp-for="TotalHoras" class="form-label fw-bold">
                                         Total de Horas <span class="text-danger">*</span>
                                     </label>
-                                    <input asp-for="TotalHoras" name="TotalHoras" type="number" min="0" class="form-control" required>
+                                    <input asp-for="TotalHoras" id="TotalHoras" name="TotalHoras" type="number" min="0" class="form-control" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -157,7 +213,7 @@
                                     <label asp-for="ProyectoComunal" class="form-label fw-bold">
                                         Proyecto Comunal <span class="text-danger">*</span>
                                     </label>
-                                    <input asp-for="ProyectoComunal" name="ProyectoComunal" class="form-control" required>
+                                    <input asp-for="ProyectoComunal" id="ProyectoComunal" name="ProyectoComunal" class="form-control" required>
                                 </div>
                             </div>
                         </div>
@@ -175,7 +231,7 @@
                                     <label asp-for="ObjetivosAlcanzados" class="form-label fw-bold">
                                         Objetivos Alcanzados <span class="text-danger">*</span>
                                     </label>
-                                    <textarea asp-for="ObjetivosAlcanzados" name="ObjetivosAlcanzados" class="form-control" rows="4" required
+                                    <textarea asp-for="ObjetivosAlcanzados" id="ObjetivosAlcanzados" name="ObjetivosAlcanzados" class="form-control" rows="4" required
                                               placeholder="Describa los objetivos que se lograron alcanzar durante el proyecto"></textarea>
                                 </div>
                             </div>
@@ -184,7 +240,7 @@
                                     <label asp-for="ActividadesRealizadas" class="form-label fw-bold">
                                         Actividades Realizadas <span class="text-danger">*</span>
                                     </label>
-                                    <textarea asp-for="ActividadesRealizadas" name="ActividadesRealizadas" class="form-control" rows="4" required
+                                    <textarea asp-for="ActividadesRealizadas" id="ActividadesRealizadas" name="ActividadesRealizadas" class="form-control" rows="4" required
                                               placeholder="Detalle las principales actividades realizadas durante el proyecto"></textarea>
                                 </div>
                             </div>
@@ -193,7 +249,7 @@
                                     <label asp-for="ImpactoEnLaComunidad" class="form-label fw-bold">
                                         Impacto en la Comunidad <span class="text-danger">*</span>
                                     </label>
-                                    <textarea asp-for="ImpactoEnLaComunidad" name="ImpactoEnLaComunidad" class="form-control" rows="4" required
+                                    <textarea asp-for="ImpactoEnLaComunidad" id="ImpactoEnLaComunidad" name="ImpactoEnLaComunidad" class="form-control" rows="4" required
                                               placeholder="Describa el impacto que tuvo el proyecto en la comunidad beneficiada"></textarea>
                                 </div>
                             </div>
@@ -202,7 +258,7 @@
                                     <label asp-for="AprendizajesObtenidos" class="form-label fw-bold">
                                         Aprendizajes Obtenidos <span class="text-danger">*</span>
                                     </label>
-                                    <textarea asp-for="AprendizajesObtenidos" name="AprendizajesObtenidos" class="form-control" rows="4" required
+                                    <textarea asp-for="AprendizajesObtenidos" id="AprendizajesObtenidos" name="AprendizajesObtenidos" class="form-control" rows="4" required
                                               placeholder="Describa los principales aprendizajes obtenidos por los estudiantes"></textarea>
                                 </div>
                             </div>
@@ -288,171 +344,182 @@ function guardarBorrador() {
 
 // Prevent default form submission and use fetch API instead
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('anexo5Form');
+    console.log('DOM cargado para FormularioAnexo5');
     
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault(); // Prevent default form submission
-            
-            // Validate required fields
-            const nombreDelProyecto = document.querySelector('input[name="NombreDelProyecto"]');
-            const tutor = document.querySelector('input[name="Tutor"]');
-            const carnetYEmail = document.querySelector('input[name="CarnetYEmail"]');
-            const nombreEstudiante1 = document.querySelector('input[name="NombreEstudiante1"]');
-            const carnetEstudiante1 = document.querySelector('input[name="CarnetEstudiante1"]');
-            const sede = document.querySelector('input[name="Sede"]');
-            const fechaInicio = document.querySelector('input[name="FechaInicio"]');
-            const fechaFinalizacion = document.querySelector('input[name="FechaFinalizacion"]');
-            const totalHoras = document.querySelector('input[name="TotalHoras"]');
-            const proyectoComunal = document.querySelector('input[name="ProyectoComunal"]');
-            const objetivosAlcanzados = document.querySelector('textarea[name="ObjetivosAlcanzados"]');
-            const actividadesRealizadas = document.querySelector('textarea[name="ActividadesRealizadas"]');
-            const impactoEnLaComunidad = document.querySelector('textarea[name="ImpactoEnLaComunidad"]');
-            const aprendizajesObtenidos = document.querySelector('textarea[name="AprendizajesObtenidos"]');
-            const calificacionNumerica = document.querySelector('input[name="CalificacionNumerica"]');
-            const calificacionAlfabetica = document.querySelector('select[name="CalificacionAlfabetica"]');
-            
-            if (!nombreDelProyecto || !nombreDelProyecto.value.trim()) {
-                alert('Por favor, ingrese el nombre del proyecto.');
-                if (nombreDelProyecto) nombreDelProyecto.focus();
-                return;
-            }
-            
-            if (!tutor || !tutor.value.trim()) {
-                alert('Por favor, ingrese el nombre del tutor.');
-                if (tutor) tutor.focus();
-                return;
-            }
-            
-            if (!carnetYEmail || !carnetYEmail.value.trim()) {
-                alert('Por favor, ingrese el carnet y email del tutor.');
-                if (carnetYEmail) carnetYEmail.focus();
-                return;
-            }
-            
-            if (!nombreEstudiante1 || !nombreEstudiante1.value.trim()) {
-                alert('Por favor, ingrese el nombre del estudiante 1.');
-                if (nombreEstudiante1) nombreEstudiante1.focus();
-                return;
-            }
-            
-            if (!carnetEstudiante1 || !carnetEstudiante1.value.trim()) {
-                alert('Por favor, ingrese el carnet del estudiante 1.');
-                if (carnetEstudiante1) carnetEstudiante1.focus();
-                return;
-            }
-            
-            if (!sede || !sede.value.trim()) {
-                alert('Por favor, ingrese la sede.');
-                if (sede) sede.focus();
-                return;
-            }
-            
-            if (!fechaInicio || !fechaInicio.value) {
-                alert('Por favor, ingrese la fecha de inicio.');
-                if (fechaInicio) fechaInicio.focus();
-                return;
-            }
-            
-            if (!fechaFinalizacion || !fechaFinalizacion.value) {
-                alert('Por favor, ingrese la fecha de finalización.');
-                if (fechaFinalizacion) fechaFinalizacion.focus();
-                return;
-            }
-            
-            if (!totalHoras || !totalHoras.value) {
-                alert('Por favor, ingrese el total de horas.');
-                if (totalHoras) totalHoras.focus();
-                return;
-            }
-            
-            if (!proyectoComunal || !proyectoComunal.value.trim()) {
-                alert('Por favor, ingrese el proyecto comunal.');
-                if (proyectoComunal) proyectoComunal.focus();
-                return;
-            }
-            
-            if (!objetivosAlcanzados || !objetivosAlcanzados.value.trim()) {
-                alert('Por favor, ingrese los objetivos alcanzados.');
-                if (objetivosAlcanzados) objetivosAlcanzados.focus();
-                return;
-            }
-            
-            if (!actividadesRealizadas || !actividadesRealizadas.value.trim()) {
-                alert('Por favor, ingrese las actividades realizadas.');
-                if (actividadesRealizadas) actividadesRealizadas.focus();
-                return;
-            }
-            
-            if (!impactoEnLaComunidad || !impactoEnLaComunidad.value.trim()) {
-                alert('Por favor, ingrese el impacto en la comunidad.');
-                if (impactoEnLaComunidad) impactoEnLaComunidad.focus();
-                return;
-            }
-            
-            if (!aprendizajesObtenidos || !aprendizajesObtenidos.value.trim()) {
-                alert('Por favor, ingrese los aprendizajes obtenidos.');
-                if (aprendizajesObtenidos) aprendizajesObtenidos.focus();
-                return;
-            }
-            
-            if (!calificacionNumerica || !calificacionNumerica.value) {
-                alert('Por favor, ingrese la calificación numérica.');
-                if (calificacionNumerica) calificacionNumerica.focus();
-                return;
-            }
-            
-            if (!calificacionAlfabetica || !calificacionAlfabetica.value) {
-                alert('Por favor, seleccione la calificación alfabética.');
-                if (calificacionAlfabetica) calificacionAlfabetica.focus();
-                return;
-            }
-            
-            // Create FormData from the form
-            const formData = new FormData(form);
-            
-            // Show loading state
-            const submitButton = form.querySelector('button[type="submit"]');
-            const originalText = submitButton.innerHTML;
-            submitButton.disabled = true;
-            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando PDF...';
-            
-            // Submit using fetch API
-            fetch('@Url.Action("GuardarAnexo5", "Estudiante")', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    alert('Anexo 5 guardado y PDF generado exitosamente.');
-                    
-                    // Redirect to the specified URL if provided
-                    if (data.redirectUrl) {
-                        window.location.href = data.redirectUrl;
-                    } else {
-                        // Fallback: reload the page or redirect to a default location
-                        window.location.reload();
-                    }
-                } else {
-                    alert('Error: ' + (data.message || 'No se pudo guardar el anexo 5.'));
-                }
-            })
-            .catch(error => {
-                console.error('Error submitting form:', error);
-                alert('Error al enviar el formulario. Por favor, inténtelo de nuevo.');
-            })
-            .finally(() => {
-                // Restore button state
-                submitButton.disabled = false;
-                submitButton.innerHTML = originalText;
-            });
-        });
+    const form = document.getElementById('anexo5Form');
+    if (!form) {
+        console.error('Formulario anexo5Form no encontrado');
+        return;
     }
+    
+    console.log('Formulario encontrado:', form);
+    form.addEventListener('submit', function(e) {
+        e.preventDefault(); // Prevent default form submission
+        console.log('Submit event capturado para FormularioAnexo5');
+        
+        // Validate required fields using getElementById for consistency
+        const nombreDelProyecto = document.getElementById('NombreDelProyecto');
+        const tutor = document.getElementById('Tutor');
+        const carnetYEmail = document.getElementById('CarnetYEmail');
+        const nombreEstudiante1 = document.getElementById('NombreEstudiante1');
+        const carnetEstudiante1 = document.getElementById('CarnetEstudiante1');
+        const sede = document.getElementById('Sede');
+        const fechaInicio = document.getElementById('FechaInicio');
+        const fechaFinalizacion = document.getElementById('FechaFinalizacion');
+        const totalHoras = document.getElementById('TotalHoras');
+        const proyectoComunal = document.getElementById('ProyectoComunal');
+        const objetivosAlcanzados = document.getElementById('ObjetivosAlcanzados');
+        const actividadesRealizadas = document.getElementById('ActividadesRealizadas');
+        const impactoEnLaComunidad = document.getElementById('ImpactoEnLaComunidad');
+        const aprendizajesObtenidos = document.getElementById('AprendizajesObtenidos');
+        
+        console.log('Validando campos requeridos...');
+        console.log('NombreDelProyecto:', nombreDelProyecto?.value);
+        console.log('Tutor:', tutor?.value);
+        console.log('CarnetYEmail:', carnetYEmail?.value);
+        console.log('NombreEstudiante1:', nombreEstudiante1?.value);
+        console.log('CarnetEstudiante1:', carnetEstudiante1?.value);
+        console.log('Sede:', sede?.value);
+        console.log('FechaInicio:', fechaInicio?.value);
+        console.log('FechaFinalizacion:', fechaFinalizacion?.value);
+        console.log('TotalHoras:', totalHoras?.value);
+        console.log('ProyectoComunal:', proyectoComunal?.value);
+        console.log('ObjetivosAlcanzados:', objetivosAlcanzados?.value);
+        console.log('ActividadesRealizadas:', actividadesRealizadas?.value);
+        console.log('ImpactoEnLaComunidad:', impactoEnLaComunidad?.value);
+        console.log('AprendizajesObtenidos:', aprendizajesObtenidos?.value);
+        
+        if (!nombreDelProyecto || !nombreDelProyecto.value.trim()) {
+            alert('Por favor, ingrese el nombre del proyecto.');
+            if (nombreDelProyecto) nombreDelProyecto.focus();
+            return;
+        }
+        
+        if (!tutor || !tutor.value.trim()) {
+            alert('Por favor, ingrese el nombre del tutor.');
+            if (tutor) tutor.focus();
+            return;
+        }
+        
+        if (!carnetYEmail || !carnetYEmail.value.trim()) {
+            alert('Por favor, ingrese el carnet y email del tutor.');
+            if (carnetYEmail) carnetYEmail.focus();
+            return;
+        }
+        
+        if (!nombreEstudiante1 || !nombreEstudiante1.value.trim()) {
+            alert('Por favor, ingrese el nombre del estudiante 1.');
+            if (nombreEstudiante1) nombreEstudiante1.focus();
+            return;
+        }
+        
+        if (!carnetEstudiante1 || !carnetEstudiante1.value.trim()) {
+            alert('Por favor, ingrese el carnet del estudiante 1.');
+            if (carnetEstudiante1) carnetEstudiante1.focus();
+            return;
+        }
+        
+        if (!sede || !sede.value.trim()) {
+            alert('Por favor, ingrese la sede.');
+            if (sede) sede.focus();
+            return;
+        }
+        
+        if (!fechaInicio || !fechaInicio.value) {
+            alert('Por favor, ingrese la fecha de inicio.');
+            if (fechaInicio) fechaInicio.focus();
+            return;
+        }
+        
+        if (!fechaFinalizacion || !fechaFinalizacion.value) {
+            alert('Por favor, ingrese la fecha de finalización.');
+            if (fechaFinalizacion) fechaFinalizacion.focus();
+            return;
+        }
+        
+        if (!totalHoras || !totalHoras.value) {
+            alert('Por favor, ingrese el total de horas.');
+            if (totalHoras) totalHoras.focus();
+            return;
+        }
+        
+        if (!proyectoComunal || !proyectoComunal.value.trim()) {
+            alert('Por favor, ingrese el proyecto comunal.');
+            if (proyectoComunal) proyectoComunal.focus();
+            return;
+        }
+        
+        if (!objetivosAlcanzados || !objetivosAlcanzados.value.trim()) {
+            alert('Por favor, ingrese los objetivos alcanzados.');
+            if (objetivosAlcanzados) objetivosAlcanzados.focus();
+            return;
+        }
+        
+        if (!actividadesRealizadas || !actividadesRealizadas.value.trim()) {
+            alert('Por favor, ingrese las actividades realizadas.');
+            if (actividadesRealizadas) actividadesRealizadas.focus();
+            return;
+        }
+        
+        if (!impactoEnLaComunidad || !impactoEnLaComunidad.value.trim()) {
+            alert('Por favor, ingrese el impacto en la comunidad.');
+            if (impactoEnLaComunidad) impactoEnLaComunidad.focus();
+            return;
+        }
+        
+        if (!aprendizajesObtenidos || !aprendizajesObtenidos.value.trim()) {
+            alert('Por favor, ingrese los aprendizajes obtenidos.');
+            if (aprendizajesObtenidos) aprendizajesObtenidos.focus();
+            return;
+        }
+        
+        console.log('Validaciones pasadas, creando FormData...');
+        
+        // Create FormData from the form
+        const formData = new FormData(form);
+        
+        // Show loading state
+        const submitButton = form.querySelector('button[type="submit"]');
+        const originalText = submitButton.innerHTML;
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando PDF...';
+        
+        console.log('Estado de carga activado, preparando envío...');
+        
+        console.log('=== DATOS DEL FORMULARIO ===');
+        for (let [key, value] of formData.entries()) {
+            console.log(key + ':', value);
+        }
+        console.log('=== FIN DATOS DEL FORMULARIO ===');
+        
+        const actionUrl = '@Url.Action("GuardarAnexo5", "Estudiante")';
+        console.log('URL de destino:', actionUrl);
+        
+        console.log('Iniciando fetch request...');
+        
+        // Submit using fetch API
+        fetch(actionUrl, {
+            method: 'POST',
+            body: formData,
+            redirect: 'follow' // Seguir redirecciones automáticamente
+        })
+        .then(response => {
+            console.log('Respuesta recibida:', response.status, 'URL:', response.url);
+            if (response.ok) {
+                // Si la respuesta es exitosa, redirigir a la URL final
+                console.log('POST exitoso, redirigiendo a:', response.url);
+                window.location.href = response.url;
+            } else {
+                throw new Error('Error en la respuesta: ' + response.status);
+            }
+        })
+        .catch(error => {
+            console.error('Error al enviar formulario:', error);
+            alert('Error al procesar el formulario: ' + error.message);
+            // Restore button state
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalText;
+        });
+    });
 });
 </script>

@@ -45,7 +45,7 @@
                                     <label asp-for="NombreProyecto" class="form-label fw-bold">
                                         Nombre del Proyecto <span class="text-danger">*</span>
                                     </label>
-                                    <input asp-for="NombreProyecto" name="NombreProyecto" class="form-control" required 
+                                    <input asp-for="NombreProyecto" name="NombreProyecto" id="NombreProyecto" class="form-control" required 
                                            placeholder="Ingrese el nombre del proyecto">
                                     <span asp-validation-for="NombreProyecto" class="text-danger"></span>
                                 </div>
@@ -55,7 +55,7 @@
                                     <label asp-for="Tutor" class="form-label fw-bold">
                                         Tutor <span class="text-danger">*</span>
                                     </label>
-                                    <input asp-for="Tutor" name="Tutor" class="form-control" required 
+                                    <input asp-for="Tutor" id="Tutor" name="Tutor" class="form-control" required 
                                            placeholder="Ingrese el nombre del tutor">
                                     <span asp-validation-for="Tutor" class="text-danger"></span>
                                 </div>
@@ -75,7 +75,7 @@
                                     <label asp-for="Nombre1" class="form-label fw-bold">
                                         Estudiante 1 <span class="text-danger">*</span>
                                     </label>
-                                    <input asp-for="Nombre1" class="form-control" required 
+                                    <input asp-for="Nombre1" id="Nombre1" name="Nombre1" class="form-control" required 
                                            placeholder="Nombre del estudiante 1">
                                 </div>
                             </div>
@@ -111,7 +111,7 @@
                                     <label asp-for="Nombre3" class="form-label fw-bold">
                                         Estudiante 3
                                     </label>
-                                    <input asp-for="Nombre3" name="Nombre3" class="form-control" 
+                                    <input asp-for="Nombre3" id="Nombre3" name="Nombre3" class="form-control" 
                                            placeholder="Nombre del estudiante 3">
                                 </div>
                             </div>
@@ -129,7 +129,7 @@
                                     <label asp-for="Nombre4" class="form-label fw-bold">
                                         Estudiante 4
                                     </label>
-                                    <input asp-for="Nombre4" name="Nombre4" class="form-control" 
+                                    <input asp-for="Nombre4" id="Nombre4" name="Nombre4" class="form-control" 
                                            placeholder="Nombre del estudiante 4">
                                 </div>
                             </div>
@@ -212,7 +212,7 @@
                                     <label asp-for="BreveDescripcion" class="form-label fw-bold">
                                         Breve Descripción <span class="text-danger">*</span>
                                     </label>
-                                    <textarea asp-for="BreveDescripcion" name="BreveDescripcion" class="form-control" rows="6" required
+                                    <textarea asp-for="BreveDescripcion" id="BreveDescripcion" name="BreveDescripcion" class="form-control" rows="6" required
                                               placeholder="Describa brevemente el proyecto, sus objetivos y beneficiarios..."></textarea>
                                     <span asp-validation-for="BreveDescripcion" class="text-danger"></span>
                                 </div>
@@ -273,17 +273,26 @@ function guardarBorrador() {
 
 // Prevent default form submission and use fetch API instead
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('formularioAnexo2');
+    console.log('DOM cargado para FormularioAnexo2');
+    const form = document.getElementById('anexo2Form'); // Corregido: usar el ID correcto
     
     if (form) {
+        console.log('Formulario encontrado:', form);
         form.addEventListener('submit', function(e) {
             e.preventDefault(); // Prevent default form submission
+            console.log('Submit event capturado para FormularioAnexo2');
             
             // Validate required fields
-            const nombreProyecto = document.querySelector('input[name="NombreProyecto"]');
-            const tutor = document.querySelector('input[name="Tutor"]');
-            const seccion1 = document.querySelector('input[name="Seccion1"]');
-            const breveDescripcion = document.querySelector('textarea[name="BreveDescripcion"]');
+            const nombreProyecto = document.getElementById('NombreProyecto');
+            const tutor = document.getElementById('Tutor');
+            const nombre1 = document.getElementById('Nombre1');
+            const breveDescripcion = document.getElementById('BreveDescripcion');
+            
+            console.log('Validando campos requeridos...');
+            console.log('NombreProyecto:', nombreProyecto?.value);
+            console.log('Tutor:', tutor?.value);
+            console.log('Nombre1:', nombre1?.value);
+            console.log('BreveDescripcion:', breveDescripcion?.value);
             
             if (!nombreProyecto || !nombreProyecto.value.trim()) {
                 alert('Por favor, ingrese el nombre del proyecto.');
@@ -297,9 +306,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            if (!seccion1 || !seccion1.value.trim()) {
-                alert('Por favor, ingrese la sección del estudiante 1.');
-                if (seccion1) seccion1.focus();
+            if (!nombre1 || !nombre1.value.trim()) {
+                alert('Por favor, ingrese el nombre del estudiante 1.');
+                if (nombre1) nombre1.focus();
                 return;
             }
             
@@ -308,6 +317,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (breveDescripcion) breveDescripcion.focus();
                 return;
             }
+            
+            console.log('Validaciones pasadas, creando FormData...');
             
             // Create FormData from the form
             const formData = new FormData(form);
@@ -318,42 +329,46 @@ document.addEventListener('DOMContentLoaded', function() {
             submitButton.disabled = true;
             submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando PDF...';
             
+            console.log('Estado de carga activado, preparando envío...');
+            
+            // Log form data for debugging
+            console.log('=== DATOS DEL FORMULARIO ===');
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}: ${value}`);
+            }
+            console.log('=== FIN DATOS DEL FORMULARIO ===');
+            
+            // Usar la URL correcta para GuardarAnexo2
+            const actionUrl = '/Estudiante/GuardarAnexo2';
+            console.log('URL de destino:', actionUrl);
+            
             // Submit using fetch API
-            fetch('@Url.Action("GuardarAnexo2", "Estudiante")', {
+            console.log('Iniciando fetch request...');
+            fetch(actionUrl, {
                 method: 'POST',
-                body: formData
+                body: formData,
+                redirect: 'follow' // Seguir redirecciones automáticamente
             })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    alert('Anexo 2 guardado y PDF generado exitosamente.');
-                    
-                    // Redirect to the specified URL if provided
-                    if (data.redirectUrl) {
-                        window.location.href = data.redirectUrl;
-                    } else {
-                        // Fallback: reload the page or redirect to a default location
-                        window.location.reload();
-                    }
+                console.log('Respuesta recibida:', response.status, 'URL:', response.url);
+                if (response.ok) {
+                    // Si la respuesta es exitosa, redirigir a la URL final
+                    console.log('POST exitoso, redirigiendo a:', response.url);
+                    window.location.href = response.url;
                 } else {
-                    alert('Error: ' + (data.message || 'No se pudo guardar el anexo 2.'));
+                    throw new Error('Error en la respuesta: ' + response.status);
                 }
             })
             .catch(error => {
-                console.error('Error submitting form:', error);
-                alert('Error al enviar el formulario. Por favor, inténtelo de nuevo.');
-            })
-            .finally(() => {
+                console.error('Error al enviar formulario:', error);
+                alert('Error al procesar el formulario: ' + error.message);
                 // Restore button state
                 submitButton.disabled = false;
                 submitButton.innerHTML = originalText;
             });
         });
+    } else {
+        console.error('No se encontró el formulario anexo2Form');
     }
 });
 </script>

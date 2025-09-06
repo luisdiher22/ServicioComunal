@@ -492,18 +492,23 @@ function importarEstudiantes() {
     const archivo = document.getElementById('archivoExcelEstudiantes').files[0];
     
     if (!archivo) {
-        mostrarError('Por favor selecciona un archivo Excel');
+        mostrarError('Por favor selecciona un archivo Excel o CSV');
         return;
     }
 
     // Validar tipo de archivo
     const tiposPermitidos = [
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
-        'application/vnd.ms-excel' // .xls
+        'application/vnd.ms-excel', // .xls
+        'text/csv', // .csv
+        'application/csv'
     ];
 
-    if (!tiposPermitidos.includes(archivo.type)) {
-        mostrarError('El archivo debe ser un Excel (.xlsx o .xls)');
+    const extension = archivo.name.toLowerCase().split('.').pop();
+    const extensionesPermitidas = ['xlsx', 'xls', 'csv'];
+
+    if (!extensionesPermitidas.includes(extension)) {
+        mostrarError('El archivo debe ser un Excel (.xlsx o .xls) o CSV (.csv)');
         return;
     }
 
@@ -524,34 +529,83 @@ function importarEstudiantes() {
         if (!response.ok) {
             throw new Error('Error en la respuesta del servidor');
         }
-        // Como el controlador hace redirect, manejamos la respuesta
-        return response.text();
+        return response.json();
     })
     .then(data => {
-        // El servidor redirige, así que simplemente recargamos la página
-        mostrarExito('Importación completada. Recargando página...');
-        
-        // Cerrar modal
-        const modal = bootstrap.Modal.getInstance(document.getElementById('modalImportarEstudiantes'));
-        modal.hide();
-        
-        // Recargar página después de 2 segundos
-        setTimeout(() => {
-            location.reload();
-        }, 2000);
+        if (data.success) {
+            // Construir mensaje detallado
+            let mensaje = data.message;
+            
+            if (data.advertencias && data.advertencias.length > 0) {
+                mensaje += '\n\nAdvertencias:\n';
+                data.advertencias.slice(0, 5).forEach(adv => {
+                    mensaje += '• ' + adv + '\n';
+                });
+                if (data.advertencias.length > 5) {
+                    mensaje += `• ... y ${data.advertencias.length - 5} advertencias más`;
+                }
+            }
+
+            if (data.errores && data.errores.length > 0) {
+                mensaje += '\n\nErrores menores:\n';
+                data.errores.slice(0, 3).forEach(err => {
+                    mensaje += '• ' + err + '\n';
+                });
+                if (data.errores.length > 3) {
+                    mensaje += `• ... y ${data.errores.length - 3} errores más`;
+                }
+            }
+
+            Swal.fire({
+                icon: 'success',
+                title: '¡Importación Exitosa!',
+                text: mensaje,
+                timer: 5000,
+                showConfirmButton: true
+            });
+            
+            // Cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalImportarEstudiantes'));
+            modal.hide();
+            
+            // Recargar tabla de estudiantes
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            let errorMsg = data.message;
+            
+            if (data.errores && data.errores.length > 0) {
+                errorMsg += '\n\nDetalles:\n';
+                data.errores.slice(0, 5).forEach(err => {
+                    errorMsg += '• ' + err + '\n';
+                });
+                if (data.errores.length > 5) {
+                    errorMsg += `• ... y ${data.errores.length - 5} errores más`;
+                }
+            }
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Error en la Importación',
+                text: errorMsg,
+                confirmButtonText: 'Entendido'
+            });
+        }
     })
     .catch(error => {
         console.error('Error:', error);
-        mostrarError('Error al comunicarse con el servidor');
+        Swal.fire({
+            icon: 'error',
+            title: 'Error de Conexión',
+            text: 'Error al procesar la solicitud: ' + error.message,
+            confirmButtonText: 'Entendido'
+        });
     })
     .finally(() => {
         // Restaurar botón
         btn.disabled = false;
-        btn.textContent = textoOriginal;
-        
-        // Limpiar input
-        document.getElementById('archivoExcelEstudiantes').value = '';
-        btn.disabled = true; // Volver a deshabilitar hasta que se seleccione otro archivo
+        btn.innerHTML = textoOriginal;
     });
 }
 

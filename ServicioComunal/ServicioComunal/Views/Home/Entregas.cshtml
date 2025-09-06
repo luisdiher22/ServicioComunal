@@ -165,15 +165,9 @@
                         <div class="col-md-4 mb-3">
                             <label class="form-label">Tipo de Recurso</label>
                             <div class="form-check">
-                                <input type="radio" class="form-check-input" id="tipoFormulario" name="tipoRecurso" value="formulario" checked>
-                                <label class="form-check-label" for="tipoFormulario">
-                                    Formulario
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input type="radio" class="form-check-input" id="tipoAnexo" name="tipoRecurso" value="anexo">
+                                <input type="radio" class="form-check-input" id="tipoAnexo" name="tipoRecurso" value="anexo" checked>
                                 <label class="form-check-label" for="tipoAnexo">
-                                    Anexo Interactivo
+                                    Anexo
                                 </label>
                             </div>
                             <div class="form-check">
@@ -186,30 +180,19 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-6 mb-3" id="seccionFormulario">
-                            <label for="entregaFormulario" class="form-label">Formulario Asociado</label>
-                            <select class="form-select" id="entregaFormulario" name="formularioIdentificacion">
-                                <option value="">-- Sin formulario --</option>
-                                @{
-                                    var formularios = ViewBag.Formularios as List<ServicioComunal.Models.Formulario> ?? new List<ServicioComunal.Models.Formulario>();
-                                }
-                                @foreach (var formulario in formularios)
-                                {
-                                    <option value="@formulario.Identificacion">@formulario.Nombre</option>
-                                }
-                            </select>
-                            <div class="form-text">Formulario que los estudiantes necesitarán para esta entrega</div>
-                        </div>
-                        <div class="col-md-6 mb-3" id="seccionAnexo" style="display: none;">
-                            <label for="entregaAnexo" class="form-label">Anexo Interactivo</label>
+                        <div class="col-md-6 mb-3" id="seccionAnexo">
+                            <label for="entregaAnexo" class="form-label">Anexo</label>
                             <select class="form-select" id="entregaAnexo" name="tipoAnexo">
                                 <option value="">-- Seleccionar Anexo --</option>
                                 <option value="1">Anexo #1 - Información Básica</option>
                                 <option value="2">Anexo #2 - Propuesta de Proyecto</option>
                                 <option value="3">Anexo #3 - Plan de Trabajo</option>
                                 <option value="5">Anexo #5 - Evaluación Final</option>
+                                <option value="6">Anexo #6 - Informe Final Tutor</option>
+                                <option value="7">Anexo #7 - Carta para Ingresar a la Institución</option>
+                                <option value="8">Anexo #8 - Carta de Consentimiento Encargado Legal</option>
                             </select>
-                            <div class="form-text">Anexo interactivo que los estudiantes deberán completar</div>
+                            <div class="form-text">Anexo que los estudiantes deberán completar</div>
                         </div>
                     </div>
 
@@ -231,9 +214,41 @@
                         </div>
                     </div>
 
+                    <!-- Sección para seleccionar destinatarios de la entrega (solo en modo creación) -->
+                    <div class="row" id="seccionDestinatarios">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Destinatarios de la Entrega</label>
+                            <div class="form-check">
+                                <input type="radio" class="form-check-input" id="todosLosGrupos" name="destinatarios" value="todos" checked>
+                                <label class="form-check-label" for="todosLosGrupos">
+                                    <i class="fas fa-users"></i> Enviar a todos los grupos
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="radio" class="form-check-input" id="grupoEspecifico" name="destinatarios" value="especifico">
+                                <label class="form-check-label" for="grupoEspecifico">
+                                    <i class="fas fa-user-friends"></i> Enviar a un grupo específico
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Dropdown para seleccionar grupo específico -->
+                        <div class="col-md-12 mb-3" id="seccionGrupoEspecifico" style="display: none;">
+                            <label for="entregaGrupoEspecifico" class="form-label">Seleccionar Grupo</label>
+                            <select class="form-select" id="entregaGrupoEspecifico" name="grupoEspecifico">
+                                <option value="">-- Seleccionar Grupo --</option>
+                                @foreach (var grupo in grupos)
+                                {
+                                    <option value="@grupo.Numero">Grupo @grupo.Numero (@grupo.GruposEstudiantes.Count estudiantes)</option>
+                                }
+                            </select>
+                            <div class="form-text">La entrega se creará únicamente para el grupo seleccionado</div>
+                        </div>
+                    </div>
+
                     <div class="alert alert-info" id="infoNuevaEntrega">
                         <i class="fas fa-info-circle"></i>
-                        <strong>Nota:</strong> Al crear una nueva entrega, se generará automáticamente una tarea para cada grupo existente.
+                        <strong>Nota:</strong> <span id="textoInfoEntrega">Al crear una nueva entrega, se generará automáticamente una tarea para cada grupo existente.</span>
                     </div>
                 </form>
             </div>
@@ -265,4 +280,35 @@
 
 @section Scripts {
     <script src="~/js/entregas.js"></script>
+    <style>
+        .form-check {
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-check-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .form-check-label i {
+            color: #6c757d;
+        }
+        
+        #seccionGrupoEspecifico {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            margin-top: 0.5rem;
+        }
+        
+        .alert-info {
+            font-size: 0.9rem;
+        }
+        
+        .badge {
+            font-size: 0.75em;
+        }
+    </style>
 }

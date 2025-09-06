@@ -177,6 +177,9 @@ namespace ServicioComunal.Services
                 2 => Path.Combine(templatesPath, "Anexo #2 Interactivo.pdf"),
                 3 => Path.Combine(templatesPath, "Anexo #3 Interactivo.pdf"),
                 5 => Path.Combine(templatesPath, "Anexo #5 Interactivo.pdf"),
+                6 => Path.Combine(templatesPath, "Informe final tutor Interactiva.pdf"),
+                7 => Path.Combine(templatesPath, "Carta para ingresar a la institucion interactiva.pdf"),
+                8 => Path.Combine(templatesPath, "Carta de consentimiento encargado legal Interactiva.pdf"),
                 _ => throw new ArgumentException($"Tipo de anexo no válido: {tipoAnexo}")
             };
         }
@@ -401,7 +404,7 @@ fillPDF();
             }
         } catch (e) { console.log('Error en SECCION4:', e.message); }
         
-        // Checkboxes
+        // Checkboxes - Corregidos para usar camelCase
         try {
             if (formData.medioAmbiente) {
                 const field = form.getCheckBox('CBMEDIOAMBIENTE');
@@ -669,6 +672,487 @@ fillPDF();
                 console.log('Campo Observaciones llenado con:', formData.observaciones);
             }
         } catch (e) { console.log('Error en Observaciones:', e.message); }
+        ",
+
+                6 => @"
+        // Informe Final Tutor - Mapeo de campos
+        console.log('Procesando Informe Final Tutor...');
+        
+        try {
+            if (formData.nombreProyecto) {
+                const field = form.getTextField('NombreProyecto');
+                field.setText(formData.nombreProyecto);
+                console.log('Campo NombreProyecto llenado con:', formData.nombreProyecto);
+            }
+        } catch (e) { console.log('Error en NombreProyecto:', e.message); }
+        
+        try {
+            if (formData.tutor) {
+                const field = form.getTextField('Tutor');
+                field.setText(formData.tutor);
+                console.log('Campo Tutor llenado con:', formData.tutor);
+            }
+        } catch (e) { console.log('Error en Tutor:', e.message); }
+        
+        try {
+            if (formData.firmaTutor) {
+                const field = form.getTextField('FirmaTutor');
+                field.setText(formData.firmaTutor);
+                console.log('Campo FirmaTutor llenado con:', formData.firmaTutor);
+            }
+        } catch (e) { console.log('Error en FirmaTutor:', e.message); }
+        
+        try {
+            if (formData.nombreEstudiante1) {
+                const field = form.getTextField('NombreEstudiante1');
+                field.setText(formData.nombreEstudiante1);
+                console.log('Campo NombreEstudiante1 llenado con:', formData.nombreEstudiante1);
+            }
+        } catch (e) { console.log('Error en NombreEstudiante1:', e.message); }
+        
+        try {
+            if (formData.nombreEstudiante2) {
+                const field = form.getTextField('NombreEstudiante2');
+                field.setText(formData.nombreEstudiante2);
+                console.log('Campo NombreEstudiante2 llenado con:', formData.nombreEstudiante2);
+            }
+        } catch (e) { console.log('Error en NombreEstudiante2:', e.message); }
+        
+        try {
+            if (formData.nombreEstudiante3) {
+                const field = form.getTextField('NombreEstudiante3');
+                field.setText(formData.nombreEstudiante3);
+                console.log('Campo NombreEstudiante3 llenado con:', formData.nombreEstudiante3);
+            }
+        } catch (e) { console.log('Error en NombreEstudiante3:', e.message); }
+        
+        try {
+            if (formData.nombreEstudiante4) {
+                const field = form.getTextField('NombreEstudiante4');
+                field.setText(formData.nombreEstudiante4);
+                console.log('Campo NombreEstudiante4 llenado con:', formData.nombreEstudiante4);
+            }
+        } catch (e) { console.log('Error en NombreEstudiante4:', e.message); }
+        
+        try {
+            if (formData.fechaInicio) {
+                const field = form.getTextField('FechaInicio');
+                field.setText(formData.fechaInicio);
+                console.log('Campo FechaInicio llenado con:', formData.fechaInicio);
+            }
+        } catch (e) { console.log('Error en FechaInicio:', e.message); }
+        
+        try {
+            if (formData.fechaFin) {
+                const field = form.getTextField('FechaFin');
+                field.setText(formData.fechaFin);
+                console.log('Campo FechaFin llenado con:', formData.fechaFin);
+            }
+        } catch (e) { console.log('Error en FechaFin:', e.message); }
+        
+        try {
+            if (formData.totalHoras) {
+                const field = form.getTextField('TotalHoras');
+                field.setText(formData.totalHoras);
+                console.log('Campo TotalHoras llenado con:', formData.totalHoras);
+            }
+        } catch (e) { console.log('Error en TotalHoras:', e.message); }
+        
+        try {
+            if (formData.descripcionActividades) {
+                const field = form.getTextField('DescripcionActividades');
+                field.setText(formData.descripcionActividades);
+                console.log('Campo DescripcionActividades llenado');
+            }
+        } catch (e) { console.log('Error en DescripcionActividades:', e.message); }
+        
+        try {
+            if (formData.logrosObtenidos) {
+                const field = form.getTextField('LogrosObtenidos');
+                field.setText(formData.logrosObtenidos);
+                console.log('Campo LogrosObtenidos llenado');
+            }
+        } catch (e) { console.log('Error en LogrosObtenidos:', e.message); }
+        
+        try {
+            if (formData.dificultadesEncontradas) {
+                const field = form.getTextField('DificultadesEncontradas');
+                field.setText(formData.dificultadesEncontradas);
+                console.log('Campo DificultadesEncontradas llenado');
+            }
+        } catch (e) { console.log('Error en DificultadesEncontradas:', e.message); }
+        
+        try {
+            if (formData.recomendaciones) {
+                const field = form.getTextField('Recomendaciones');
+                field.setText(formData.recomendaciones);
+                console.log('Campo Recomendaciones llenado');
+            }
+        } catch (e) { console.log('Error en Recomendaciones:', e.message); }
+        
+        try {
+            if (formData.calificacionDesempeno) {
+                const field = form.getTextField('CalificacionDesempeno');
+                field.setText(formData.calificacionDesempeno);
+                console.log('Campo CalificacionDesempeno llenado');
+            }
+        } catch (e) { console.log('Error en CalificacionDesempeno:', e.message); }
+        
+        try {
+            if (formData.observacionesGenerales) {
+                const field = form.getTextField('ObservacionesGenerales');
+                field.setText(formData.observacionesGenerales);
+                console.log('Campo ObservacionesGenerales llenado');
+            }
+        } catch (e) { console.log('Error en ObservacionesGenerales:', e.message); }
+        ",
+
+                7 => @"
+        // Carta Institución - Mapeo de campos
+        console.log('Procesando Carta Institución...');
+        
+        try {
+            if (formData.fechaElaboracion) {
+                const field = form.getTextField('FechaElaboracion');
+                field.setText(formData.fechaElaboracion);
+                console.log('Campo FechaElaboracion llenado con:', formData.fechaElaboracion);
+            }
+        } catch (e) { console.log('Error en FechaElaboracion:', e.message); }
+        
+        try {
+            if (formData.nombreInstitucion) {
+                const field = form.getTextField('NombreInstitucion');
+                field.setText(formData.nombreInstitucion);
+                console.log('Campo NombreInstitucion llenado con:', formData.nombreInstitucion);
+            }
+        } catch (e) { console.log('Error en NombreInstitucion:', e.message); }
+        
+        try {
+            if (formData.direccionInstitucion) {
+                const field = form.getTextField('DireccionInstitucion');
+                field.setText(formData.direccionInstitucion);
+                console.log('Campo DireccionInstitucion llenado');
+            }
+        } catch (e) { console.log('Error en DireccionInstitucion:', e.message); }
+        
+        try {
+            if (formData.personaContacto) {
+                const field = form.getTextField('PersonaContacto');
+                field.setText(formData.personaContacto);
+                console.log('Campo PersonaContacto llenado con:', formData.personaContacto);
+            }
+        } catch (e) { console.log('Error en PersonaContacto:', e.message); }
+        
+        try {
+            if (formData.cargoContacto) {
+                const field = form.getTextField('CargoContacto');
+                field.setText(formData.cargoContacto);
+                console.log('Campo CargoContacto llenado con:', formData.cargoContacto);
+            }
+        } catch (e) { console.log('Error en CargoContacto:', e.message); }
+        
+        try {
+            if (formData.nombreProyecto) {
+                const field = form.getTextField('NombreProyecto');
+                field.setText(formData.nombreProyecto);
+                console.log('Campo NombreProyecto llenado con:', formData.nombreProyecto);
+            }
+        } catch (e) { console.log('Error en NombreProyecto:', e.message); }
+        
+        try {
+            if (formData.descripcionProyecto) {
+                const field = form.getTextField('DescripcionProyecto');
+                field.setText(formData.descripcionProyecto);
+                console.log('Campo DescripcionProyecto llenado');
+            }
+        } catch (e) { console.log('Error en DescripcionProyecto:', e.message); }
+        
+        try {
+            if (formData.objetivosProyecto) {
+                const field = form.getTextField('ObjetivosProyecto');
+                field.setText(formData.objetivosProyecto);
+                console.log('Campo ObjetivosProyecto llenado');
+            }
+        } catch (e) { console.log('Error en ObjetivosProyecto:', e.message); }
+        
+        try {
+            if (formData.beneficiosInstitucion) {
+                const field = form.getTextField('BeneficiosInstitucion');
+                field.setText(formData.beneficiosInstitucion);
+                console.log('Campo BeneficiosInstitucion llenado');
+            }
+        } catch (e) { console.log('Error en BeneficiosInstitucion:', e.message); }
+        
+        try {
+            if (formData.tutor) {
+                const field = form.getTextField('Tutor');
+                field.setText(formData.tutor);
+                console.log('Campo Tutor llenado con:', formData.tutor);
+            }
+        } catch (e) { console.log('Error en Tutor:', e.message); }
+        
+        try {
+            if (formData.firmaTutor) {
+                const field = form.getTextField('FirmaTutor');
+                field.setText(formData.firmaTutor);
+                console.log('Campo FirmaTutor llenado con:', formData.firmaTutor);
+            }
+        } catch (e) { console.log('Error en FirmaTutor:', e.message); }
+        
+        try {
+            if (formData.contactoTutor) {
+                const field = form.getTextField('ContactoTutor');
+                field.setText(formData.contactoTutor);
+                console.log('Campo ContactoTutor llenado con:', formData.contactoTutor);
+            }
+        } catch (e) { console.log('Error en ContactoTutor:', e.message); }
+        
+        try {
+            if (formData.nombreEstudiante1) {
+                const field = form.getTextField('NombreEstudiante1');
+                field.setText(formData.nombreEstudiante1);
+                console.log('Campo NombreEstudiante1 llenado con:', formData.nombreEstudiante1);
+            }
+        } catch (e) { console.log('Error en NombreEstudiante1:', e.message); }
+        
+        try {
+            if (formData.nombreEstudiante2) {
+                const field = form.getTextField('NombreEstudiante2');
+                field.setText(formData.nombreEstudiante2);
+                console.log('Campo NombreEstudiante2 llenado con:', formData.nombreEstudiante2);
+            }
+        } catch (e) { console.log('Error en NombreEstudiante2:', e.message); }
+        
+        try {
+            if (formData.nombreEstudiante3) {
+                const field = form.getTextField('NombreEstudiante3');
+                field.setText(formData.nombreEstudiante3);
+                console.log('Campo NombreEstudiante3 llenado con:', formData.nombreEstudiante3);
+            }
+        } catch (e) { console.log('Error en NombreEstudiante3:', e.message); }
+        
+        try {
+            if (formData.nombreEstudiante4) {
+                const field = form.getTextField('NombreEstudiante4');
+                field.setText(formData.nombreEstudiante4);
+                console.log('Campo NombreEstudiante4 llenado con:', formData.nombreEstudiante4);
+            }
+        } catch (e) { console.log('Error en NombreEstudiante4:', e.message); }
+        
+        try {
+            if (formData.duracionEstimada) {
+                const field = form.getTextField('DuracionEstimada');
+                field.setText(formData.duracionEstimada);
+                console.log('Campo DuracionEstimada llenado con:', formData.duracionEstimada);
+            }
+        } catch (e) { console.log('Error en DuracionEstimada:', e.message); }
+        
+        try {
+            if (formData.horarioTentativo) {
+                const field = form.getTextField('HorarioTentativo');
+                field.setText(formData.horarioTentativo);
+                console.log('Campo HorarioTentativo llenado con:', formData.horarioTentativo);
+            }
+        } catch (e) { console.log('Error en HorarioTentativo:', e.message); }
+        ",
+
+                8 => @"
+        // Carta Consentimiento - Mapeo de campos
+        console.log('Procesando Carta Consentimiento...');
+        
+        try {
+            if (formData.fechaElaboracion) {
+                const field = form.getTextField('FechaElaboracion');
+                field.setText(formData.fechaElaboracion);
+                console.log('Campo FechaElaboracion llenado con:', formData.fechaElaboracion);
+            }
+        } catch (e) { console.log('Error en FechaElaboracion:', e.message); }
+        
+        try {
+            if (formData.nombreEncargado) {
+                const field = form.getTextField('NombreEncargado');
+                field.setText(formData.nombreEncargado);
+                console.log('Campo NombreEncargado llenado con:', formData.nombreEncargado);
+            }
+        } catch (e) { console.log('Error en NombreEncargado:', e.message); }
+        
+        try {
+            if (formData.cedulaEncargado) {
+                const field = form.getTextField('CedulaEncargado');
+                field.setText(formData.cedulaEncargado);
+                console.log('Campo CedulaEncargado llenado con:', formData.cedulaEncargado);
+            }
+        } catch (e) { console.log('Error en CedulaEncargado:', e.message); }
+        
+        try {
+            if (formData.relacionEstudiante) {
+                const field = form.getTextField('RelacionEstudiante');
+                field.setText(formData.relacionEstudiante);
+                console.log('Campo RelacionEstudiante llenado con:', formData.relacionEstudiante);
+            }
+        } catch (e) { console.log('Error en RelacionEstudiante:', e.message); }
+        
+        try {
+            if (formData.telefonoEncargado) {
+                const field = form.getTextField('TelefonoEncargado');
+                field.setText(formData.telefonoEncargado);
+                console.log('Campo TelefonoEncargado llenado con:', formData.telefonoEncargado);
+            }
+        } catch (e) { console.log('Error en TelefonoEncargado:', e.message); }
+        
+        try {
+            if (formData.emailEncargado) {
+                const field = form.getTextField('EmailEncargado');
+                field.setText(formData.emailEncargado);
+                console.log('Campo EmailEncargado llenado con:', formData.emailEncargado);
+            }
+        } catch (e) { console.log('Error en EmailEncargado:', e.message); }
+        
+        try {
+            if (formData.direccionEncargado) {
+                const field = form.getTextField('DireccionEncargado');
+                field.setText(formData.direccionEncargado);
+                console.log('Campo DireccionEncargado llenado');
+            }
+        } catch (e) { console.log('Error en DireccionEncargado:', e.message); }
+        
+        try {
+            if (formData.nombreEstudiante) {
+                const field = form.getTextField('NombreEstudiante');
+                field.setText(formData.nombreEstudiante);
+                console.log('Campo NombreEstudiante llenado con:', formData.nombreEstudiante);
+            }
+        } catch (e) { console.log('Error en NombreEstudiante:', e.message); }
+        
+        try {
+            if (formData.cedulaEstudiante) {
+                const field = form.getTextField('CedulaEstudiante');
+                field.setText(formData.cedulaEstudiante);
+                console.log('Campo CedulaEstudiante llenado con:', formData.cedulaEstudiante);
+            }
+        } catch (e) { console.log('Error en CedulaEstudiante:', e.message); }
+        
+        try {
+            if (formData.seccionEstudiante) {
+                const field = form.getTextField('SeccionEstudiante');
+                field.setText(formData.seccionEstudiante);
+                console.log('Campo SeccionEstudiante llenado con:', formData.seccionEstudiante);
+            }
+        } catch (e) { console.log('Error en SeccionEstudiante:', e.message); }
+        
+        try {
+            if (formData.nombreProyecto) {
+                const field = form.getTextField('NombreProyecto');
+                field.setText(formData.nombreProyecto);
+                console.log('Campo NombreProyecto llenado con:', formData.nombreProyecto);
+            }
+        } catch (e) { console.log('Error en NombreProyecto:', e.message); }
+        
+        try {
+            if (formData.descripcionProyecto) {
+                const field = form.getTextField('DescripcionProyecto');
+                field.setText(formData.descripcionProyecto);
+                console.log('Campo DescripcionProyecto llenado');
+            }
+        } catch (e) { console.log('Error en DescripcionProyecto:', e.message); }
+        
+        try {
+            if (formData.lugarEjecucion) {
+                const field = form.getTextField('LugarEjecucion');
+                field.setText(formData.lugarEjecucion);
+                console.log('Campo LugarEjecucion llenado');
+            }
+        } catch (e) { console.log('Error en LugarEjecucion:', e.message); }
+        
+        try {
+            if (formData.fechaInicio) {
+                const field = form.getTextField('FechaInicio');
+                field.setText(formData.fechaInicio);
+                console.log('Campo FechaInicio llenado con:', formData.fechaInicio);
+            }
+        } catch (e) { console.log('Error en FechaInicio:', e.message); }
+        
+        try {
+            if (formData.fechaFin) {
+                const field = form.getTextField('FechaFin');
+                field.setText(formData.fechaFin);
+                console.log('Campo FechaFin llenado con:', formData.fechaFin);
+            }
+        } catch (e) { console.log('Error en FechaFin:', e.message); }
+        
+        try {
+            if (formData.horarioActividades) {
+                const field = form.getTextField('HorarioActividades');
+                field.setText(formData.horarioActividades);
+                console.log('Campo HorarioActividades llenado');
+            }
+        } catch (e) { console.log('Error en HorarioActividades:', e.message); }
+        
+        try {
+            if (formData.nombreTutor) {
+                const field = form.getTextField('NombreTutor');
+                field.setText(formData.nombreTutor);
+                console.log('Campo NombreTutor llenado con:', formData.nombreTutor);
+            }
+        } catch (e) { console.log('Error en NombreTutor:', e.message); }
+        
+        try {
+            if (formData.contactoTutor) {
+                const field = form.getTextField('ContactoTutor');
+                field.setText(formData.contactoTutor);
+                console.log('Campo ContactoTutor llenado con:', formData.contactoTutor);
+            }
+        } catch (e) { console.log('Error en ContactoTutor:', e.message); }
+        
+        try {
+            if (formData.riesgosIdentificados) {
+                const field = form.getTextField('RiesgosIdentificados');
+                field.setText(formData.riesgosIdentificados);
+                console.log('Campo RiesgosIdentificados llenado');
+            }
+        } catch (e) { console.log('Error en RiesgosIdentificados:', e.message); }
+        
+        try {
+            if (formData.medidasSeguridad) {
+                const field = form.getTextField('MedidasSeguridad');
+                field.setText(formData.medidasSeguridad);
+                console.log('Campo MedidasSeguridad llenado');
+            }
+        } catch (e) { console.log('Error en MedidasSeguridad:', e.message); }
+        
+        try {
+            if (formData.autorizaParticipacion) {
+                const field = form.getCheckBox('AutorizaParticipacion');
+                field.check();
+                console.log('Checkbox AutorizaParticipacion marcado');
+            }
+        } catch (e) { console.log('Error en AutorizaParticipacion:', e.message); }
+        
+        try {
+            if (formData.autorizaEmergenciaMedica) {
+                const field = form.getCheckBox('AutorizaEmergenciaMedica');
+                field.check();
+                console.log('Checkbox AutorizaEmergenciaMedica marcado');
+            }
+        } catch (e) { console.log('Error en AutorizaEmergenciaMedica:', e.message); }
+        
+        try {
+            if (formData.autorizaTransporte) {
+                const field = form.getCheckBox('AutorizaTransporte');
+                field.check();
+                console.log('Checkbox AutorizaTransporte marcado');
+            }
+        } catch (e) { console.log('Error en AutorizaTransporte:', e.message); }
+        
+        try {
+            if (formData.firmaEncargado) {
+                const field = form.getTextField('FirmaEncargado');
+                field.setText(formData.firmaEncargado);
+                console.log('Campo FirmaEncargado llenado con:', formData.firmaEncargado);
+            }
+        } catch (e) { console.log('Error en FirmaEncargado:', e.message); }
+        
+        // Nota: Las imágenes de cédula se manejan por separado en el PDF
         ",
 
                 _ => throw new ArgumentException($"Tipo de anexo no válido: {tipoAnexo}")

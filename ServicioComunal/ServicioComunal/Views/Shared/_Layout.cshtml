@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <m                        <a href="@Url.Action("MisEntregas", "Estudiante")" class="nav-item @((ViewContext.RouteData.Values["controller"]?.ToString() == "Estudiante" || ViewContext.RouteData.Values["controller"]?.ToString() == "Anexo") && (ViewContext.RouteData.Values["action"]?.ToString() == "MisEntregas" || ViewContext.RouteData.Values["action"]?.ToString() == "DetalleEntrega" || (ViewContext.RouteData.Values["action"]?.ToString()?.Contains("FormularioAnexo") ?? false)) ? "active" : "")")ta charset="utf-8" />
+    <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Servicio Comunal</title>
     
@@ -143,6 +143,43 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Fix para modal backdrop que queda visible -->
+    <script>
+        // Limpiar modal backdrops cuando se cierran modales
+        document.addEventListener('hidden.bs.modal', function (event) {
+            // Eliminar cualquier backdrop que quede
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => backdrop.remove());
+            
+            // Restaurar scroll del body
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
+        
+        // Asegurar que los modales se abran correctamente
+        document.addEventListener('show.bs.modal', function (event) {
+            // Cerrar cualquier modal abierto antes de abrir uno nuevo
+            const openModals = document.querySelectorAll('.modal.show');
+            openModals.forEach(modal => {
+                const modalInstance = bootstrap.Modal.getInstance(modal);
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+            });
+        });
+        
+        // Fix adicional para cuando la página se carga con backdrop residual
+        document.addEventListener('DOMContentLoaded', function() {
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => backdrop.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
+    </script>
+    
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

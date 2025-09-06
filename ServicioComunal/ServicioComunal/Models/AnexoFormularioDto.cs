@@ -118,4 +118,83 @@ namespace ServicioComunal.Models
         public string? Sugerencias { get; set; }
         public string? Observaciones { get; set; }
     }
+
+    // Informe Final Tutor Interactiva (Tipo 6) - Campos del PDF real
+    public class InformeFinalTutorFormularioDto
+    {
+        public int EntregaId { get; set; }
+        
+        // Campos reales del PDF
+        public string? SeccionRow1 { get; set; }
+        public string? NombreTutor { get; set; }
+        public string? CedulaTutor { get; set; }
+        public string? NumeroProyecto { get; set; }
+        public string? NombreProyecto { get; set; }
+        public string? NombreEstudiante { get; set; }
+        public string? CedulaEstudiante { get; set; }
+        
+        // Checkboxes de evaluación
+        public bool ChecboxSatisfactoria { get; set; }
+        public bool ChecboxRegular { get; set; }
+        public bool CheckboxDeficiente { get; set; }
+        public bool CheckboxInsuficiente { get; set; }
+        
+        // Firma del tutor (base64)
+        public string? FirmaTutor { get; set; }
+    }
+
+    // Carta para Ingresar a la Institución Interactiva (Tipo 7) - Campos del PDF real
+    public class CartaInstitucionFormularioDto
+    {
+        public int EntregaId { get; set; }
+        
+        // Campos de fecha
+        public string? DiaFecha { get; set; }
+        public string? MesFecha { get; set; }
+        public string? YearFecha { get; set; }
+        
+        // Información del profesor y proyecto
+        public string? NombreProfesor { get; set; }
+        public string? TituloProyecto { get; set; }
+        public string? Dias { get; set; }
+        public string? Fechas { get; set; }
+        public string? AreaDesignada { get; set; }
+        
+        // Estudiantes (hasta 5)
+        public string? NombreEstudiante1 { get; set; }
+        public string? NombreEstudiante2 { get; set; }
+        public string? NombreEstudiante3 { get; set; }
+        public string? NombreEstudiante4 { get; set; }
+        public string? NombreEstudiante5 { get; set; }
+        
+        // Secciones
+        public string? Seccion1 { get; set; }
+        public string? Seccion2 { get; set; }
+        public string? Seccion3 { get; set; }
+        public string? Seccion4 { get; set; }
+        public string? Seccion5 { get; set; }
+        
+        // Firma del tutor (base64)
+        public string? FirmaTutor { get; set; }
+    }
+
+    // Carta de Consentimiento Encargado Legal (Tipo 8) - Campos del PDF real
+    public class CartaConsentimientoFormularioDto
+    {
+        public int EntregaId { get; set; }
+        
+        // Campos reales del PDF
+        public string? NombreTutor { get; set; }
+        public string? CedulaTutor { get; set; }
+        public string? CedulaEstudiante { get; set; }
+        public string? TituloServicioComunal { get; set; }
+        public string? NombreDocente { get; set; }
+        public string? UbicacionServicio { get; set; }
+        
+        // Imágenes de cédula (para compatibilidad con el controlador)
+        public string? ImagenCedulaFrente { get; set; }
+        public string? ImagenCedulaAtras { get; set; }
+        public string? CedulaFrontalImagenPath { get; set; }
+        public string? CedulaTraseraImagenPath { get; set; }
+    }
 }

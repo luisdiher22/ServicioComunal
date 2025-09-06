@@ -6,7 +6,6 @@ function mostrarSeccionTipoRecurso() {
     const tipoSeleccionado = document.querySelector('input[name="tipoRecurso"]:checked');
     console.log('Tipo seleccionado:', tipoSeleccionado ? tipoSeleccionado.value : 'ninguno');
     
-    const seccionFormulario = document.getElementById('seccionFormulario');
     const seccionAnexo = document.getElementById('seccionAnexo');
     
     if (!tipoSeleccionado) {
@@ -16,25 +15,34 @@ function mostrarSeccionTipoRecurso() {
     
     const valor = tipoSeleccionado.value;
     
-    if (valor === 'formulario') {
-        seccionFormulario.style.display = 'block';
+    if (valor === 'anexo') {
+        seccionAnexo.style.display = 'block';
+        console.log('Mostrando sección anexo');
+    } else {
         seccionAnexo.style.display = 'none';
         // Limpiar anexo seleccionado
         document.getElementById('entregaAnexo').value = '';
-        console.log('Mostrando sección formulario');
-    } else if (valor === 'anexo') {
-        seccionFormulario.style.display = 'none';
-        seccionAnexo.style.display = 'block';
-        // Limpiar formulario seleccionado
-        document.getElementById('entregaFormulario').value = '';
-        console.log('Mostrando sección anexo');
+        console.log('Ocultando sección anexo');
+    }
+}
+
+// Función para mostrar/ocultar la sección de grupo específico
+function mostrarSeccionGrupoEspecifico() {
+    const destinatarioSeleccionado = document.querySelector('input[name="destinatarios"]:checked');
+    const seccionGrupoEspecifico = document.getElementById('seccionGrupoEspecifico');
+    const textoInfo = document.getElementById('textoInfoEntrega');
+    
+    if (!destinatarioSeleccionado) {
+        return;
+    }
+    
+    if (destinatarioSeleccionado.value === 'especifico') {
+        seccionGrupoEspecifico.style.display = 'block';
+        textoInfo.textContent = 'Al crear una nueva entrega, se generará una tarea únicamente para el grupo seleccionado.';
     } else {
-        seccionFormulario.style.display = 'none';
-        seccionAnexo.style.display = 'none';
-        // Limpiar ambos
-        document.getElementById('entregaFormulario').value = '';
-        document.getElementById('entregaAnexo').value = '';
-        console.log('Ocultando ambas secciones');
+        seccionGrupoEspecifico.style.display = 'none';
+        document.getElementById('entregaGrupoEspecifico').value = '';
+        textoInfo.textContent = 'Al crear una nueva entrega, se generará automáticamente una tarea para cada grupo existente.';
     }
 }
 
@@ -44,14 +52,19 @@ function limpiarFormulario() {
     document.getElementById('entregaId').value = '';
     document.getElementById('modalEntregaLabel').textContent = 'Nueva Entrega';
     document.getElementById('modoEdicion').style.display = 'none';
+    document.getElementById('seccionDestinatarios').style.display = 'block';
     document.getElementById('infoNuevaEntrega').style.display = 'block';
     
-    // Restablecer tipo de recurso a formulario
-    document.getElementById('tipoFormulario').checked = true;
+    // Restablecer tipo de recurso a anexo
+    document.getElementById('tipoAnexo').checked = true;
+    
+    // Restablecer destinatarios a todos los grupos
+    document.getElementById('todosLosGrupos').checked = true;
     
     // Asegurar que las secciones se muestren correctamente
     setTimeout(() => {
         mostrarSeccionTipoRecurso();
+        mostrarSeccionGrupoEspecifico();
     }, 100);
     
     esEdicion = false;
@@ -107,13 +120,25 @@ async function guardarEntrega() {
             mostrarAlerta('Error al actualizar la entrega', 'danger');
         }
     } else {
-        // Modo creación - crear entrega para todos los grupos
+        // Modo creación - crear entrega para todos los grupos o grupo específico
+        const destinatarioSeleccionado = document.querySelector('input[name="destinatarios"]:checked');
+        const enviarATodos = destinatarioSeleccionado ? destinatarioSeleccionado.value === 'todos' : true;
+        const grupoEspecifico = enviarATodos ? null : parseInt(document.getElementById('entregaGrupoEspecifico').value);
+        
+        // Validar grupo específico si se seleccionó esa opción
+        if (!enviarATodos && !grupoEspecifico) {
+            mostrarAlerta('Debes seleccionar un grupo específico', 'warning');
+            return;
+        }
+        
         const entregaDto = {
             nombre: formData.get('nombre'),
             descripcion: formData.get('descripcion'),
             fechaLimite: formData.get('fechaLimite'),
-            formularioIdentificacion: formData.get('formularioIdentificacion') ? parseInt(formData.get('formularioIdentificacion')) : null,
-            tipoAnexo: formData.get('tipoAnexo') ? parseInt(formData.get('tipoAnexo')) : null
+            formularioIdentificacion: null, // Ya no se usan formularios
+            tipoAnexo: formData.get('tipoAnexo') ? parseInt(formData.get('tipoAnexo')) : null,
+            enviarATodosLosGrupos: enviarATodos,
+            grupoEspecifico: grupoEspecifico
         };
 
         // Validaciones
@@ -257,6 +282,7 @@ async function editarEntrega(id) {
             
             document.getElementById('modalEntregaLabel').textContent = 'Editar Entrega';
             document.getElementById('modoEdicion').style.display = 'block';
+            document.getElementById('seccionDestinatarios').style.display = 'none';
             document.getElementById('infoNuevaEntrega').style.display = 'none';
             esEdicion = true;
             
@@ -341,6 +367,15 @@ document.addEventListener('DOMContentLoaded', function() {
         limpiarFormulario();
     });
 
+    // Event listeners para los radio buttons de destinatarios
+    const radioButtonsDestinatarios = document.querySelectorAll('input[name="destinatarios"]');
+    radioButtonsDestinatarios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            console.log('Destinatario cambiado a:', this.value);
+            mostrarSeccionGrupoEspecifico();
+        });
+    });
+
     // Event listeners para los radio buttons de tipo de recurso
     const radioButtons = document.querySelectorAll('input[name="tipoRecurso"]');
     console.log('Radio buttons encontrados:', radioButtons.length);
@@ -373,4 +408,5 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inicializar la visualización de secciones
     console.log('Inicializando visualización de secciones');
     mostrarSeccionTipoRecurso();
+    mostrarSeccionGrupoEspecifico();
 });

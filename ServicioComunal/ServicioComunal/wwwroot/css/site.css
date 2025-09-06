@@ -1833,15 +1833,17 @@ input, textarea, select {
 }
 
 .modal-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #e9ecef;
+    background: linear-gradient(135deg, #6c8d47 0%, #5a7a3a 100%);
+    border-bottom: none;
     border-radius: 12px 12px 0 0;
     padding: 20px 24px;
+    color: white;
 }
 
 .modal-title {
     font-weight: 600;
-    color: #2c3e50;
+    color: white;
+    font-size: 18px;
 }
 
 .modal-body {
@@ -2519,15 +2521,16 @@ input, textarea, select {
 }
 
 .modal-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #e9ecef;
+    background: linear-gradient(135deg, #6c8d47 0%, #5a7a3a 100%);
+    border-bottom: none;
     border-radius: 12px 12px 0 0;
     padding: 20px 24px;
+    color: white;
 }
 
 .modal-title {
     font-weight: 600;
-    color: #2c3e50;
+    color: white;
     font-size: 18px;
 }
 
@@ -3823,4 +3826,22 @@ h1, h2, h3, h4, h5, h6, .card, .modal, .table, .form-control,
     background: linear-gradient(135deg, rgba(139, 119, 101, 0.1), rgba(111, 93, 79, 0.08)) !important;
     border: 1px solid rgba(139, 119, 101, 0.3) !important;
     color: #5a4d41 !important;
+}
+
+.alert-light {
+    background: linear-gradient(135deg, rgba(248, 249, 250, 0.9), rgba(233, 236, 239, 0.8)) !important;
+    border: 2px solid rgba(108, 141, 71, 0.3) !important;
+    color: #2c3e50 !important;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos para botón cerrar en modales */
+.modal-header .btn-close {
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+}
+
+.modal-header .btn-close:hover {
+    opacity: 1;
 }

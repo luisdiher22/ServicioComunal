@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using ServicioComunal.Data;
 using ServicioComunal.Models;
 using ServicioComunal.Services;
+using ServicioComunal.Attributes;
 using System.Text.Json;
 
 namespace ServicioComunal.Controllers
@@ -11,19 +12,22 @@ namespace ServicioComunal.Controllers
     /// Controlador que maneja las funcionalidades específicas de los estudiantes.
     /// Incluye gestión de grupos, solicitudes de ingreso y dashboards.
     /// </summary>
+    [RequireAuth("Estudiante")]
     public class EstudianteController : Controller
     {
         private readonly ServicioComunalDbContext _context;
         private readonly UsuarioService _usuarioService;
         private readonly IPdfFillerService _pdfFillerService;
         private readonly ILogger<EstudianteController> _logger;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public EstudianteController(ServicioComunalDbContext context, UsuarioService usuarioService, IPdfFillerService pdfFillerService, ILogger<EstudianteController> logger)
+        public EstudianteController(ServicioComunalDbContext context, UsuarioService usuarioService, IPdfFillerService pdfFillerService, ILogger<EstudianteController> logger, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
             _usuarioService = usuarioService;
             _pdfFillerService = pdfFillerService;
             _logger = logger;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         public async Task<IActionResult> Dashboard()
@@ -1252,11 +1256,11 @@ namespace ServicioComunal.Controllers
 
         // ========== FUNCIONES DE ANEXOS ==========
 
-        // GET: /Estudiante/FormularioAnexo/{entregaId}
-        [HttpGet]
+        // GET/POST: /Estudiante/FormularioAnexo/{entregaId}
+        [HttpGet, HttpPost]
         public async Task<IActionResult> FormularioAnexo(int entregaId)
         {
-            _logger.LogWarning("=== FormularioAnexo GET ejecutado - EntregaId: {EntregaId} ===", entregaId);
+            _logger.LogWarning("=== FormularioAnexo {Method} ejecutado - EntregaId: {EntregaId} ===", Request.Method, entregaId);
             // Verificar autenticación de estudiante
             var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
             var usuarioRol = HttpContext.Session.GetString("UsuarioRol");
@@ -1311,6 +1315,9 @@ namespace ServicioComunal.Controllers
                 2 => View("FormularioAnexo2"),
                 3 => View("FormularioAnexo3"),
                 5 => View("FormularioAnexo5"),
+                6 => View("FormularioInformeFinalTutor"),
+                7 => View("FormularioCartaInstitucion"),
+                8 => View("FormularioCartaConsentimiento"),
                 _ => BadRequest("Tipo de anexo no válido")
             };
         }
@@ -1491,6 +1498,13 @@ namespace ServicioComunal.Controllers
                     return RedirectToAction("FormularioAnexo", new { entregaId });
                 }
                 
+                if (string.IsNullOrWhiteSpace(formData.NombreProyecto))
+                {
+                    _logger.LogWarning("Nombre del proyecto es requerido para entrega {EntregaId}. Valor recibido: '{NombreProyecto}'", entregaId, formData.NombreProyecto);
+                    TempData["Error"] = "El nombre del proyecto es requerido";
+                    return RedirectToAction("FormularioAnexo", new { entregaId });
+                }
+                
                 var entrega = await _context.Entregas.FindAsync(entregaId);
                 if (entrega == null)
                 {
@@ -1537,7 +1551,24 @@ namespace ServicioComunal.Controllers
             {
                 stopwatch.Stop();
                 _logger.LogError(ex, "Error guardando Anexo 2 para entrega {EntregaId} - Tiempo transcurrido: {ElapsedMs}ms", entregaId, stopwatch.ElapsedMilliseconds);
-                TempData["Error"] = "Error al guardar el anexo: " + ex.Message;
+                
+                // Escribir error detallado a un archivo para diagnóstico
+                try
+                {
+                    var errorLogPath = Path.Combine("C:\\temp", "anexo2_error.log");
+                    Directory.CreateDirectory("C:\\temp"); // Crear directorio si no existe
+                    var errorDetails = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Error en GuardarAnexo2:\n" +
+                                     $"EntregaId: {entregaId}\n" +
+                                     $"Exception: {ex.GetType().Name}\n" +
+                                     $"Message: {ex.Message}\n" +
+                                     $"StackTrace: {ex.StackTrace}\n" +
+                                     $"FormData: {System.Text.Json.JsonSerializer.Serialize(formData)}\n" +
+                                     $"================================\n\n";
+                    await System.IO.File.AppendAllTextAsync(errorLogPath, errorDetails);
+                }
+                catch { /* Ignore logging errors */ }
+                
+                TempData["Error"] = $"Error al guardar el anexo: {ex.Message}";
                 return RedirectToAction("FormularioAnexo", new { entregaId });
             }
         }
@@ -1762,6 +1793,246 @@ namespace ServicioComunal.Controllers
             }
         }
 
+        // POST: /Estudiante/GuardarInformeFinalTutor
+        [HttpPost]
+        public async Task<IActionResult> GuardarInformeFinalTutor(InformeFinalTutorFormularioDto formData)
+        {
+            _logger.LogWarning("=== INICIO GuardarInformeFinalTutor - ACCIÓN EJECUTÁNDOSE ===");
+            
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            var entregaId = 0;
+            
+            try
+            {
+                _logger.LogInformation("POST recibido para GuardarInformeFinalTutor");
+                _logger.LogInformation("FormData recibido: {@FormData}", formData);
+                
+                entregaId = formData?.EntregaId ?? 0;
+                if (entregaId == 0 && Request.Form.ContainsKey("entregaId") && int.TryParse(Request.Form["entregaId"], out var parsedId))
+                {
+                    entregaId = parsedId;
+                    if (formData != null) formData.EntregaId = entregaId;
+                }
+                
+                var entrega = await _context.Entregas.FirstOrDefaultAsync(e => e.Identificacion == entregaId);
+                if (entrega == null)
+                {
+                    TempData["Error"] = "Entrega no encontrada";
+                    return RedirectToAction("Index");
+                }
+                
+                // Serializar y guardar datos del formulario
+                var datosJson = JsonSerializer.Serialize(formData);
+                entrega.DatosFormularioJson = datosJson;
+                entrega.ArchivoRuta = $"temp_informe_final_tutor_{entregaId}.pdf";
+                
+                _logger.LogInformation("Datos del formulario serializados correctamente");
+                
+                // Generar PDF usando el servicio PdfFillerService
+                var pdfBytes = await _pdfFillerService.FillPdfAsync(6, datosJson);
+                if (pdfBytes == null || pdfBytes.Length == 0)
+                {
+                    throw new Exception("No se pudo generar el PDF");
+                }
+                
+                // Guardar PDF en wwwroot/uploads
+                var uploadsPath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads");
+                Directory.CreateDirectory(uploadsPath);
+                
+                var fileName = $"informe_final_tutor_{entregaId}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+                var filePath = Path.Combine(uploadsPath, fileName);
+                
+                await System.IO.File.WriteAllBytesAsync(filePath, pdfBytes);
+                entrega.ArchivoRuta = $"uploads/{fileName}";
+                
+                await _context.SaveChangesAsync();
+                stopwatch.Stop();
+                
+                _logger.LogInformation("Informe Final Tutor guardado exitosamente para entrega {EntregaId} - Tiempo total: {ElapsedMs}ms", entregaId, stopwatch.ElapsedMilliseconds);
+                
+                TempData["Success"] = "Informe Final Tutor guardado exitosamente";
+                return RedirectToAction("DetalleEntrega", new { id = entregaId });
+            }
+            catch (Exception ex)
+            {
+                stopwatch.Stop();
+                _logger.LogError(ex, "Error guardando Informe Final Tutor para entrega {EntregaId} - Tiempo transcurrido: {ElapsedMs}ms", entregaId, stopwatch.ElapsedMilliseconds);
+                TempData["Error"] = "Error al guardar el informe: " + ex.Message;
+                return RedirectToAction("FormularioAnexo", new { entregaId });
+            }
+        }
+
+        // POST: /Estudiante/GuardarCartaInstitucion
+        [HttpPost]
+        public async Task<IActionResult> GuardarCartaInstitucion(CartaInstitucionFormularioDto formData)
+        {
+            _logger.LogWarning("=== INICIO GuardarCartaInstitucion - ACCIÓN EJECUTÁNDOSE ===");
+            
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            var entregaId = 0;
+            
+            try
+            {
+                _logger.LogInformation("POST recibido para GuardarCartaInstitucion");
+                _logger.LogInformation("FormData recibido: {@FormData}", formData);
+                
+                entregaId = formData?.EntregaId ?? 0;
+                if (entregaId == 0 && Request.Form.ContainsKey("entregaId") && int.TryParse(Request.Form["entregaId"], out var parsedId))
+                {
+                    entregaId = parsedId;
+                    if (formData != null) formData.EntregaId = entregaId;
+                }
+                
+                var entrega = await _context.Entregas.FirstOrDefaultAsync(e => e.Identificacion == entregaId);
+                if (entrega == null)
+                {
+                    TempData["Error"] = "Entrega no encontrada";
+                    return RedirectToAction("Index");
+                }
+                
+                // Serializar y guardar datos del formulario
+                var datosJson = JsonSerializer.Serialize(formData);
+                entrega.DatosFormularioJson = datosJson;
+                entrega.ArchivoRuta = $"temp_carta_institucion_{entregaId}.pdf";
+                
+                _logger.LogInformation("Datos del formulario serializados correctamente");
+                
+                // Generar PDF usando el servicio PdfFillerService
+                var pdfBytes = await _pdfFillerService.FillPdfAsync(7, datosJson);
+                if (pdfBytes == null || pdfBytes.Length == 0)
+                {
+                    throw new Exception("No se pudo generar el PDF");
+                }
+                
+                // Guardar PDF en wwwroot/uploads
+                var uploadsPath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads");
+                Directory.CreateDirectory(uploadsPath);
+                
+                var fileName = $"carta_institucion_{entregaId}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+                var filePath = Path.Combine(uploadsPath, fileName);
+                
+                await System.IO.File.WriteAllBytesAsync(filePath, pdfBytes);
+                entrega.ArchivoRuta = $"uploads/{fileName}";
+                
+                await _context.SaveChangesAsync();
+                stopwatch.Stop();
+                
+                _logger.LogInformation("Carta Institución guardada exitosamente para entrega {EntregaId} - Tiempo total: {ElapsedMs}ms", entregaId, stopwatch.ElapsedMilliseconds);
+                
+                TempData["Success"] = "Carta para Institución guardada exitosamente";
+                return RedirectToAction("DetalleEntrega", new { id = entregaId });
+            }
+            catch (Exception ex)
+            {
+                stopwatch.Stop();
+                _logger.LogError(ex, "Error guardando Carta Institución para entrega {EntregaId} - Tiempo transcurrido: {ElapsedMs}ms", entregaId, stopwatch.ElapsedMilliseconds);
+                TempData["Error"] = "Error al guardar la carta: " + ex.Message;
+                return RedirectToAction("FormularioAnexo", new { entregaId });
+            }
+        }
+
+        // POST: /Estudiante/GuardarCartaConsentimiento
+        [HttpPost]
+        public async Task<IActionResult> GuardarCartaConsentimiento(CartaConsentimientoFormularioDto formData, IFormFile? imagenCedulaFrente, IFormFile? imagenCedulaAtras)
+        {
+            _logger.LogWarning("=== INICIO GuardarCartaConsentimiento - ACCIÓN EJECUTÁNDOSE ===");
+            
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            var entregaId = 0;
+            
+            try
+            {
+                _logger.LogInformation("POST recibido para GuardarCartaConsentimiento");
+                _logger.LogInformation("FormData recibido: {@FormData}", formData);
+                
+                entregaId = formData?.EntregaId ?? 0;
+                if (entregaId == 0 && Request.Form.ContainsKey("entregaId") && int.TryParse(Request.Form["entregaId"], out var parsedId))
+                {
+                    entregaId = parsedId;
+                    if (formData != null) formData.EntregaId = entregaId;
+                }
+                
+                var entrega = await _context.Entregas.FirstOrDefaultAsync(e => e.Identificacion == entregaId);
+                if (entrega == null)
+                {
+                    TempData["Error"] = "Entrega no encontrada";
+                    return RedirectToAction("Index");
+                }
+                
+                // Procesar imágenes de cédula si se enviaron
+                if (imagenCedulaFrente != null && imagenCedulaFrente.Length > 0)
+                {
+                    var uploadsPath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "cedulas");
+                    Directory.CreateDirectory(uploadsPath);
+                    
+                    var fileName = $"cedula_frente_{entregaId}_{DateTime.Now:yyyyMMdd_HHmmss}.{Path.GetExtension(imagenCedulaFrente.FileName)}";
+                    var filePath = Path.Combine(uploadsPath, fileName);
+                    
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await imagenCedulaFrente.CopyToAsync(stream);
+                    }
+                    if (formData != null)
+                        formData.ImagenCedulaFrente = $"uploads/cedulas/{fileName}";
+                }
+                
+                if (imagenCedulaAtras != null && imagenCedulaAtras.Length > 0)
+                {
+                    var uploadsPath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "cedulas");
+                    Directory.CreateDirectory(uploadsPath);
+                    
+                    var fileName = $"cedula_atras_{entregaId}_{DateTime.Now:yyyyMMdd_HHmmss}.{Path.GetExtension(imagenCedulaAtras.FileName)}";
+                    var filePath = Path.Combine(uploadsPath, fileName);
+                    
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await imagenCedulaAtras.CopyToAsync(stream);
+                    }
+                    if (formData != null)
+                        formData.ImagenCedulaAtras = $"uploads/cedulas/{fileName}";
+                }
+                
+                // Serializar y guardar datos del formulario
+                var datosJson = JsonSerializer.Serialize(formData);
+                entrega.DatosFormularioJson = datosJson;
+                entrega.ArchivoRuta = $"temp_carta_consentimiento_{entregaId}.pdf";
+                
+                _logger.LogInformation("Datos del formulario serializados correctamente");
+                
+                // Generar PDF usando el servicio PdfFillerService
+                var pdfBytes = await _pdfFillerService.FillPdfAsync(8, datosJson);
+                if (pdfBytes == null || pdfBytes.Length == 0)
+                {
+                    throw new Exception("No se pudo generar el PDF");
+                }
+                
+                // Guardar PDF en wwwroot/uploads
+                var uploadsPath2 = Path.Combine(_webHostEnvironment.WebRootPath, "uploads");
+                Directory.CreateDirectory(uploadsPath2);
+                
+                var fileName2 = $"carta_consentimiento_{entregaId}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+                var filePath2 = Path.Combine(uploadsPath2, fileName2);
+                
+                await System.IO.File.WriteAllBytesAsync(filePath2, pdfBytes);
+                entrega.ArchivoRuta = $"uploads/{fileName2}";
+                
+                await _context.SaveChangesAsync();
+                stopwatch.Stop();
+                
+                _logger.LogInformation("Carta Consentimiento guardada exitosamente para entrega {EntregaId} - Tiempo total: {ElapsedMs}ms", entregaId, stopwatch.ElapsedMilliseconds);
+                
+                TempData["Success"] = "Carta de Consentimiento guardada exitosamente";
+                return RedirectToAction("DetalleEntrega", new { id = entregaId });
+            }
+            catch (Exception ex)
+            {
+                stopwatch.Stop();
+                _logger.LogError(ex, "Error guardando Carta Consentimiento para entrega {EntregaId} - Tiempo transcurrido: {ElapsedMs}ms", entregaId, stopwatch.ElapsedMilliseconds);
+                TempData["Error"] = "Error al guardar la carta: " + ex.Message;
+                return RedirectToAction("FormularioAnexo", new { entregaId });
+            }
+        }
+
         // MÉTODO TEMPORAL PARA AGREGAR DATOS DE PRUEBA
         [HttpGet]
         public async Task<IActionResult> CrearDatosPrueba()
@@ -1839,6 +2110,104 @@ namespace ServicioComunal.Controllers
                 return Json(new { success = false, message = $"Error: {ex.Message}" });
             }
         }
+
+        [HttpPost]
+        public async Task<IActionResult> CambiarContraseña([FromBody] CambiarContraseñaEstudianteRequest request)
+        {
+            try
+            {
+                var usuarioActual = _usuarioService.ObtenerUsuarioActual();
+                if (usuarioActual == null)
+                {
+                    return Json(new { success = false, message = "Usuario no autenticado" });
+                }
+
+                var resultado = await _usuarioService.CambiarContraseñaConValidacionAsync(
+                    usuarioActual.NombreUsuario, 
+                    request.ContraseñaActual, 
+                    request.NuevaContraseña);
+
+                return Json(new { success = resultado.exito, message = resultado.mensaje });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al cambiar contraseña del estudiante");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CambiarLider([FromBody] CambiarLiderRequest request)
+        {
+            try
+            {
+                var usuarioActual = _usuarioService.ObtenerUsuarioActual();
+                if (usuarioActual == null)
+                {
+                    return Json(new { success = false, message = "Usuario no autenticado" });
+                }
+
+                var estudiante = await _context.Estudiantes
+                    .FirstOrDefaultAsync(e => e.Identificacion == usuarioActual.Identificacion);
+
+                if (estudiante == null)
+                {
+                    return Json(new { success = false, message = "Estudiante no encontrado" });
+                }
+
+                // Verificar que el estudiante actual es líder del grupo
+                var grupo = await _context.Grupos
+                    .Include(g => g.Lider)
+                    .FirstOrDefaultAsync(g => g.Numero == request.GrupoNumero);
+
+                if (grupo == null)
+                {
+                    return Json(new { success = false, message = "Grupo no encontrado" });
+                }
+
+                if (grupo.LiderIdentificacion != estudiante.Identificacion)
+                {
+                    return Json(new { success = false, message = "Solo el líder actual puede cambiar el liderazgo" });
+                }
+
+                // Verificar que el nuevo líder es miembro del grupo
+                var nuevoLider = await _context.GruposEstudiantes
+                    .Include(ge => ge.Estudiante)
+                    .FirstOrDefaultAsync(ge => ge.GrupoNumero == request.GrupoNumero && 
+                                              ge.EstudianteIdentificacion == request.NuevoLiderIdentificacion);
+
+                if (nuevoLider == null)
+                {
+                    return Json(new { success = false, message = "El nuevo líder debe ser miembro del grupo" });
+                }
+
+                // Cambiar el líder
+                grupo.LiderIdentificacion = request.NuevoLiderIdentificacion;
+                await _context.SaveChangesAsync();
+
+                return Json(new { 
+                    success = true, 
+                    message = $"Liderazgo transferido exitosamente a {nuevoLider.Estudiante.Nombre} {nuevoLider.Estudiante.Apellidos}" 
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al cambiar líder del grupo");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+    }
+
+    public class CambiarLiderRequest
+    {
+        public int GrupoNumero { get; set; }
+        public int NuevoLiderIdentificacion { get; set; }
+    }
+
+    public class CambiarContraseñaEstudianteRequest
+    {
+        public string ContraseñaActual { get; set; } = string.Empty;
+        public string NuevaContraseña { get; set; } = string.Empty;
     }
 
     public class ResponderSolicitudRequest

@@ -27,6 +27,9 @@
                 <a class="nav-link" href="@Url.Action("Entregas", "Estudiante")">
                     <i class="fas fa-file-upload"></i> Entregas
                 </a>
+                <a class="nav-link" href="@Url.Action("GestionGrupos", "Estudiante")">
+                    <i class="fas fa-users-cog"></i> Gestión de Grupos
+                </a>
                 <a class="nav-link" href="@Url.Action("MisSolicitudes", "Estudiante")">
                     <i class="fas fa-bell"></i> Solicitudes
                 </a>
@@ -73,6 +76,12 @@
                                                 <small class="text-muted">@lider.Clase</small>
                                             </div>
                                         </div>
+                                        @if (lider != null && lider.Identificacion == estudiante?.Identificacion)
+                                        {
+                                            <button type="button" class="btn btn-warning btn-sm mt-2" onclick="abrirModalCambiarLider()">
+                                                <i class="fas fa-exchange-alt"></i> Transferir Liderazgo
+                                            </button>
+                                        }
                                     }
                                     else
                                     {
@@ -259,4 +268,154 @@
     .badge {
         font-size: 0.75em;
     }
+    }
 </style>
+
+<!-- Modal para cambiar líder -->
+<div class="modal fade" id="modalCambiarLider" tabindex="-1" aria-labelledby="modalCambiarLiderLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="modalCambiarLiderLabel">
+                    <i class="fas fa-exchange-alt"></i> Transferir Liderazgo
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>¡Atención!</strong> Al transferir el liderazgo, perderás todos los privilegios de líder y no podrás recuperarlos a menos que el nuevo líder te los devuelva.
+                </div>
+                
+                <form id="formCambiarLider">
+                    <div class="mb-3">
+                        <label for="selectNuevoLider" class="form-label">Selecciona el nuevo líder:</label>
+                        <select class="form-select" id="selectNuevoLider" name="nuevoLider" required>
+                            <option value="">-- Selecciona un integrante --</option>
+                            @if (integrantesGrupo != null)
+                            {
+                                @foreach (var integrante in integrantesGrupo.Where(i => i.Identificacion != lider?.Identificacion))
+                                {
+                                    <option value="@integrante.Identificacion">
+                                        @integrante.Nombre @integrante.Apellidos - @integrante.Clase
+                                    </option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="confirmarTransferencia" required>
+                            <label class="form-check-label" for="confirmarTransferencia">
+                                Confirmo que deseo transferir el liderazgo y entiendo las consecuencias
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-warning" onclick="confirmarCambioLider()">
+                    <i class="fas fa-exchange-alt"></i> Transferir Liderazgo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function abrirModalCambiarLider() {
+    const modal = new bootstrap.Modal(document.getElementById('modalCambiarLider'));
+    modal.show();
+}
+
+function confirmarCambioLider() {
+    const selectNuevoLider = document.getElementById('selectNuevoLider');
+    const confirmarTransferencia = document.getElementById('confirmarTransferencia');
+    
+    if (!selectNuevoLider.value) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Debes seleccionar un nuevo líder'
+        });
+        return;
+    }
+    
+    if (!confirmarTransferencia.checked) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Debes confirmar que entiendes las consecuencias'
+        });
+        return;
+    }
+
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: 'Esta acción no se puede deshacer. Perderás el liderazgo del grupo.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ffc107',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, transferir',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            cambiarLider();
+        }
+    });
+}
+
+function cambiarLider() {
+    const selectNuevoLider = document.getElementById('selectNuevoLider');
+    const grupoNumero = @(grupo?.Numero ?? 0);
+    
+    const data = {
+        GrupoNumero: grupoNumero,
+        NuevoLiderIdentificacion: parseInt(selectNuevoLider.value)
+    };
+    
+    fetch('@Url.Action("CambiarLider", "Estudiante")', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Éxito!',
+                text: result.message,
+                timer: 3000,
+                showConfirmButton: false
+            }).then(() => {
+                location.reload();
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: result.message
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error al procesar la solicitud'
+        });
+    });
+}
+</script>
+
+```

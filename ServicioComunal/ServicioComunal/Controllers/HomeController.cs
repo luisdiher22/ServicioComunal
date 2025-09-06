@@ -4,6 +4,7 @@ using ServicioComunal.Data;
 using ServicioComunal.Services;
 using ServicioComunal.Models;
 using ServicioComunal.Utilities;
+using ServicioComunal.Attributes;
 using OfficeOpenXml;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -22,6 +23,7 @@ namespace ServicioComunal.Controllers
         public int GrupoNumero { get; set; }
     }
 
+    [RequireAuth("Administrador")]
     public class HomeController : Controller
     {
         private readonly DataSeederService _seeder;
@@ -567,17 +569,15 @@ namespace ServicioComunal.Controllers
         {
             if (archivo == null || archivo.Length == 0)
             {
-                TempData["Error"] = "Por favor seleccione un archivo válido.";
-                return RedirectToAction("Estudiantes");
+                return Json(new { success = false, message = "Por favor seleccione un archivo válido." });
             }
 
-            var extensionesPermitidas = new[] { ".xlsx", ".xls" };
+            var extensionesPermitidas = new[] { ".xlsx", ".xls", ".csv" };
             var extension = Path.GetExtension(archivo.FileName).ToLowerInvariant();
             
             if (!extensionesPermitidas.Contains(extension))
             {
-                TempData["Error"] = "Solo se permiten archivos Excel (.xlsx, .xls).";
-                return RedirectToAction("Estudiantes");
+                return Json(new { success = false, message = "Solo se permiten archivos Excel (.xlsx, .xls) o CSV (.csv)." });
             }
 
             try
@@ -586,168 +586,284 @@ namespace ServicioComunal.Controllers
                 var estudiantesExistentes = 0;
                 var usuariosCreados = 0;
                 var errores = new List<string>();
+                var advertencias = new List<string>();
 
                 using (var transaction = await _context.Database.BeginTransactionAsync())
                 {
-                    Console.WriteLine("DEBUG: Transacción iniciada");
-                    
                     try
                     {
-                        using (var stream = archivo.OpenReadStream())
-                        {
-                            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-                            using (var package = new ExcelPackage(stream))
-                    {
-                        var worksheet = package.Workbook.Worksheets[0];
-                        var rowCount = worksheet.Dimension?.Rows ?? 0;
+                        List<EstudianteImportDto> estudiantesParaImportar;
 
-                        if (rowCount < 2)
+                        if (extension == ".csv")
                         {
-                            TempData["Error"] = "El archivo debe contener al menos una fila de datos además del encabezado.";
-                            return RedirectToAction("Estudiantes");
+                            estudiantesParaImportar = await ProcesarArchivoCSV(archivo);
+                        }
+                        else
+                        {
+                            estudiantesParaImportar = ProcesarArchivoExcel(archivo);
                         }
 
-                        for (int row = 2; row <= rowCount; row++)
+                        // Validar datos antes de importar
+                        var validacionResult = ValidarDatosImportacion(estudiantesParaImportar);
+                        if (!validacionResult.EsValido)
+                        {
+                            return Json(new { success = false, message = validacionResult.Mensaje, errores = validacionResult.Errores });
+                        }
+
+                        // Obtener estudiantes y usuarios existentes para evitar consultas repetidas
+                        var estudiantesExistentesDb = await _context.Estudiantes
+                            .Select(e => e.Identificacion)
+                            .ToListAsync();
+                        
+                        var usuariosExistentesDb = await _context.Usuarios
+                            .Select(u => u.Identificacion)
+                            .ToListAsync();
+
+                        var nombresUsuarioExistentes = await _context.Usuarios
+                            .Select(u => u.NombreUsuario.ToLower())
+                            .ToListAsync();
+
+                        foreach (var estudianteDto in estudiantesParaImportar)
                         {
                             try
                             {
-                                var apellidos = worksheet.Cells[row, 1].Value?.ToString()?.Trim();
-                                var nombre = worksheet.Cells[row, 2].Value?.ToString()?.Trim();
-                                var clase = worksheet.Cells[row, 3].Value?.ToString()?.Trim();
-                                var cedulaTexto = worksheet.Cells[row, 4].Value?.ToString()?.Trim();
-
-                                if (string.IsNullOrWhiteSpace(apellidos) || 
-                                    string.IsNullOrWhiteSpace(nombre) || 
-                                    string.IsNullOrWhiteSpace(clase) ||
-                                    string.IsNullOrWhiteSpace(cedulaTexto))
-                                {
-                                    errores.Add($"Fila {row}: Datos incompletos");
-                                    continue;
-                                }
-
-                                if (!int.TryParse(cedulaTexto, out int cedula))
-                                {
-                                    errores.Add($"Fila {row}: Número de identificación inválido ({cedulaTexto})");
-                                    continue;
-                                }
-
                                 // Verificar si ya existe el estudiante
-                                var existeEstudiante = await _context.Estudiantes
-                                    .AnyAsync(e => e.Identificacion == cedula);
-
-                                if (existeEstudiante)
+                                if (estudiantesExistentesDb.Contains(estudianteDto.Identificacion))
                                 {
                                     estudiantesExistentes++;
+                                    advertencias.Add($"Estudiante {estudianteDto.Nombre} {estudianteDto.Apellidos} (ID: {estudianteDto.Identificacion}) ya existe");
                                     continue;
                                 }
 
                                 // Crear estudiante
                                 var estudiante = new ServicioComunal.Models.Estudiante
                                 {
-                                    Identificacion = cedula,
-                                    Nombre = nombre,
-                                    Apellidos = apellidos,
-                                    Clase = clase
+                                    Identificacion = estudianteDto.Identificacion,
+                                    Nombre = estudianteDto.Nombre,
+                                    Apellidos = estudianteDto.Apellidos,
+                                    Clase = estudianteDto.Clase
                                 };
 
                                 _context.Estudiantes.Add(estudiante);
                                 estudiantesImportados++;
 
-                                // Verificar si ya existe usuario para este estudiante
-                                var existeUsuario = await _context.Usuarios
-                                    .AnyAsync(u => u.Identificacion == cedula);
-
-                                Console.WriteLine($"DEBUG: Estudiante {nombre} {apellidos} (ID: {cedula}) - Usuario existe: {existeUsuario}");
-
-                                if (!existeUsuario)
+                                // Crear usuario si no existe
+                                if (!usuariosExistentesDb.Contains(estudianteDto.Identificacion))
                                 {
-                                    try
+                                    string nombreUsuario = GenerarNombreUsuarioUnico(estudianteDto.Nombre, estudianteDto.Apellidos, nombresUsuarioExistentes);
+                                    
+                                    var usuario = new ServicioComunal.Models.Usuario
                                     {
-                                        // Crear usuario automáticamente
-                                        string nombreUsuario = GenerarNombreUsuario(nombre, apellidos);
-                                        Console.WriteLine($"DEBUG: Generando usuario para {nombre} {apellidos} - Username: {nombreUsuario}");
-                                        
-                                        var usuario = new ServicioComunal.Models.Usuario
-                                        {
-                                            Identificacion = cedula,
-                                            NombreUsuario = nombreUsuario,
-                                            Contraseña = PasswordHelper.HashPassword(cedula.ToString()),
-                                            Rol = "Estudiante",
-                                            RequiereCambioContraseña = true,
-                                            FechaCreacion = DateTime.Now,
-                                            Activo = true
-                                        };
+                                        Identificacion = estudianteDto.Identificacion,
+                                        NombreUsuario = nombreUsuario,
+                                        Contraseña = PasswordHelper.HashPassword(estudianteDto.Identificacion.ToString()),
+                                        Rol = "Estudiante",
+                                        RequiereCambioContraseña = true,
+                                        FechaCreacion = DateTime.Now,
+                                        Activo = true
+                                    };
 
-                                        _context.Usuarios.Add(usuario);
-                                        usuariosCreados++;
-                                        Console.WriteLine($"DEBUG: Usuario agregado al contexto. Total usuarios a crear: {usuariosCreados}");
-                                    }
-                                    catch (Exception userEx)
-                                    {
-                                        Console.WriteLine($"ERROR creando usuario para {nombre} {apellidos}: {userEx.Message}");
-                                        errores.Add($"Error creando usuario para {nombre} {apellidos}: {userEx.Message}");
-                                    }
-                                }
-                                else
-                                {
-                                    Console.WriteLine($"DEBUG: Usuario ya existe para {nombre} {apellidos} (ID: {cedula})");
+                                    _context.Usuarios.Add(usuario);
+                                    usuariosCreados++;
+                                    nombresUsuarioExistentes.Add(nombreUsuario.ToLower());
                                 }
                             }
                             catch (Exception ex)
                             {
-                                errores.Add($"Fila {row}: {ex.Message}");
+                                errores.Add($"Error procesando estudiante {estudianteDto.Nombre} {estudianteDto.Apellidos}: {ex.Message}");
                             }
                         }
 
+                        if (estudiantesImportados == 0)
+                        {
+                            return Json(new { success = false, message = "No se importó ningún estudiante nuevo." });
+                        }
+
                         await _context.SaveChangesAsync();
-                    }
-                }
+                        await transaction.CommitAsync();
+                        
+                        var mensaje = $"Importación completada: {estudiantesImportados} estudiantes y {usuariosCreados} usuarios creados.";
+                        if (estudiantesExistentes > 0)
+                        {
+                            mensaje += $" {estudiantesExistentes} estudiantes ya existían.";
+                        }
 
-                Console.WriteLine("DEBUG: Commit de transacción");
-                await transaction.CommitAsync();
-                
-                var mensaje = new StringBuilder();
-                mensaje.AppendLine($"Importación completada:");
-                mensaje.AppendLine($"- Estudiantes importados: {estudiantesImportados}");
-                mensaje.AppendLine($"- Usuarios creados: {usuariosCreados}");
-                if (estudiantesExistentes > 0)
-                    mensaje.AppendLine($"- Estudiantes ya existentes: {estudiantesExistentes}");
-                
-                // DEBUG: Verificar usuarios después del guardado
-                var totalUsuarios = await _context.Usuarios.CountAsync();
-                var usuariosEstudiantes = await _context.Usuarios.CountAsync(u => u.Rol == "Estudiante");
-                mensaje.AppendLine($"DEBUG - Total usuarios en DB: {totalUsuarios}");
-                mensaje.AppendLine($"DEBUG - Usuarios estudiantes en DB: {usuariosEstudiantes}");
-                
-                if (errores.Any())
-                {
-                    mensaje.AppendLine($"- Errores: {errores.Count}");
-                    mensaje.AppendLine("Detalles de errores:");
-                    foreach (var error in errores.Take(5)) // Mostrar máximo 5 errores
-                    {
-                        mensaje.AppendLine($"  • {error}");
-                    }
-                    if (errores.Count > 5)
-                        mensaje.AppendLine($"  • ... y {errores.Count - 5} errores más");
-                }
-
-                TempData["Success"] = mensaje.ToString();
-                return RedirectToAction("Estudiantes");
+                        return Json(new { 
+                            success = true, 
+                            message = mensaje,
+                            estudiantesImportados,
+                            usuariosCreados,
+                            estudiantesExistentes,
+                            errores = errores.Count > 0 ? errores : null,
+                            advertencias = advertencias.Count > 0 ? advertencias : null
+                        });
                     }
                     catch (Exception transactionEx)
                     {
-                        Console.WriteLine($"ERROR en transacción: {transactionEx.Message}");
                         await transaction.RollbackAsync();
-                        throw;
+                        Console.WriteLine($"Error en transacción de importación: {transactionEx.Message}");
+                        return Json(new { success = false, message = $"Error en la transacción: {transactionEx.Message}" });
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ERROR general: {ex.Message}");
-                TempData["Error"] = $"Error al importar archivo: {ex.Message}";
-                return RedirectToAction("Estudiantes");
+                Console.WriteLine($"Error general en importación: {ex.Message}");
+                return Json(new { success = false, message = $"Error al importar archivo: {ex.Message}" });
             }
+        }
+
+        private List<EstudianteImportDto> ProcesarArchivoExcel(IFormFile archivo)
+        {
+            var estudiantes = new List<EstudianteImportDto>();
+            
+            using (var stream = archivo.OpenReadStream())
+            {
+                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+                using (var package = new ExcelPackage(stream))
+                {
+                    var worksheet = package.Workbook.Worksheets[0];
+                    var rowCount = worksheet.Dimension?.Rows ?? 0;
+
+                    if (rowCount < 2)
+                    {
+                        throw new InvalidOperationException("El archivo debe contener al menos una fila de datos además del encabezado.");
+                    }
+
+                    for (int row = 2; row <= rowCount; row++)
+                    {
+                        var apellidos = worksheet.Cells[row, 1].Value?.ToString()?.Trim();
+                        var nombre = worksheet.Cells[row, 2].Value?.ToString()?.Trim();
+                        var clase = worksheet.Cells[row, 3].Value?.ToString()?.Trim();
+                        var cedulaTexto = worksheet.Cells[row, 4].Value?.ToString()?.Trim();
+
+                        if (!string.IsNullOrWhiteSpace(apellidos) && 
+                            !string.IsNullOrWhiteSpace(nombre) && 
+                            !string.IsNullOrWhiteSpace(clase) &&
+                            !string.IsNullOrWhiteSpace(cedulaTexto) &&
+                            int.TryParse(cedulaTexto, out int cedula))
+                        {
+                            estudiantes.Add(new EstudianteImportDto
+                            {
+                                Identificacion = cedula,
+                                Nombre = nombre,
+                                Apellidos = apellidos,
+                                Clase = clase,
+                                FilaOrigen = row
+                            });
+                        }
+                    }
+                }
+            }
+            
+            return estudiantes;
+        }
+
+        private async Task<List<EstudianteImportDto>> ProcesarArchivoCSV(IFormFile archivo)
+        {
+            var estudiantes = new List<EstudianteImportDto>();
+            
+            using (var reader = new StreamReader(archivo.OpenReadStream()))
+            {
+                var line = await reader.ReadLineAsync(); // Saltar encabezado
+                int fila = 2;
+                
+                while ((line = await reader.ReadLineAsync()) != null)
+                {
+                    var campos = line.Split(',');
+                    
+                    if (campos.Length >= 4 &&
+                        !string.IsNullOrWhiteSpace(campos[0]) &&
+                        !string.IsNullOrWhiteSpace(campos[1]) &&
+                        !string.IsNullOrWhiteSpace(campos[2]) &&
+                        !string.IsNullOrWhiteSpace(campos[3]) &&
+                        int.TryParse(campos[3].Trim(), out int cedula))
+                    {
+                        estudiantes.Add(new EstudianteImportDto
+                        {
+                            Identificacion = cedula,
+                            Nombre = campos[1].Trim(),
+                            Apellidos = campos[0].Trim(),
+                            Clase = campos[2].Trim(),
+                            FilaOrigen = fila
+                        });
+                    }
+                    fila++;
+                }
+            }
+            
+            return estudiantes;
+        }
+
+        private (bool EsValido, string Mensaje, List<string> Errores) ValidarDatosImportacion(List<EstudianteImportDto> estudiantes)
+        {
+            var errores = new List<string>();
+            
+            if (!estudiantes.Any())
+            {
+                return (false, "No se encontraron datos válidos para importar.", errores);
+            }
+
+            // Verificar duplicados en el archivo
+            var duplicados = estudiantes.GroupBy(e => e.Identificacion)
+                .Where(g => g.Count() > 1)
+                .Select(g => g.Key)
+                .ToList();
+
+            if (duplicados.Any())
+            {
+                errores.Add($"Identificaciones duplicadas en el archivo: {string.Join(", ", duplicados)}");
+            }
+
+            // Validar longitud de campos
+            foreach (var estudiante in estudiantes)
+            {
+                if (estudiante.Nombre.Length > 50)
+                    errores.Add($"Fila {estudiante.FilaOrigen}: Nombre demasiado largo (máximo 50 caracteres)");
+                
+                if (estudiante.Apellidos.Length > 50)
+                    errores.Add($"Fila {estudiante.FilaOrigen}: Apellidos demasiado largos (máximo 50 caracteres)");
+                
+                if (estudiante.Clase.Length > 20)
+                    errores.Add($"Fila {estudiante.FilaOrigen}: Clase demasiado larga (máximo 20 caracteres)");
+                
+                if (estudiante.Identificacion <= 0)
+                    errores.Add($"Fila {estudiante.FilaOrigen}: Identificación debe ser un número positivo");
+            }
+
+            return (errores.Count == 0, errores.Count > 0 ? $"Se encontraron {errores.Count} errores de validación." : "Validación exitosa", errores);
+        }
+
+        private string GenerarNombreUsuarioUnico(string nombre, string apellidos, List<string> nombresExistentes)
+        {
+            // Generar nombre base
+            var nombreBase = GenerarNombreUsuario(nombre, apellidos).ToLower();
+            
+            if (!nombresExistentes.Contains(nombreBase))
+            {
+                return nombreBase;
+            }
+
+            // Si existe, agregar número
+            int contador = 1;
+            string nombreConNumero;
+            do
+            {
+                nombreConNumero = $"{nombreBase}{contador}";
+                contador++;
+            }
+            while (nombresExistentes.Contains(nombreConNumero));
+
+            return nombreConNumero;
+        }
+
+        public class EstudianteImportDto
+        {
+            public int Identificacion { get; set; }
+            public required string Nombre { get; set; }
+            public required string Apellidos { get; set; }
+            public required string Clase { get; set; }
+            public int FilaOrigen { get; set; }
         }
 
         [HttpGet]
@@ -2238,48 +2354,60 @@ namespace ServicioComunal.Controllers
                     return Json(new { success = false, message = "Nombre y descripción son requeridos" });
                 }
 
-                // Verificar que el formulario existe si se especificó uno
-                if (entregaDto.FormularioIdentificacion.HasValue)
-                {
-                    var formularioExiste = await _context.Formularios
-                        .AnyAsync(f => f.Identificacion == entregaDto.FormularioIdentificacion);
-                    
-                    if (!formularioExiste)
-                    {
-                        return Json(new { success = false, message = "El formulario seleccionado no existe" });
-                    }
-                }
-
                 // Verificar que el tipo de anexo es válido si se especificó uno
                 if (entregaDto.TipoAnexo.HasValue)
                 {
-                    if (!new[] { 1, 2, 3, 5 }.Contains(entregaDto.TipoAnexo.Value))
+                    if (!new[] { 1, 2, 3, 5, 6, 7, 8 }.Contains(entregaDto.TipoAnexo.Value))
                     {
                         return Json(new { success = false, message = "El tipo de anexo seleccionado no es válido" });
                     }
                 }
 
-                // Verificar que no se especifiquen ambos (formulario y anexo)
-                if (entregaDto.FormularioIdentificacion.HasValue && entregaDto.TipoAnexo.HasValue)
+                // Determinar para qué grupos se creará la entrega
+                List<Grupo> gruposDestino;
+                
+                if (entregaDto.EnviarATodosLosGrupos)
                 {
-                    return Json(new { success = false, message = "No se puede especificar tanto un formulario como un anexo para la misma entrega" });
+                    // Obtener todos los grupos existentes
+                    gruposDestino = await _context.Grupos
+                        .Include(g => g.GruposProfesores)
+                        .ThenInclude(gp => gp.Profesor)
+                        .ToListAsync();
+                }
+                else
+                {
+                    // Validar que se especificó un grupo
+                    if (!entregaDto.GrupoEspecifico.HasValue)
+                    {
+                        return Json(new { success = false, message = "Debe especificar un grupo cuando no se envía a todos los grupos" });
+                    }
+                    
+                    // Obtener solo el grupo específico
+                    var grupoEspecifico = await _context.Grupos
+                        .Include(g => g.GruposProfesores)
+                        .ThenInclude(gp => gp.Profesor)
+                        .FirstOrDefaultAsync(g => g.Numero == entregaDto.GrupoEspecifico.Value);
+                    
+                    if (grupoEspecifico == null)
+                    {
+                        return Json(new { success = false, message = "El grupo especificado no existe" });
+                    }
+                    
+                    gruposDestino = new List<Grupo> { grupoEspecifico };
                 }
 
-                // Obtener todos los grupos existentes
-                var grupos = await _context.Grupos
-                    .Include(g => g.GruposProfesores)
-                    .ThenInclude(gp => gp.Profesor)
-                    .ToListAsync();
-
-                if (!grupos.Any())
+                if (!gruposDestino.Any())
                 {
-                    return Json(new { success = false, message = "No hay grupos disponibles para crear entregas" });
+                    string mensajeError = entregaDto.EnviarATodosLosGrupos 
+                        ? "No hay grupos disponibles para crear entregas" 
+                        : "El grupo especificado no existe";
+                    return Json(new { success = false, message = mensajeError });
                 }
 
-                // Crear una entrega por cada grupo
+                // Crear una entrega por cada grupo destino
                 var entregas = new List<Entrega>();
                 
-                foreach (var grupo in grupos)
+                foreach (var grupo in gruposDestino)
                 {
                     var entrega = new Entrega
                     {
@@ -2288,7 +2416,7 @@ namespace ServicioComunal.Controllers
                         FechaLimite = entregaDto.FechaLimite,
                         GrupoNumero = grupo.Numero,
                         ProfesorIdentificacion = null, // Sin profesor asignado
-                        FormularioIdentificacion = entregaDto.FormularioIdentificacion,
+                        FormularioIdentificacion = null, // Ya no se usan formularios
                         TipoAnexo = entregaDto.TipoAnexo ?? 0, // Asignar el tipo de anexo si se especificó
                         ArchivoRuta = "", // Se llenará cuando se adjunte archivo
                         Retroalimentacion = "", // Se llenará por el tutor
@@ -2301,15 +2429,10 @@ namespace ServicioComunal.Controllers
                 _context.Entregas.AddRange(entregas);
                 await _context.SaveChangesAsync();
 
-                string mensaje = $"Entrega creada exitosamente para {entregas.Count} grupos";
+                string tipoDestinatario = entregaDto.EnviarATodosLosGrupos ? "todos los grupos" : $"el grupo {entregaDto.GrupoEspecifico}";
+                string mensaje = $"Entrega creada exitosamente para {tipoDestinatario} ({entregas.Count} tarea{(entregas.Count > 1 ? "s" : "")} generada{(entregas.Count > 1 ? "s" : "")})";
                 
-                if (entregaDto.FormularioIdentificacion.HasValue)
-                {
-                    var formulario = await _context.Formularios
-                        .FirstOrDefaultAsync(f => f.Identificacion == entregaDto.FormularioIdentificacion);
-                    mensaje += $" con formulario asociado: {formulario?.Nombre}";
-                }
-                else if (entregaDto.TipoAnexo.HasValue)
+                if (entregaDto.TipoAnexo.HasValue)
                 {
                     string nombreAnexo = entregaDto.TipoAnexo.Value switch
                     {
@@ -2317,6 +2440,9 @@ namespace ServicioComunal.Controllers
                         2 => "Anexo #2 - Propuesta de Proyecto", 
                         3 => "Anexo #3 - Plan de Trabajo",
                         5 => "Anexo #5 - Evaluación Final",
+                        6 => "Anexo #6 - Informe Final Tutor",
+                        7 => "Anexo #7 - Carta para Ingresar a la Institución",
+                        8 => "Anexo #8 - Carta de Consentimiento Encargado Legal",
                         _ => $"Anexo #{entregaDto.TipoAnexo.Value}"
                     };
                     mensaje += $" con anexo asociado: {nombreAnexo}";
