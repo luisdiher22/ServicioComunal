@@ -18,14 +18,16 @@ namespace ServicioComunal.Controllers
         private readonly ServicioComunalDbContext _context;
         private readonly UsuarioService _usuarioService;
         private readonly IPdfFillerService _pdfFillerService;
+        private readonly NotificacionService _notificacionService;
         private readonly ILogger<EstudianteController> _logger;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public EstudianteController(ServicioComunalDbContext context, UsuarioService usuarioService, IPdfFillerService pdfFillerService, ILogger<EstudianteController> logger, IWebHostEnvironment webHostEnvironment)
+        public EstudianteController(ServicioComunalDbContext context, UsuarioService usuarioService, IPdfFillerService pdfFillerService, NotificacionService notificacionService, ILogger<EstudianteController> logger, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
             _usuarioService = usuarioService;
             _pdfFillerService = pdfFillerService;
+            _notificacionService = notificacionService;
             _logger = logger;
             _webHostEnvironment = webHostEnvironment;
         }
@@ -293,6 +295,13 @@ namespace ServicioComunal.Controllers
                 _context.Solicitudes.Add(solicitud);
                 await _context.SaveChangesAsync();
 
+                // Notificar al líder del grupo sobre la nueva solicitud
+                await _notificacionService.NotificarNuevaSolicitudGrupoAsync(
+                    grupo.LiderIdentificacion.Value,
+                    estudiante.Identificacion,
+                    grupoNumero
+                );
+
                 return Json(new { success = true, message = "Solicitud enviada exitosamente" });
             }
             catch (Exception ex)
@@ -424,6 +433,12 @@ namespace ServicioComunal.Controllers
                     };
 
                     _context.GruposEstudiantes.Add(nuevoMiembro);
+
+                    // Notificar al estudiante que su solicitud fue aceptada
+                    await _notificacionService.NotificarSolicitudAceptadaAsync(
+                        solicitud.EstudianteRemitenteId,
+                        solicitud.GrupoNumero!.Value
+                    );
 
                     // Rechazar automáticamente todas las demás solicitudes pendientes del mismo estudiante
                     var otrasSolicitudes = await _context.Solicitudes
@@ -927,6 +942,20 @@ namespace ServicioComunal.Controllers
 
                 await _context.SaveChangesAsync();
 
+                // Obtener el tutor asignado al grupo y notificarle sobre el entregable recibido
+                var grupoProfesor = await _context.GruposProfesores
+                    .FirstOrDefaultAsync(gp => gp.GrupoNumero == grupoEstudiante.GrupoNumero);
+
+                if (grupoProfesor != null)
+                {
+                    await _notificacionService.NotificarEntregableRecibidoAsync(
+                        grupoProfesor.ProfesorIdentificacion,
+                        entrega.Identificacion,
+                        entrega.Nombre,
+                        grupoEstudiante.GrupoNumero
+                    );
+                }
+
                 return Json(new { success = true, message = "Entrega subida exitosamente" });
             }
             catch (Exception ex)
@@ -1180,6 +1209,22 @@ namespace ServicioComunal.Controllers
                 entrega.Retroalimentacion = "Pendiente de revisión";
 
                 await _context.SaveChangesAsync();
+
+                // Notificar al tutor que se ha recibido un entregable
+                var tutoresDelGrupo = await _context.GruposProfesores
+                    .Where(gp => gp.GrupoNumero == grupoEstudiante.GrupoNumero)
+                    .Select(gp => gp.ProfesorIdentificacion)
+                    .ToListAsync();
+
+                foreach (var tutorId in tutoresDelGrupo)
+                {
+                    await _notificacionService.NotificarEntregableRecibidoAsync(
+                        tutorId, 
+                        entrega.Identificacion, 
+                        entrega.Nombre, 
+                        grupoEstudiante.GrupoNumero
+                    );
+                }
 
                 return Json(new { 
                     success = true, 

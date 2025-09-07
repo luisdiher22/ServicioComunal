@@ -54,10 +54,8 @@ function initCardAnimations() {
 }
 
 function initNotifications() {
-    // Simular notificaciones en tiempo real (demo)
-    setTimeout(() => {
-        showNotification('Nueva entrega recibida de Grupo 2', 'info');
-    }, 5000);
+    // Sistema de notificaciones integrado con el backend
+    // Las notificaciones ahora se manejan a través del sistema principal
 }
 
 // Función para mostrar tooltips personalizados

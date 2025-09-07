@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using ServicioComunal.Data;
 using ServicioComunal.Models;
 using ServicioComunal.Attributes;
+using ServicioComunal.Services;
 using System.Text.Json.Serialization;
 
 namespace ServicioComunal.Controllers
@@ -11,10 +12,12 @@ namespace ServicioComunal.Controllers
     public class TutorController : Controller
     {
         private readonly ServicioComunalDbContext _context;
+        private readonly NotificacionService _notificacionService;
 
-        public TutorController(ServicioComunalDbContext context)
+        public TutorController(ServicioComunalDbContext context, NotificacionService notificacionService)
         {
             _context = context;
+            _notificacionService = notificacionService;
         }
 
         // Método para verificar si el usuario actual es un tutor
@@ -195,7 +198,12 @@ namespace ServicioComunal.Controllers
             {
                 Console.WriteLine($"AprobarEntrega llamado con EntregaId: {request.EntregaId}");
                 
-                var entrega = await _context.Entregas.FindAsync(request.EntregaId);
+                var entrega = await _context.Entregas
+                    .Include(e => e.Grupo)
+                    .ThenInclude(g => g.GruposEstudiantes)
+                    .ThenInclude(ge => ge.Estudiante)
+                    .FirstOrDefaultAsync(e => e.Identificacion == request.EntregaId);
+                
                 if (entrega != null)
                 {
                     Console.WriteLine($"Entrega encontrada: {entrega.Identificacion} - {entrega.Nombre}");
@@ -203,6 +211,28 @@ namespace ServicioComunal.Controllers
                     entrega.Retroalimentacion = $"APROBADO: {request.Comentarios ?? "Sin comentarios adicionales"}";
                     entrega.FechaRetroalimentacion = DateTime.Now;
                     await _context.SaveChangesAsync();
+
+                    // Notificar a todos los estudiantes del grupo sobre la retroalimentación
+                    var tutorId = HttpContext.Session.GetInt32("UsuarioId");
+                    if (tutorId != null && entrega.Grupo?.GruposEstudiantes != null)
+                    {
+                        foreach (var grupoEstudiante in entrega.Grupo.GruposEstudiantes)
+                        {
+                            await _notificacionService.NotificarRetroalimentacionAsync(
+                                grupoEstudiante.EstudianteIdentificacion,
+                                entrega.Identificacion,
+                                entrega.Nombre,
+                                tutorId.Value
+                            );
+
+                            await _notificacionService.NotificarEntregaRevisadaAsync(
+                                grupoEstudiante.EstudianteIdentificacion,
+                                entrega.Identificacion,
+                                entrega.Nombre,
+                                "aprobada"
+                            );
+                        }
+                    }
                     
                     return Json(new { success = true, message = "Entrega aprobada correctamente" });
                 }
@@ -230,7 +260,12 @@ namespace ServicioComunal.Controllers
             {
                 Console.WriteLine($"SolicitarCambios llamado con EntregaId: {request.EntregaId}");
                 
-                var entrega = await _context.Entregas.FindAsync(request.EntregaId);
+                var entrega = await _context.Entregas
+                    .Include(e => e.Grupo)
+                    .ThenInclude(g => g.GruposEstudiantes)
+                    .ThenInclude(ge => ge.Estudiante)
+                    .FirstOrDefaultAsync(e => e.Identificacion == request.EntregaId);
+                
                 if (entrega != null)
                 {
                     Console.WriteLine($"Entrega encontrada: {entrega.Identificacion} - {entrega.Nombre}");
@@ -238,6 +273,28 @@ namespace ServicioComunal.Controllers
                     entrega.Retroalimentacion = $"CAMBIOS SOLICITADOS: {request.Comentarios}";
                     entrega.FechaRetroalimentacion = DateTime.Now;
                     await _context.SaveChangesAsync();
+
+                    // Notificar a todos los estudiantes del grupo sobre la retroalimentación
+                    var tutorId = HttpContext.Session.GetInt32("UsuarioId");
+                    if (tutorId != null && entrega.Grupo?.GruposEstudiantes != null)
+                    {
+                        foreach (var grupoEstudiante in entrega.Grupo.GruposEstudiantes)
+                        {
+                            await _notificacionService.NotificarRetroalimentacionAsync(
+                                grupoEstudiante.EstudianteIdentificacion,
+                                entrega.Identificacion,
+                                entrega.Nombre,
+                                tutorId.Value
+                            );
+
+                            await _notificacionService.NotificarEntregaRevisadaAsync(
+                                grupoEstudiante.EstudianteIdentificacion,
+                                entrega.Identificacion,
+                                entrega.Nombre,
+                                "requiere cambios"
+                            );
+                        }
+                    }
                     
                     return Json(new { success = true, message = "Cambios solicitados correctamente" });
                 }

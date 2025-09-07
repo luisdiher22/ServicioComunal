@@ -28,11 +28,13 @@ namespace ServicioComunal.Controllers
     {
         private readonly DataSeederService _seeder;
         private readonly ServicioComunalDbContext _context;
+        private readonly NotificacionService _notificacionService;
 
-        public HomeController(DataSeederService seeder, ServicioComunalDbContext context)
+        public HomeController(DataSeederService seeder, ServicioComunalDbContext context, NotificacionService notificacionService)
         {
             _seeder = seeder;
             _context = context;
+            _notificacionService = notificacionService;
         }
 
         public IActionResult Dashboard()
@@ -1724,6 +1726,9 @@ namespace ServicioComunal.Controllers
 
                 await _context.SaveChangesAsync();
 
+                // Notificar al tutor sobre la asignación del grupo
+                await _notificacionService.NotificarGrupoAsignadoAsync(tutorId, grupoNumero);
+
                 return Json(new { success = true, message = "Tutor asignado exitosamente" });
             }
             catch (Exception)
@@ -1774,6 +1779,9 @@ namespace ServicioComunal.Controllers
 
                 _context.GruposProfesores.Add(nuevaAsignacion);
                 await _context.SaveChangesAsync();
+
+                // Notificar al tutor sobre la asignación del grupo
+                await _notificacionService.NotificarGrupoAsignadoAsync(request.TutorId, request.GrupoNumero);
 
                 return Json(new { success = true, message = "Grupo asignado al tutor exitosamente" });
             }
@@ -2428,6 +2436,16 @@ namespace ServicioComunal.Controllers
 
                 _context.Entregas.AddRange(entregas);
                 await _context.SaveChangesAsync();
+
+                // Notificar a estudiantes sobre nueva entrega
+                foreach (var entrega in entregas)
+                {
+                    await _notificacionService.NotificarNuevaEntregaAsync(
+                        entrega.GrupoNumero, 
+                        entrega.Identificacion, 
+                        entrega.Nombre
+                    );
+                }
 
                 string tipoDestinatario = entregaDto.EnviarATodosLosGrupos ? "todos los grupos" : $"el grupo {entregaDto.GrupoEspecifico}";
                 string mensaje = $"Entrega creada exitosamente para {tipoDestinatario} ({entregas.Count} tarea{(entregas.Count > 1 ? "s" : "")} generada{(entregas.Count > 1 ? "s" : "")})";

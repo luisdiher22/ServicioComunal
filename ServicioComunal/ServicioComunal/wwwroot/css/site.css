@@ -3845,3 +3845,211 @@ h1, h2, h3, h4, h5, h6, .card, .modal, .table, .form-control,
 .modal-header .btn-close:hover {
     opacity: 1;
 }
+
+/* ===== ESTILOS PARA NOTIFICACIONES ===== */
+
+/* Badge de notificaciones */
+.notification-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #dc3545;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    min-width: 18px;
+    text-align: center;
+    line-height: 1.2;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+}
+
+/* Campana de notificaciones */
+.header-notifications {
+    position: relative;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.header-notifications:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.1);
+}
+
+.header-notifications i {
+    font-size: 1.2rem;
+    color: #fff;
+}
+
+/* Modal de notificaciones */
+#notificacionesModal .modal-content {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+#notificacionesModal .modal-header {
+    background: linear-gradient(135deg, #6c8d47 0%, #5a7638 100%);
+    color: white;
+    border-radius: 16px 16px 0 0;
+    padding: 1.25rem 1.5rem;
+    border-bottom: none;
+}
+
+#notificacionesModal .modal-header .btn-close {
+    filter: brightness(0) invert(1);
+    font-size: 1.1rem;
+}
+
+#notificacionesModal .modal-body {
+    padding: 1.5rem;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+/* Items de notificación */
+.notification-item {
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+}
+
+.notification-item:hover {
+    background: rgba(108, 141, 71, 0.05);
+    transform: translateX(4px);
+}
+
+.notification-unread {
+    background: linear-gradient(135deg, rgba(108, 141, 71, 0.08) 0%, rgba(90, 122, 58, 0.06) 100%);
+    border-left: 4px solid #6c8d47;
+    font-weight: 500;
+}
+
+.notification-read {
+    background: rgba(248, 249, 250, 0.5);
+    border-left: 4px solid #dee2e6;
+    opacity: 0.8;
+}
+
+.notification-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(108, 141, 71, 0.1);
+    flex-shrink: 0;
+}
+
+.notification-icon i {
+    font-size: 1.1rem;
+}
+
+.notification-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.notification-actions .btn {
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+}
+
+/* Estados especiales para tipos de notificación */
+.notification-item[data-tipo="NUEVA_ENTREGA"] .notification-icon {
+    background: rgba(13, 110, 253, 0.1);
+}
+
+.notification-item[data-tipo="RETROALIMENTACION_ENTREGA"] .notification-icon {
+    background: rgba(13, 202, 240, 0.1);
+}
+
+.notification-item[data-tipo="ENTREGA_REVISADA"] .notification-icon {
+    background: rgba(25, 135, 84, 0.1);
+}
+
+.notification-item[data-tipo="SOLICITUD_ACEPTADA"] .notification-icon {
+    background: rgba(25, 135, 84, 0.1);
+}
+
+.notification-item[data-tipo="NUEVA_SOLICITUD_GRUPO"] .notification-icon {
+    background: rgba(255, 193, 7, 0.1);
+}
+
+.notification-item[data-tipo="RECORDATORIO_ENTREGA"] .notification-icon {
+    background: rgba(255, 193, 7, 0.1);
+}
+
+.notification-item[data-tipo="GRUPO_ASIGNADO"] .notification-icon {
+    background: rgba(13, 202, 240, 0.1);
+}
+
+.notification-item[data-tipo="ENTREGABLE_RECIBIDO"] .notification-icon {
+    background: rgba(13, 110, 253, 0.1);
+}
+
+/* Scrollbar personalizado para el modal */
+#notificacionesModal .modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+#notificacionesModal .modal-body::-webkit-scrollbar-track {
+    background: rgba(108, 141, 71, 0.1);
+    border-radius: 3px;
+}
+
+#notificacionesModal .modal-body::-webkit-scrollbar-thumb {
+    background: rgba(108, 141, 71, 0.4);
+    border-radius: 3px;
+}
+
+#notificacionesModal .modal-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(108, 141, 71, 0.6);
+}
+
+/* Animaciones */
+@keyframes notificationPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.notification-badge {
+    animation: notificationPulse 2s infinite;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    #notificacionesModal .modal-dialog {
+        margin: 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+    
+    #notificacionesModal .modal-body {
+        padding: 1rem;
+        max-height: 400px;
+    }
+    
+    .notification-item {
+        padding: 0.75rem !important;
+    }
+    
+    .notification-icon {
+        width: 35px;
+        height: 35px;
+    }
+}

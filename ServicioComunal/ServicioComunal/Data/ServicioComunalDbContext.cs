@@ -106,14 +106,26 @@ namespace ServicioComunal.Data
             // Configuración de relaciones para Notificacion
             modelBuilder.Entity<Notificacion>()
                 .HasOne(n => n.Grupo)
-                .WithMany(g => g.Notificaciones)
-                .HasForeignKey(n => n.GrupoNumero)
+                .WithMany()
+                .HasForeignKey(n => n.GrupoId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Notificacion>()
-                .HasOne(n => n.Profesor)
-                .WithMany(p => p.Notificaciones)
-                .HasForeignKey(n => n.ProfesorIdentificacion)
+                .HasOne(n => n.Entrega)
+                .WithMany()
+                .HasForeignKey(n => n.EntregaId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Notificacion>()
+                .HasOne(n => n.UsuarioDestinoNavigation)
+                .WithMany()
+                .HasForeignKey(n => n.UsuarioDestino)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Notificacion>()
+                .HasOne(n => n.UsuarioOrigenNavigation)
+                .WithMany()
+                .HasForeignKey(n => n.UsuarioOrigen)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Configuración de relaciones para Solicitud

@@ -20,17 +20,47 @@ namespace ServicioComunal.Models
         [Column("Leido")]
         public bool Leido { get; set; }
 
-        [Column("GRUPO_Numero")]
-        public int GrupoNumero { get; set; }
+        [Required]
+        [Column("UsuarioDestino")]
+        public int UsuarioDestino { get; set; }
 
-        [Column("PROFESOR_Identificacion")]
-        public int ProfesorIdentificacion { get; set; }
+        [Required]
+        [Column("TipoNotificacion")]
+        public string TipoNotificacion { get; set; } = string.Empty;
 
-        // Propiedades de navegación
-        [ForeignKey("GrupoNumero")]
-        public virtual Grupo Grupo { get; set; } = null!;
+        [Column("EntregaId")]
+        public int? EntregaId { get; set; }
 
-        [ForeignKey("ProfesorIdentificacion")]
-        public virtual Profesor Profesor { get; set; } = null!;
+        [Column("GrupoId")]
+        public int? GrupoId { get; set; }
+
+        [Column("UsuarioOrigen")]
+        public int? UsuarioOrigen { get; set; }
+
+        // Propiedades de navegación opcionales
+        [ForeignKey("EntregaId")]
+        public virtual Entrega? Entrega { get; set; }
+
+        [ForeignKey("GrupoId")]
+        public virtual Grupo? Grupo { get; set; }
+
+        [ForeignKey("UsuarioDestino")]
+        public virtual Usuario UsuarioDestinoNavigation { get; set; } = null!;
+
+        [ForeignKey("UsuarioOrigen")]
+        public virtual Usuario? UsuarioOrigenNavigation { get; set; }
+    }
+
+    // Enum para tipos de notificaciones
+    public static class TipoNotificacion
+    {
+        public const string NuevaEntrega = "NUEVA_ENTREGA";
+        public const string RetroalimentacionEntrega = "RETROALIMENTACION_ENTREGA";
+        public const string EntregaRevisada = "ENTREGA_REVISADA";
+        public const string SolicitudAceptada = "SOLICITUD_ACEPTADA";
+        public const string NuevaSolicitudGrupo = "NUEVA_SOLICITUD_GRUPO";
+        public const string RecordatorioEntrega = "RECORDATORIO_ENTREGA";
+        public const string GrupoAsignado = "GRUPO_ASIGNADO";
+        public const string EntregableRecibido = "ENTREGABLE_RECIBIDO";
     }
 }

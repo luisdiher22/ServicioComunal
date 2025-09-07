@@ -40,9 +40,9 @@
                         <i class="fas fa-user-circle"></i>
                         <span>@(Context.Session.GetString("UsuarioRol") ?? "Administrador")</span>
                     </div>
-                    <div class="header-notifications">
+                    <div class="header-notifications" onclick="toggleNotifications()">
                         <i class="fas fa-bell"></i>
-                        <span class="notification-badge">@(ViewData["NotificationCount"] ?? "1")</span>
+                        <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
                     </div>
                 </div>
             </div>
@@ -167,6 +167,227 @@
                 if (modalInstance) {
                     modalInstance.hide();
                 }
+        });
+    }
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Modal de Notificaciones -->
+    <div class="modal fade" id="notificacionesModal" tabindex="-1" aria-labelledby="notificacionesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="notificacionesModalLabel">
+                        <i class="fas fa-bell"></i> Notificaciones
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span id="totalNotificaciones">0 notificaciones</span>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="marcarTodasComoLeidas()">
+                            <i class="fas fa-check"></i> Marcar todas como leídas
+                        </button>
+                    </div>
+                    <div id="listaNotificaciones">
+                        <div class="text-center p-4">
+                            <i class="fas fa-spinner fa-spin fa-2x"></i>
+                            <p class="mt-2">Cargando notificaciones...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales para notificaciones
+        let notificacionesModal;
+        let conteoActual = 0;
+
+        // Inicializar cuando se carga la página
+        document.addEventListener('DOMContentLoaded', function() {
+            notificacionesModal = new bootstrap.Modal(document.getElementById('notificacionesModal'));
+            actualizarConteoNotificaciones();
+            
+            // Actualizar cada 30 segundos
+            setInterval(actualizarConteoNotificaciones, 30000);
+        });
+
+        // Función para toggle del modal de notificaciones
+        function toggleNotifications() {
+            cargarNotificaciones();
+            notificacionesModal.show();
+        }
+
+        // Actualizar conteo de notificaciones
+        async function actualizarConteoNotificaciones() {
+            try {
+                const response = await fetch('/Notificacion/ObtenerConteoNoLeidas');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const badge = document.getElementById('notificationBadge');
+                    conteoActual = result.cantidad;
+                    
+                    if (conteoActual > 0) {
+                        badge.textContent = conteoActual;
+                        badge.style.display = 'inline-block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error('Error actualizando conteo de notificaciones:', error);
+            }
+        }
+
+        // Cargar notificaciones en el modal
+        async function cargarNotificaciones() {
+            try {
+                const listaDiv = document.getElementById('listaNotificaciones');
+                listaDiv.innerHTML = `
+                    <div class="text-center p-4">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p class="mt-2">Cargando notificaciones...</p>
+                    </div>
+                `;
+
+                const response = await fetch('/Notificacion/ObtenerTodasLasNotificaciones');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const notificaciones = result.notificaciones;
+                    document.getElementById('totalNotificaciones').textContent = 
+                        `${notificaciones.length} notificación${notificaciones.length !== 1 ? 'es' : ''}`;
+                    
+                    if (notificaciones.length === 0) {
+                        listaDiv.innerHTML = `
+                            <div class="text-center p-4 text-muted">
+                                <i class="fas fa-bell-slash fa-3x mb-3"></i>
+                                <p>No tienes notificaciones</p>
+                            </div>
+                        `;
+                    } else {
+                        let html = '';
+                        notificaciones.forEach(notif => {
+                            const iconoTipo = obtenerIconoNotificacion(notif.tipo);
+                            const claseLeida = notif.leido ? 'notification-read' : 'notification-unread';
+                            
+                            html += `
+                                <div class="notification-item ${claseLeida} p-3 border-bottom" data-id="${notif.id}">
+                                    <div class="d-flex">
+                                        <div class="notification-icon me-3">
+                                            <i class="${iconoTipo}"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <p class="mb-1">${notif.mensaje}</p>
+                                            <small class="text-muted">${notif.fechaHora}</small>
+                                        </div>
+                                        ${!notif.leido ? `
+                                            <div class="notification-actions">
+                                                <button class="btn btn-sm btn-outline-primary" onclick="marcarComoLeida(${notif.id})">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        listaDiv.innerHTML = html;
+                    }
+                } else {
+                    listaDiv.innerHTML = `
+                        <div class="text-center p-4 text-danger">
+                            <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                            <p>Error al cargar notificaciones</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error cargando notificaciones:', error);
+                document.getElementById('listaNotificaciones').innerHTML = `
+                    <div class="text-center p-4 text-danger">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                        <p>Error al cargar notificaciones</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Marcar notificación como leída
+        async function marcarComoLeida(notificacionId) {
+            try {
+                const response = await fetch('/Notificacion/MarcarComoLeida', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(notificacionId)
+                });
+                
+                if (response.ok) {
+                    // Actualizar la UI
+                    const notifElement = document.querySelector(`[data-id="${notificacionId}"]`);
+                    if (notifElement) {
+                        notifElement.classList.remove('notification-unread');
+                        notifElement.classList.add('notification-read');
+                        notifElement.querySelector('.notification-actions').remove();
+                    }
+                    
+                    // Actualizar conteo
+                    actualizarConteoNotificaciones();
+                }
+            } catch (error) {
+                console.error('Error marcando como leída:', error);
+            }
+        }
+
+        // Marcar todas como leídas
+        async function marcarTodasComoLeidas() {
+            try {
+                const response = await fetch('/Notificacion/MarcarTodasComoLeidas', {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    // Recargar notificaciones
+                    cargarNotificaciones();
+                    actualizarConteoNotificaciones();
+                }
+            } catch (error) {
+                console.error('Error marcando todas como leídas:', error);
+            }
+        }
+
+        // Obtener icono según tipo de notificación
+        function obtenerIconoNotificacion(tipo) {
+            const iconos = {
+                'NUEVA_ENTREGA': 'fas fa-tasks text-primary',
+                'RETROALIMENTACION_ENTREGA': 'fas fa-comment text-info',
+                'ENTREGA_REVISADA': 'fas fa-check-circle text-success',
+                'SOLICITUD_ACEPTADA': 'fas fa-user-check text-success',
+                'NUEVA_SOLICITUD_GRUPO': 'fas fa-user-plus text-warning',
+                'RECORDATORIO_ENTREGA': 'fas fa-clock text-warning',
+                'GRUPO_ASIGNADO': 'fas fa-users text-info',
+                'ENTREGABLE_RECIBIDO': 'fas fa-file-upload text-primary'
+            };
+            return iconos[tipo] || 'fas fa-bell text-secondary';
+        }
+
+        // Limpiar backdrops residuales
+        $(document).ready(function() {
+            $('.modal').on('hidden.bs.modal', function () {
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open').css({
+                    'overflow': '',
+                    'padding-right': ''
+                });
             });
         });
         
