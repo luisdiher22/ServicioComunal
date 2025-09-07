@@ -168,23 +168,18 @@
                                 </h6>
                             </div>
                             <div class="card-body d-flex flex-column">
-                                @if (!string.IsNullOrEmpty(Model.DatosFormularioJson))
+                                @if (!string.IsNullOrEmpty(Model.ArchivoRuta))
                                 {
                                     <div class="text-center mb-3">
                                         <i class="fas fa-check-circle fa-3x text-success mb-2"></i>
-                                        <h6 class="text-success">Anexo Completado</h6>
-                                        <p class="text-muted">Ya llenaste los campos del Anexo #@Model.TipoAnexo</p>
+                                        <h6 class="text-success">Entrega Completada</h6>
+                                        <p class="text-muted">Ya subiste tu entrega para el Anexo #@Model.TipoAnexo</p>
                                     </div>
                                     
                                     <div class="d-flex gap-2 justify-content-center">
-                                        <a href="@Url.Action("FormularioAnexo", "Estudiante", new { entregaId = Model.Identificacion })" 
-                                           class="btn btn-outline-primary">
-                                            <i class="fas fa-edit"></i> Editar Datos
-                                        </a>
-                                        
                                         <a href="@Url.Action("DescargarArchivo", "Estudiante", new { entregaId = Model.Identificacion })" 
                                            class="btn btn-success">
-                                            <i class="fas fa-download"></i> Descargar PDF
+                                            <i class="fas fa-download"></i> Descargar Mi Entrega
                                         </a>
                                     </div>
                                 }
@@ -192,15 +187,15 @@
                                 {
                                     <div class="text-center flex-grow-1 d-flex flex-column justify-content-center">
                                         <i class="fas fa-file-alt fa-3x text-primary mb-3"></i>
-                                        <h6>Llenar Anexo #@Model.TipoAnexo</h6>
+                                        <h6>Descargar Anexo #@Model.TipoAnexo</h6>
                                         <p class="text-muted mb-4">
-                                            Esta entrega requiere completar un formulario interactivo 
-                                            que generará automáticamente un PDF.
+                                            Descarga el anexo interactivo, llénalo fuera del sistema 
+                                            y luego súbelo usando el formulario de "Mi Entrega" al lado.
                                         </p>
                                         
-                                        <a href="@Url.Action("FormularioAnexo", "Estudiante", new { entregaId = Model.Identificacion })" 
+                                        <a href="@Url.Action("DescargarAnexoTemplate", "Estudiante", new { tipoAnexo = Model.TipoAnexo })" 
                                            class="btn btn-primary btn-lg">
-                                            <i class="fas fa-edit"></i> Llenar Formulario
+                                            <i class="fas fa-download"></i> Descargar Anexo
                                         </a>
                                     </div>
                                 }
@@ -264,15 +259,13 @@
                             {
                                 @if (Model.TipoAnexo > 0)
                                 {
-                                    <div class="alert alert-info text-center">
+                                    <div class="alert alert-info text-center mb-3">
                                         <i class="fas fa-info-circle"></i>
-                                        <strong>Nota:</strong> Esta entrega utiliza un formulario interactivo. 
-                                        Completa el Anexo #@Model.TipoAnexo arriba para generar automáticamente tu entrega.
+                                        <strong>Nota:</strong> Esta entrega corresponde al Anexo #@Model.TipoAnexo. 
+                                        Puedes descargar la plantilla arriba como referencia y luego subir tu entrega completada aquí.
                                     </div>
                                 }
-                                else
-                                {
-                                    <form id="formSubirEntrega" enctype="multipart/form-data" class="flex-grow-1 d-flex flex-column">
+                <form id="formSubirEntrega" enctype="multipart/form-data" class="flex-grow-1 d-flex flex-column">
                                         <div class="mb-3 flex-grow-1">
                                             <label for="archivoEntrega" class="form-label">Seleccionar archivo:</label>
                                             <input type="file" class="form-control" id="archivoEntrega" name="archivo" 
@@ -295,7 +288,6 @@
                                             </button>
                                         </div>
                                     </form>
-                                }
                             }
                         </div>
                     </div>

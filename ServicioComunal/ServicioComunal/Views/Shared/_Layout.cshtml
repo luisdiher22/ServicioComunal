@@ -81,7 +81,7 @@
                             <i class="fas fa-users"></i>
                             <span>Mi Grupo</span>
                         </a>
-                        <a href="@Url.Action("MisEntregas", "Estudiante")" class="nav-item @((ViewContext.RouteData.Values["controller"]?.ToString() == "Estudiante" || ViewContext.RouteData.Values["controller"]?.ToString() == "Anexo") && (ViewContext.RouteData.Values["action"]?.ToString() == "MisEntregas" || ViewContext.RouteData.Values["action"]?.ToString() == "DetalleEntrega" || ViewContext.RouteData.Values["action"]?.ToString().Contains("FormularioAnexo") == true) ? "active" : "")">
+                        <a href="@Url.Action("MisEntregas", "Estudiante")" class="nav-item @((ViewContext.RouteData.Values["controller"]?.ToString() == "Estudiante") && (ViewContext.RouteData.Values["action"]?.ToString() == "MisEntregas" || ViewContext.RouteData.Values["action"]?.ToString() == "DetalleEntrega") ? "active" : "")">>
                             <i class="fas fa-file-alt"></i>
                             <span>Mis Entregas</span>
                         </a>
