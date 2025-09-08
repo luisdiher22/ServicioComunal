@@ -17,12 +17,12 @@ function mostrarSeccionTipoRecurso() {
     
     if (valor === 'anexo') {
         seccionAnexo.style.display = 'block';
-        console.log('Mostrando sección anexo');
+        console.log('Mostrando sección formulario');
     } else {
         seccionAnexo.style.display = 'none';
-        // Limpiar anexo seleccionado
+        // Limpiar formulario seleccionado
         document.getElementById('entregaAnexo').value = '';
-        console.log('Ocultando sección anexo');
+        console.log('Ocultando sección formulario');
     }
 }
 
@@ -55,7 +55,7 @@ function limpiarFormulario() {
     document.getElementById('seccionDestinatarios').style.display = 'block';
     document.getElementById('infoNuevaEntrega').style.display = 'block';
     
-    // Restablecer tipo de recurso a anexo
+    // Restablecer tipo de recurso a formulario
     document.getElementById('tipoAnexo').checked = true;
     
     // Restablecer destinatarios a todos los grupos
@@ -322,6 +322,49 @@ async function eliminarEntrega(id) {
         console.error('Error:', error);
         mostrarAlerta('Error al eliminar la entrega', 'danger');
     }
+}
+
+// Función para filtrar entregas
+function filtrarEntregas() {
+    const busqueda = document.getElementById('buscarEntrega').value.toLowerCase();
+    const filtroEstado = document.getElementById('filtroEstado').value;
+    const filtroGrupo = document.getElementById('filtroGrupo').value;
+    
+    const filas = document.querySelectorAll('.entrega-row');
+    
+    filas.forEach(fila => {
+        const nombre = fila.getAttribute('data-nombre');
+        const descripcion = fila.getAttribute('data-descripcion');
+        const grupo = fila.getAttribute('data-grupo');
+        const estado = fila.getAttribute('data-estado');
+        
+        let mostrar = true;
+        
+        // Filtro por búsqueda (nombre o descripción)
+        if (busqueda && !nombre.includes(busqueda) && !descripcion.includes(busqueda)) {
+            mostrar = false;
+        }
+        
+        // Filtro por estado
+        if (filtroEstado && estado !== filtroEstado) {
+            mostrar = false;
+        }
+        
+        // Filtro por grupo
+        if (filtroGrupo && grupo !== filtroGrupo) {
+            mostrar = false;
+        }
+        
+        fila.style.display = mostrar ? '' : 'none';
+    });
+}
+
+// Función para limpiar búsqueda
+function limpiarBusqueda() {
+    document.getElementById('buscarEntrega').value = '';
+    document.getElementById('filtroEstado').value = '';
+    document.getElementById('filtroGrupo').value = '';
+    filtrarEntregas();
 }
 
 // Función para mostrar alertas

@@ -3548,28 +3548,31 @@ namespace ServicioComunal.Controllers
             }
         }
 
-        // Obtener anexos disponibles
+        // Obtener formularios disponibles
         [HttpGet]
         public IActionResult ObtenerAnexosDisponibles()
         {
-            var anexos = new[]
+            var formularios = new[]
             {
                 new { Id = 1, Nombre = "Anexo #1 - Información Básica", Archivo = "Anexo #1 Interactivo.pdf" },
                 new { Id = 2, Nombre = "Anexo #2 - Propuesta de Proyecto", Archivo = "Anexo #2 Interactivo.pdf" },
                 new { Id = 3, Nombre = "Anexo #3 - Plan de Trabajo", Archivo = "Anexo #3 Interactivo.pdf" },
-                new { Id = 5, Nombre = "Anexo #5 - Evaluación Final", Archivo = "Anexo #5 Interactivo.pdf" }
+                new { Id = 5, Nombre = "Anexo #5 - Evaluación Final", Archivo = "Anexo #5 Interactivo.pdf" },
+                new { Id = 6, Nombre = "Informe Final Tutor", Archivo = "Informe final tutor Interactiva.pdf" },
+                new { Id = 7, Nombre = "Carta para Ingresar a la Institución", Archivo = "Carta para ingresar a la institucion interactiva.pdf" },
+                new { Id = 8, Nombre = "Carta de Consentimiento Encargado Legal", Archivo = "Carta de consentimiento encargado legal Interactiva.pdf" }
             };
 
-            var anexosConInfo = anexos.Select(a => new
+            var formulariosConInfo = formularios.Select(f => new
             {
-                a.Id,
-                a.Nombre,
-                a.Archivo,
-                Existe = System.IO.File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "formularios", a.Archivo)),
-                RutaDescarga = $"/uploads/formularios/{Uri.EscapeDataString(a.Archivo)}"
+                f.Id,
+                f.Nombre,
+                f.Archivo,
+                Existe = System.IO.File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "formularios", f.Archivo)),
+                RutaDescarga = $"/uploads/formularios/{Uri.EscapeDataString(f.Archivo)}"
             }).ToList();
 
-            return Json(new { success = true, anexos = anexosConInfo });
+            return Json(new { success = true, anexos = formulariosConInfo });
         }
 
         [HttpGet]

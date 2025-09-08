@@ -869,7 +869,7 @@ namespace ServicioComunal.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> SubirEntrega(int entregaId, IFormFile archivo)
+        public async Task<IActionResult> SubirEntregaConParametros(int entregaId, IFormFile archivo)
         {
             try
             {
@@ -931,12 +931,9 @@ namespace ServicioComunal.Controllers
                 entrega.ArchivoRuta = $"/uploads/entregas/{nombreArchivo}";
                 entrega.FechaEntrega = DateTime.Now;
                 
-                // Si había cambios solicitados, limpiar la retroalimentación para permitir nueva revisión
-                if (!string.IsNullOrEmpty(entrega.Retroalimentacion) && entrega.Retroalimentacion.StartsWith("CAMBIOS SOLICITADOS:"))
-                {
-                    entrega.Retroalimentacion = string.Empty;
-                    entrega.FechaRetroalimentacion = null;
-                }
+                // Limpiar retroalimentación para que aparezca como "Listo para revisión"
+                entrega.Retroalimentacion = string.Empty;
+                entrega.FechaRetroalimentacion = null;
 
                 await _context.SaveChangesAsync();
 
@@ -1111,7 +1108,7 @@ namespace ServicioComunal.Controllers
             try
             {
                 // Verificar autenticación
-                var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+                var usuarioId = HttpContext.Session.GetInt32("UsuarioIdentificacion");
                 var usuarioRol = HttpContext.Session.GetString("UsuarioRol");
                 
                 if (usuarioId == null || usuarioRol != "Estudiante")
@@ -1204,7 +1201,7 @@ namespace ServicioComunal.Controllers
                 // Actualizar entrega
                 entrega.ArchivoRuta = $"uploads/entregas/{nombreArchivo}";
                 entrega.FechaEntrega = DateTime.Now;
-                entrega.Retroalimentacion = "Pendiente de revisión";
+                entrega.Retroalimentacion = string.Empty;
 
                 await _context.SaveChangesAsync();
 

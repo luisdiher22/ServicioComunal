@@ -8,7 +8,7 @@
 <div class="container mt-4">
     <h1>
         <i class="fas fa-file-alt"></i>
-        Gestión de Formularios y Anexos
+        Gestión de Formularios
     </h1>
     
     @if (ViewBag.Error != null)
@@ -18,31 +18,12 @@
         </div>
     }
 
-    <!-- Sección de Anexos Interactivos -->
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">
-                <i class="fas fa-file-pdf"></i>
-                Anexos Interactivos Disponibles
-            </h5>
-        </div>
-        <div class="card-body">
-            <p class="text-muted mb-3">
-                Estos son los anexos interactivos que los estudiantes pueden llenar automáticamente.
-            </p>
-            
-            <div class="row" id="anexosContainer">
-                <!-- Se llena vía JavaScript -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Sección de Formularios Adicionales -->
+    <!-- Sección unificada de formularios -->
     <div class="card">
-        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0">
-                <i class="fas fa-file-upload"></i>
-                Formularios Adicionales
+                <i class="fas fa-file-alt"></i>
+                Todos los Formularios Disponibles
             </h5>
             <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#modalSubirFormulario">
                 <i class="fas fa-plus"></i>
@@ -51,28 +32,45 @@
         </div>
         <div class="card-body">
             <p class="text-muted mb-3">
-                Formularios adicionales subidos por profesores (Total: @(Model?.Count ?? 0))
+                Lista completa de formularios del sistema y formularios adicionales subidos por profesores
             </p>
 
-            @if (Model != null && Model.Any())
-            {
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Descripción</th>
-                                <th>Subido por</th>
-                                <th>Fecha</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th>Estado</th>
+                            <th>Subido por</th>
+                            <th>Fecha</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaFormularios">
+                        <!-- Los formularios del sistema se cargarán via JavaScript -->
+                        
+                        <!-- Formularios adicionales -->
+                        @if (Model != null && Model.Any())
+                        {
                             @foreach (var formulario in Model)
                             {
                                 <tr>
+                                    <td>
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-file-upload"></i>
+                                            Formulario Adicional
+                                        </span>
+                                    </td>
                                     <td><strong>@formulario.Nombre</strong></td>
                                     <td>@formulario.Descripcion</td>
+                                    <td>
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle"></i>
+                                            Disponible
+                                        </span>
+                                    </td>
                                     <td>
                                         @if (formulario.Profesor != null)
                                         {
@@ -100,21 +98,22 @@
                                     </td>
                                 </tr>
                             }
-                        </tbody>
-                    </table>
-                </div>
-            }
-            else
-            {
-                <div class="text-center py-4">
-                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                    <p class="text-muted">No hay formularios adicionales subidos.</p>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalSubirFormulario">
-                        <i class="fas fa-plus"></i>
-                        Subir Primer Formulario
-                    </button>
-                </div>
-            }
+                        }
+                    </tbody>
+                </table>
+                
+                @if ((Model == null || !Model.Any()))
+                {
+                    <div class="text-center py-4" id="sinFormularios" style="display: none;">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No hay formularios disponibles.</p>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalSubirFormulario">
+                            <i class="fas fa-plus"></i>
+                            Subir Primer Formulario
+                        </button>
+                    </div>
+                }
+            </div>
         </div>
     </div>
 </div>
@@ -180,27 +179,23 @@
 </div>
 
 <style>
-    .anexo-card {
-        transition: transform 0.2s;
+    .table th {
+        border-top: none;
+        font-weight: 600;
+        color: #495057;
     }
     
-    .anexo-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.375rem 0.75rem;
     }
     
-    .anexo-disponible {
-        border-left: 4px solid #28a745;
+    .btn-group-sm .btn {
+        margin-right: 0.25rem;
     }
     
-    .anexo-no-disponible {
-        border-left: 4px solid #dc3545;
-        opacity: 0.7;
-    }
-    
-    .anexo-icon {
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
+    .btn-group-sm .btn:last-child {
+        margin-right: 0;
     }
 </style>
 
@@ -220,7 +215,7 @@ async function cargarAnexos() {
         if (data.success) {
             mostrarAnexos(data.anexos);
         } else {
-            console.error('Error al cargar anexos:', data.message);
+            console.error('Error al cargar formularios:', data.message);
         }
     } catch (error) {
         console.error('Error:', error);
@@ -228,47 +223,61 @@ async function cargarAnexos() {
 }
 
 function mostrarAnexos(anexos) {
-    const container = document.getElementById('anexosContainer');
-    container.innerHTML = '';
+    const tbody = document.getElementById('tablaFormularios');
+    
+    // Preparar filas para formularios del sistema
+    let formulariosHtml = '';
     
     anexos.forEach(anexo => {
-        const col = document.createElement('div');
-        col.className = 'col-md-6 col-lg-3 mb-3';
-        
-        const disponibleClass = anexo.existe ? 'anexo-disponible' : 'anexo-no-disponible';
-        const iconColor = anexo.existe ? 'text-success' : 'text-danger';
-        const btnClass = anexo.existe ? 'btn-success' : 'btn-secondary';
+        const disponibleClass = anexo.existe ? 'bg-primary' : 'bg-secondary';
+        const estadoClass = anexo.existe ? 'bg-success' : 'bg-danger';
+        const estadoTexto = anexo.existe ? 'Disponible' : 'No encontrado';
+        const estadoIcono = anexo.existe ? 'fa-check-circle' : 'fa-times-circle';
+        const btnClass = anexo.existe ? 'btn-primary' : 'btn-secondary';
         const btnDisabled = anexo.existe ? '' : 'disabled';
         
-        col.innerHTML = `
-            <div class="card anexo-card h-100 ${disponibleClass}">
-                <div class="card-body text-center">
-                    <i class="fas fa-file-pdf anexo-icon ${iconColor}"></i>
-                    <h6 class="card-title">${anexo.nombre}</h6>
-                    <p class="card-text">
-                        <small class="text-muted">${anexo.archivo}</small>
-                    </p>
-                    
-                    ${anexo.existe ? 
-                        `<span class="badge bg-success mb-2">Disponible</span>` : 
-                        `<span class="badge bg-danger mb-2">No encontrado</span>`
-                    }
-                    
-                    <div class="d-grid">
-                        <a href="${anexo.rutaDescarga}" 
-                           class="btn ${btnClass} btn-sm" 
-                           ${btnDisabled}
-                           ${anexo.existe ? 'target="_blank"' : ''}>
-                            <i class="fas fa-download"></i>
-                            ${anexo.existe ? 'Descargar' : 'No disponible'}
-                        </a>
-                    </div>
-                </div>
-            </div>
+        formulariosHtml += `
+            <tr>
+                <td>
+                    <span class="badge ${disponibleClass}">
+                        <i class="fas fa-file-pdf"></i>
+                        Formulario del Sistema
+                    </span>
+                </td>
+                <td><strong>${anexo.nombre}</strong></td>
+                <td>Formulario oficial del servicio comunal</td>
+                <td>
+                    <span class="badge ${estadoClass}">
+                        <i class="fas ${estadoIcono}"></i>
+                        ${estadoTexto}
+                    </span>
+                </td>
+                <td><em>Sistema</em></td>
+                <td>-</td>
+                <td>
+                    <a href="${anexo.rutaDescarga}" 
+                       class="btn btn-sm ${btnClass}" 
+                       ${btnDisabled}
+                       ${anexo.existe ? 'target="_blank"' : ''}>
+                        <i class="fas fa-download"></i>
+                        ${anexo.existe ? 'Descargar' : 'No disponible'}
+                    </a>
+                </td>
+            </tr>
         `;
-        
-        container.appendChild(col);
     });
+    
+    // Insertar formularios del sistema al inicio de la tabla
+    if (tbody.children.length > 0) {
+        tbody.insertAdjacentHTML('afterbegin', formulariosHtml);
+    } else {
+        tbody.innerHTML = formulariosHtml;
+        // Ocultar mensaje de sin formularios si hay formularios del sistema
+        const sinFormularios = document.getElementById('sinFormularios');
+        if (sinFormularios) {
+            sinFormularios.style.display = 'none';
+        }
+    }
 }
 
 async function subirFormulario(e) {

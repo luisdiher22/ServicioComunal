@@ -439,8 +439,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const response = await fetch('@Url.Action("SubirEntrega", "Estudiante")', {
                 method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
                 body: formData
             });
+
+            if (!response.ok) {
+                throw new Error('Error HTTP: ' + response.status + ' - ' + response.statusText);
+            }
+
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('La respuesta del servidor no es un JSON válido');
+            }
 
             const result = await response.json();
 
@@ -454,7 +466,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             modalProgreso.hide();
-            alert('Error al subir la entrega: ' + error.message);
+            if (error.message.includes('JSON')) {
+                alert('Error de comunicación con el servidor. Por favor, recarga la página e intenta nuevamente.');
+            } else {
+                alert('Error al subir la entrega: ' + error.message);
+            }
         } finally {
             btnSubir.disabled = false;
         }

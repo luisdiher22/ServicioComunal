@@ -29,6 +29,51 @@
         </button>
     </div>
 
+    <!-- Barra de búsqueda y filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label">Buscar entregas:</label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" class="form-control" id="buscarEntrega" 
+                               placeholder="Buscar por nombre, descripción o grupo..." 
+                               onkeyup="filtrarEntregas()">
+                        <button class="btn btn-outline-secondary" type="button" onclick="limpiarBusqueda()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Filtrar por estado:</label>
+                    <select class="form-select" id="filtroEstado" onchange="filtrarEntregas()">
+                        <option value="">Todos los estados</option>
+                        <option value="pendiente">Pendientes</option>
+                        <option value="entregada">Entregadas</option>
+                        <option value="completada">Completadas</option>
+                        <option value="vencida">Vencidas</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Filtrar por grupo:</label>
+                    <select class="form-select" id="filtroGrupo" onchange="filtrarEntregas()">
+                        <option value="">Todos los grupos</option>
+                        @{
+                            var gruposUnicos = Model.Select(e => e.GrupoNumero).Distinct().OrderBy(g => g);
+                        }
+                        @foreach (var grupo in gruposUnicos)
+                        {
+                            <option value="@grupo">Grupo @grupo</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="table-container">
         <table class="table table-striped" id="tablaEntregas">
             <thead>
@@ -49,8 +94,23 @@
                     var fechaVencida = entrega.FechaLimite < DateTime.Now;
                     var tieneArchivo = !string.IsNullOrEmpty(entrega.ArchivoRuta);
                     var tieneRetroalimentacion = !string.IsNullOrEmpty(entrega.Retroalimentacion);
+                    
+                    var estadoEntrega = "";
+                    if (tieneArchivo && tieneRetroalimentacion)
+                        estadoEntrega = "completada";
+                    else if (tieneArchivo)
+                        estadoEntrega = "entregada";
+                    else if (fechaVencida)
+                        estadoEntrega = "vencida";
+                    else
+                        estadoEntrega = "pendiente";
 
-                    <tr class="@(fechaVencida ? "table-warning" : "")">
+                    <tr class="entrega-row @(fechaVencida ? "table-warning" : "")" 
+                        data-id="@entrega.Identificacion"
+                        data-nombre="@entrega.Nombre.ToLower()"
+                        data-descripcion="@entrega.Descripcion.ToLower()"
+                        data-grupo="@entrega.GrupoNumero"
+                        data-estado="@estadoEntrega">
                         <td>@entrega.Identificacion</td>
                         <td>@entrega.Nombre</td>
                         <td>@entrega.Descripcion</td>
@@ -80,6 +140,9 @@
                                     2 => "Anexo #2 - Propuesta de Proyecto",
                                     3 => "Anexo #3 - Plan de Trabajo",
                                     5 => "Anexo #5 - Evaluación Final",
+                                    6 => "Informe Final Tutor",
+                                    7 => "Carta para Ingresar a la Institución",
+                                    8 => "Carta de Consentimiento Encargado Legal",
                                     _ => $"Anexo #{entrega.TipoAnexo}"
                                 };
                                 var archivoAnexo = entrega.TipoAnexo switch
@@ -88,10 +151,13 @@
                                     2 => "Anexo #2 Interactivo.pdf",
                                     3 => "Anexo #3 Interactivo.pdf",
                                     5 => "Anexo #5 Interactivo.pdf",
+                                    6 => "Informe final tutor Interactiva.pdf",
+                                    7 => "Carta para ingresar a la institucion interactiva.pdf",
+                                    8 => "Carta de consentimiento encargado legal Interactiva.pdf",
                                     _ => ""
                                 };
                                 <a href="/uploads/formularios/@Uri.EscapeDataString(archivoAnexo)" 
-                                   class="btn btn-sm btn-outline-success" title="Descargar anexo interactivo" target="_blank">
+                                   class="btn btn-sm btn-outline-success" title="Descargar formulario" target="_blank">
                                     <i class="fas fa-file-pdf"></i> @nombreAnexo
                                 </a>
                             }
@@ -110,6 +176,10 @@
                             else if (tieneArchivo)
                             {
                                 <span class="badge badge-info"><i class="fas fa-upload"></i> Entregada</span>
+                            }
+                            else if (fechaVencida)
+                            {
+                                <span class="badge badge-danger"><i class="fas fa-times"></i> Vencida</span>
                             }
                             else
                             {
@@ -167,7 +237,7 @@
                             <div class="form-check">
                                 <input type="radio" class="form-check-input" id="tipoAnexo" name="tipoRecurso" value="anexo" checked>
                                 <label class="form-check-label" for="tipoAnexo">
-                                    Anexo
+                                    Formulario
                                 </label>
                             </div>
                             <div class="form-check">
@@ -181,18 +251,18 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3" id="seccionAnexo">
-                            <label for="entregaAnexo" class="form-label">Anexo</label>
+                            <label for="entregaAnexo" class="form-label">Formulario</label>
                             <select class="form-select" id="entregaAnexo" name="tipoAnexo">
-                                <option value="">-- Seleccionar Anexo --</option>
+                                <option value="">-- Seleccionar Formulario --</option>
                                 <option value="1">Anexo #1 - Información Básica</option>
                                 <option value="2">Anexo #2 - Propuesta de Proyecto</option>
                                 <option value="3">Anexo #3 - Plan de Trabajo</option>
                                 <option value="5">Anexo #5 - Evaluación Final</option>
-                                <option value="6">Anexo #6 - Informe Final Tutor</option>
-                                <option value="7">Anexo #7 - Carta para Ingresar a la Institución</option>
-                                <option value="8">Anexo #8 - Carta de Consentimiento Encargado Legal</option>
+                                <option value="6">Informe Final Tutor</option>
+                                <option value="7">Carta para Ingresar a la Institución</option>
+                                <option value="8">Carta de Consentimiento Encargado Legal</option>
                             </select>
-                            <div class="form-text">Anexo que los estudiantes deberán completar</div>
+                            <div class="form-text">Formulario que los estudiantes deberán completar</div>
                         </div>
                     </div>
 
@@ -309,6 +379,31 @@
         
         .badge {
             font-size: 0.75em;
+        }
+        
+        /* Estilos para la barra de búsqueda */
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        
+        .input-group .form-control:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        
+        .btn-outline-secondary:hover {
+            color: #fff;
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+        
+        /* Mejorar visibilidad de filas filtradas */
+        .entrega-row {
+            transition: opacity 0.3s ease;
+        }
+        
+        .entrega-row:hover {
+            background-color: rgba(0, 123, 255, 0.05);
         }
     </style>
 }

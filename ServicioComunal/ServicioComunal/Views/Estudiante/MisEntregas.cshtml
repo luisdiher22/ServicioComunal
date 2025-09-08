@@ -342,8 +342,20 @@ document.getElementById('formSubirEntrega').addEventListener('submit', async fun
     try {
         const response = await fetch('/Estudiante/SubirEntrega', {
             method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
             body: formData
         });
+        
+        if (!response.ok) {
+            throw new Error('Error HTTP: ' + response.status + ' - ' + response.statusText);
+        }
+
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('La respuesta del servidor no es un JSON válido');
+        }
         
         const result = await response.json();
         
@@ -354,7 +366,11 @@ document.getElementById('formSubirEntrega').addEventListener('submit', async fun
             alert('Error: ' + result.message);
         }
     } catch (error) {
-        alert('Error al subir archivo: ' + error.message);
+        if (error.message.includes('JSON')) {
+            alert('Error de comunicación con el servidor. Por favor, recarga la página e intenta nuevamente.');
+        } else {
+            alert('Error al subir archivo: ' + error.message);
+        }
     } finally {
         btnSubir.disabled = false;
         btnSubir.innerHTML = '<i class="fas fa-upload"></i> Subir Archivo';

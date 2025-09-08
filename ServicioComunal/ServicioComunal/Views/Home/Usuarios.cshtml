@@ -13,38 +13,38 @@
     <!-- Estadísticas rápidas -->
     <div class="row mb-4">
         <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body text-center">
-                    <i class="fas fa-users fa-2x mb-2"></i>
-                    <h4>@Model.Count</h4>
-                    <p>Total Usuarios</p>
+            <div class="card bg-primary text-white stats-card-small">
+                <div class="card-body text-center p-3">
+                    <i class="fas fa-users fa-lg mb-1"></i>
+                    <h6 class="mb-1">@Model.Count</h6>
+                    <small>Total Usuarios</small>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-warning text-dark">
-                <div class="card-body text-center">
-                    <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
-                    <h4>@Model.Count(u => u.RequiereCambioContraseña)</h4>
-                    <p>Requieren Cambio</p>
+            <div class="card bg-warning text-dark stats-card-small">
+                <div class="card-body text-center p-3">
+                    <i class="fas fa-exclamation-triangle fa-lg mb-1"></i>
+                    <h6 class="mb-1">@Model.Count(u => u.RequiereCambioContraseña)</h6>
+                    <small>Requieren Cambio</small>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-success text-white">
-                <div class="card-body text-center">
-                    <i class="fas fa-check-circle fa-2x mb-2"></i>
-                    <h4>@Model.Count(u => u.Activo)</h4>
-                    <p>Usuarios Activos</p>
+            <div class="card bg-success text-white stats-card-small">
+                <div class="card-body text-center p-3">
+                    <i class="fas fa-check-circle fa-lg mb-1"></i>
+                    <h6 class="mb-1">@Model.Count(u => u.Activo)</h6>
+                    <small>Usuarios Activos</small>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-info text-white">
-                <div class="card-body text-center">
-                    <i class="fas fa-clock fa-2x mb-2"></i>
-                    <h4>@Model.Count(u => u.UltimoAcceso.HasValue && u.UltimoAcceso.Value > DateTime.Now.AddDays(-7))</h4>
-                    <p>Activos esta semana</p>
+            <div class="card bg-info text-white stats-card-small">
+                <div class="card-body text-center p-3">
+                    <i class="fas fa-clock fa-lg mb-1"></i>
+                    <h6 class="mb-1">@Model.Count(u => u.UltimoAcceso.HasValue && u.UltimoAcceso.Value > DateTime.Now.AddDays(-7))</h6>
+                    <small>Activos esta semana</small>
                 </div>
             </div>
         </div>
@@ -421,6 +421,25 @@
 <style>
     .card {
         box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .stats-card-small .card-body {
+        padding: 0.75rem !important;
+    }
+    
+    .stats-card-small i {
+        font-size: 1.25rem;
+    }
+    
+    .stats-card-small h6 {
+        font-size: 1.1rem;
+        font-weight: bold;
+        margin: 0.25rem 0;
+    }
+    
+    .stats-card-small small {
+        font-size: 0.75rem;
+        opacity: 0.9;
     }
     
     .usuario-row:hover {
