@@ -25,9 +25,6 @@
                 <a class="nav-link active" href="@Url.Action("Entregas", "Estudiante")">
                     <i class="fas fa-file-upload"></i> Entregas
                 </a>
-                <a class="nav-link" href="@Url.Action("GestionGrupos", "Estudiante")">
-                    <i class="fas fa-users-cog"></i> Gestión de Grupos
-                </a>
                 <a class="nav-link" href="@Url.Action("MisSolicitudes", "Estudiante")">
                     <i class="fas fa-bell"></i> Solicitudes
                 </a>
@@ -158,7 +155,7 @@
                 </div>
 
                 <!-- Formulario Anexo Interactivo (si aplica) -->
-                @if (Model.TipoAnexo > 0)
+                @if (Model.TipoAnexo > 0 && string.IsNullOrEmpty(Model.ArchivoRuta))
                 {
                     <div class="col-md-6 mb-4">
                         <div class="card h-100">
@@ -168,37 +165,19 @@
                                 </h6>
                             </div>
                             <div class="card-body d-flex flex-column">
-                                @if (!string.IsNullOrEmpty(Model.ArchivoRuta))
-                                {
-                                    <div class="text-center mb-3">
-                                        <i class="fas fa-check-circle fa-3x text-success mb-2"></i>
-                                        <h6 class="text-success">Entrega Completada</h6>
-                                        <p class="text-muted">Ya subiste tu entrega para el Anexo #@Model.TipoAnexo</p>
-                                    </div>
+                                <div class="text-center flex-grow-1 d-flex flex-column justify-content-center">
+                                    <i class="fas fa-file-alt fa-3x text-primary mb-3"></i>
+                                    <h6>Descargar Anexo #@Model.TipoAnexo</h6>
+                                    <p class="text-muted mb-4">
+                                        Descarga el anexo interactivo, llénalo fuera del sistema 
+                                        y luego súbelo usando el formulario de "Mi Entrega" al lado.
+                                    </p>
                                     
-                                    <div class="d-flex gap-2 justify-content-center">
-                                        <a href="@Url.Action("DescargarArchivo", "Estudiante", new { entregaId = Model.Identificacion })" 
-                                           class="btn btn-success">
-                                            <i class="fas fa-download"></i> Descargar Mi Entrega
-                                        </a>
-                                    </div>
-                                }
-                                else
-                                {
-                                    <div class="text-center flex-grow-1 d-flex flex-column justify-content-center">
-                                        <i class="fas fa-file-alt fa-3x text-primary mb-3"></i>
-                                        <h6>Descargar Anexo #@Model.TipoAnexo</h6>
-                                        <p class="text-muted mb-4">
-                                            Descarga el anexo interactivo, llénalo fuera del sistema 
-                                            y luego súbelo usando el formulario de "Mi Entrega" al lado.
-                                        </p>
-                                        
-                                        <a href="@Url.Action("DescargarAnexoTemplate", "Estudiante", new { tipoAnexo = Model.TipoAnexo })" 
-                                           class="btn btn-primary btn-lg">
-                                            <i class="fas fa-download"></i> Descargar Anexo
-                                        </a>
-                                    </div>
-                                }
+                                    <a href="@Url.Action("DescargarAnexoTemplate", "Estudiante", new { tipoAnexo = Model.TipoAnexo })" 
+                                       class="btn btn-primary btn-lg">
+                                        <i class="fas fa-download"></i> Descargar Anexo
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -347,7 +326,7 @@
                 <div class="spinner-border text-primary mb-3" role="status">
                     <span class="sr-only">Cargando...</span>
                 </div>
-                <h5>Subiendo entrega...</h5>
+                <h5>Procesando entrega...</h5>
                 <p class="text-muted">Por favor espera mientras se procesa tu archivo.</p>
             </div>
         </div>

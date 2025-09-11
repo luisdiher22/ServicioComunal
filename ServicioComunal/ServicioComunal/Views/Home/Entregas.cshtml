@@ -40,10 +40,10 @@
                             <i class="fas fa-search"></i>
                         </span>
                         <input type="text" class="form-control" id="buscarEntrega" 
-                               placeholder="Buscar por nombre, descripción o grupo..." 
+                               placeholder="Buscar por ID, nombre o descripción..." 
                                onkeyup="filtrarEntregas()">
-                        <button class="btn btn-outline-secondary" type="button" onclick="limpiarBusqueda()">
-                            <i class="fas fa-times"></i>
+                        <button class="btn btn-outline-secondary" type="button" onclick="limpiarFiltros()">
+                            <i class="fas fa-broom"></i> Limpiar
                         </button>
                     </div>
                 </div>
@@ -52,7 +52,7 @@
                     <select class="form-select" id="filtroEstado" onchange="filtrarEntregas()">
                         <option value="">Todos los estados</option>
                         <option value="pendiente">Pendientes</option>
-                        <option value="entregada">Entregadas</option>
+                        <option value="entregada">Pendiente revisión tutor</option>
                         <option value="completada">Completadas</option>
                         <option value="vencida">Vencidas</option>
                     </select>
@@ -175,7 +175,7 @@
                             }
                             else if (tieneArchivo)
                             {
-                                <span class="badge badge-info"><i class="fas fa-upload"></i> Entregada</span>
+                                <span class="badge badge-info"><i class="fas fa-upload"></i> Pendiente revisión tutor</span>
                             }
                             else if (fechaVencida)
                             {

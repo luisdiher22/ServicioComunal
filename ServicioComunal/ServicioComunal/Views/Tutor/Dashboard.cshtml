@@ -142,9 +142,6 @@
                             <a href="@Url.Action("MisGrupos", "Tutor")#grupo-@grupo.Numero" class="btn btn-outline-primary btn-sm">
                                 <i class="fas fa-eye"></i> Ver Detalles
                             </a>
-                            <button class="btn btn-outline-secondary btn-sm" onclick="contactarGrupo(@grupo.Numero)">
-                                <i class="fas fa-envelope"></i> Contactar
-                            </button>
                         </div>
                     </div>
                 }
@@ -315,10 +312,6 @@
 </style>
 
 <script>
-function contactarGrupo(numeroGrupo) {
-    // Implementar funcionalidad de contacto
-    alert('Funcionalidad de contacto para Grupo ' + numeroGrupo + ' (por implementar)');
-}
 </script>
 
 <script src="~/js/tutor.js"></script>

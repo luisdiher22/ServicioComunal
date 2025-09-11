@@ -118,7 +118,7 @@ namespace ServicioComunal.Controllers
         }
 
         // Revisiones
-        public async Task<IActionResult> Revisiones()
+        public async Task<IActionResult> Revisiones(int? grupo = null)
         {
             // Verificar autenticación
             var tutorId = HttpContext.Session.GetInt32("UsuarioId");
@@ -141,16 +141,33 @@ namespace ServicioComunal.Controllers
                 return View(new List<Entrega>());
             }
 
-            // Obtener todas las entregas de los grupos asignados
+            // Si se especifica un grupo, verificar que esté asignado al tutor
+            if (grupo.HasValue && !gruposAsignados.Contains(grupo.Value))
+            {
+                ViewBag.Message = "No tienes acceso a este grupo.";
+                return View(new List<Entrega>());
+            }
+
+            // Filtrar por grupo específico si se proporciona
+            var gruposAFiltrar = grupo.HasValue ? new List<int> { grupo.Value } : gruposAsignados;
+
+            // Obtener entregas de los grupos (filtradas o todas las asignadas)
             var entregas = await _context.Entregas
-                .Where(e => gruposAsignados.Contains(e.GrupoNumero))
+                .Where(e => gruposAFiltrar.Contains(e.GrupoNumero))
                 .Include(e => e.Grupo)
                 .ThenInclude(g => g.GruposEstudiantes)
                 .ThenInclude(ge => ge.Estudiante)
                 .Include(e => e.Formulario)
-                .OrderBy(e => e.FechaLimite)
-                .ThenBy(e => e.GrupoNumero)
+                .OrderBy(e => e.FechaLimite < DateTime.Now ? 0 : 1)  // Vencidas primero
+                .ThenBy(e => e.FechaLimite)                          // Por fecha límite
+                .ThenBy(e => string.IsNullOrEmpty(e.Retroalimentacion) && !string.IsNullOrEmpty(e.ArchivoRuta) ? 0 : 1)  // Listas para revisar primero
+                .ThenBy(e => e.GrupoNumero)                          // Por grupo
+                .ThenBy(e => e.Nombre)                               // Por nombre para consistencia
                 .ToListAsync();
+
+            // Pasar información del filtro a la vista
+            ViewBag.GrupoFiltrado = grupo;
+            ViewBag.GruposAsignados = gruposAsignados;
 
             // Categorizar entregas
             ViewBag.EntregasPendientes = entregas.Where(e => 
@@ -378,6 +395,80 @@ namespace ServicioComunal.Controllers
                 ".rar" => "application/x-rar-compressed",
                 _ => "application/octet-stream"
             };
+        }
+
+        // Método para obtener detalles completos de un grupo
+        [HttpGet]
+        public async Task<IActionResult> ObtenerDetallesGrupo(int numeroGrupo)
+        {
+            try
+            {
+                // Verificar autenticación y rol
+                var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+                if (usuarioId == null || !await EsTutor(usuarioId.Value))
+                {
+                    return Json(new { success = false, message = "No autorizado" });
+                }
+
+                // Verificar que el tutor está asignado a este grupo
+                var grupoProfesor = await _context.GruposProfesores
+                    .FirstOrDefaultAsync(gp => gp.GrupoNumero == numeroGrupo && gp.ProfesorIdentificacion == usuarioId.Value);
+
+                if (grupoProfesor == null)
+                {
+                    return Json(new { success = false, message = "No tienes acceso a este grupo" });
+                }
+
+                // Obtener información completa del grupo
+                var grupo = await _context.Grupos
+                    .Include(g => g.GruposEstudiantes)
+                        .ThenInclude(ge => ge.Estudiante)
+                    .Include(g => g.Lider)
+                    .Include(g => g.Entregas)
+                    .FirstOrDefaultAsync(g => g.Numero == numeroGrupo);
+
+                if (grupo == null)
+                {
+                    return Json(new { success = false, message = "Grupo no encontrado" });
+                }
+
+                // Obtener fecha de asignación del tutor
+                var fechaAsignacion = grupoProfesor.FechaAsignacion.ToString("dd/MM/yyyy");
+
+                // Preparar datos del grupo
+                var grupoInfo = new
+                {
+                    numero = grupo.Numero,
+                    liderIdentificacion = grupo.LiderIdentificacion,
+                    lider = grupo.Lider != null ? $"{grupo.Lider.Nombre} {grupo.Lider.Apellidos}" : null,
+                    fechaAsignacion = fechaAsignacion,
+                    estudiantes = grupo.GruposEstudiantes.Select(ge => new
+                    {
+                        identificacion = ge.Estudiante.Identificacion,
+                        nombre = ge.Estudiante.Nombre,
+                        apellidos = ge.Estudiante.Apellidos,
+                        clase = ge.Estudiante.Clase
+                    }).ToList(),
+                    entregables = grupo.Entregas.Select(e => new
+                    {
+                        identificacion = e.Identificacion,
+                        nombre = e.Nombre,
+                        descripcion = e.Descripcion,
+                        fechaLimite = e.FechaLimite.ToString("yyyy-MM-ddTHH:mm:ss"),
+                        fechaEntrega = e.FechaEntrega?.ToString("yyyy-MM-ddTHH:mm:ss"),
+                        archivoRuta = e.ArchivoRuta,
+                        retroalimentacion = e.Retroalimentacion,
+                        fechaRetroalimentacion = e.FechaRetroalimentacion?.ToString("yyyy-MM-ddTHH:mm:ss")
+                    }).OrderBy(e => e.fechaLimite).ToList()
+                };
+
+                return Json(new { success = true, grupo = grupoInfo });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en ObtenerDetallesGrupo: {ex.Message}");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
         }
     }
 

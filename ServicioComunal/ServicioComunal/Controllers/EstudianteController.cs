@@ -54,8 +54,8 @@ namespace ServicioComunal.Controllers
 
             if (grupoEstudiante == null)
             {
-                // Si no está en ningún grupo, redirigir a gestión de grupos
-                return RedirectToAction("GestionGrupos");
+                // Si no está en ningún grupo, redirigir a mi grupo
+                return RedirectToAction("MiGrupo");
             }
 
             // Si está en un grupo, mostrar el dashboard
@@ -94,6 +94,9 @@ namespace ServicioComunal.Controllers
             return View();
         }
 
+        // NOTA: GestionGrupos se ha deshabilitado para estudiantes
+        // Los estudiantes ahora solo pueden ver "Mi Grupo" y gestionar su grupo específico
+        /*
         public async Task<IActionResult> GestionGrupos()
         {
             var usuarioActual = _usuarioService.ObtenerUsuarioActual();
@@ -157,6 +160,7 @@ namespace ServicioComunal.Controllers
 
             return View();
         }
+        */
 
         public async Task<IActionResult> MisSolicitudes()
         {
@@ -744,8 +748,8 @@ namespace ServicioComunal.Controllers
 
             if (grupoEstudiante == null)
             {
-                // Si no está en ningún grupo, redirigir a gestión de grupos
-                return RedirectToAction("GestionGrupos");
+                // Si no está en ningún grupo, redirigir a mi grupo
+                return RedirectToAction("MiGrupo");
             }
 
             ViewBag.Estudiante = estudiante;
@@ -801,8 +805,8 @@ namespace ServicioComunal.Controllers
 
             if (grupoEstudiante == null)
             {
-                // Si no está en ningún grupo, redirigir a gestión de grupos
-                return RedirectToAction("GestionGrupos");
+                // Si no está en ningún grupo, redirigir a mi grupo
+                return RedirectToAction("MiGrupo");
             }
 
             ViewBag.Estudiante = estudiante;
@@ -846,7 +850,7 @@ namespace ServicioComunal.Controllers
 
             if (grupoEstudiante == null)
             {
-                return RedirectToAction("GestionGrupos");
+                return RedirectToAction("MiGrupo");
             }
 
             // Obtener la entrega específica

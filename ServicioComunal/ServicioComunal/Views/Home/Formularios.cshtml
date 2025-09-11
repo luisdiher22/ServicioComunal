@@ -137,24 +137,8 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="descripcionFormulario" class="form-label">Descripción</label>
-                        <textarea class="form-control" id="descripcionFormulario" rows="3"></textarea>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="profesorFormulario" class="form-label">Profesor <span class="text-danger">*</span></label>
-                        <select class="form-select" id="profesorFormulario" required>
-                            <option value="">Seleccionar profesor...</option>
-                            @if (ViewBag.Profesores != null)
-                            {
-                                @foreach (var profesor in ViewBag.Profesores)
-                                {
-                                    <option value="@profesor.Identificacion">
-                                        @profesor.Nombre @profesor.Apellidos
-                                    </option>
-                                }
-                            }
-                        </select>
+                        <label for="descripcionFormulario" class="form-label">Descripción <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="descripcionFormulario" rows="3" required></textarea>
                     </div>
                     
                     <div class="mb-3">
@@ -286,7 +270,6 @@ async function subirFormulario(e) {
     const formData = new FormData();
     formData.append('nombre', document.getElementById('nombreFormulario').value);
     formData.append('descripcion', document.getElementById('descripcionFormulario').value);
-    formData.append('profesorId', document.getElementById('profesorFormulario').value);
     formData.append('archivo', document.getElementById('archivoFormulario').files[0]);
     
     try {

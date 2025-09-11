@@ -160,9 +160,6 @@
                                             <button type="button" class="btn btn-sm btn-outline-primary" onclick="verDetallesGrupo(@grupo.Numero)" title="Ver detalles">
                                                 <i class="fas fa-eye"></i>
                                             </button>
-                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="contactarGrupo(@grupo.Numero)" title="Contactar">
-                                                <i class="fas fa-envelope"></i>
-                                            </button>
                                             <a href="@Url.Action("Revisiones", "Tutor")" class="btn btn-sm btn-outline-success" title="Ver entregas">
                                                 <i class="fas fa-clipboard-check"></i>
                                             </a>
@@ -549,11 +546,6 @@
 function verDetallesGrupo(numeroGrupo) {
     // Implementar modal o redirección con detalles del grupo
     window.location.href = `@Url.Action("MisGrupos", "Tutor")#grupo-${numeroGrupo}`;
-}
-
-function contactarGrupo(numeroGrupo) {
-    // Implementar funcionalidad de contacto
-    alert(`Contactar Grupo ${numeroGrupo} (funcionalidad por implementar)`);
 }
 
 // Función para resaltar fila al hacer hover en acciones

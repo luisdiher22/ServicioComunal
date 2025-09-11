@@ -27,9 +27,6 @@
                 <a class="nav-link" href="@Url.Action("Entregas", "Estudiante")">
                     <i class="fas fa-file-upload"></i> Entregas
                 </a>
-                <a class="nav-link" href="@Url.Action("GestionGrupos", "Estudiante")">
-                    <i class="fas fa-users-cog"></i> Gestión de Grupos
-                </a>
                 <a class="nav-link" href="@Url.Action("MisSolicitudes", "Estudiante")">
                     <i class="fas fa-bell"></i> Solicitudes
                 </a>
@@ -88,64 +85,6 @@
                                     }
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Estadísticas rápidas -->
-            <div class="row mb-4">
-                <div class="col-md-3">
-                    <div class="card bg-info text-white">
-                        <div class="card-body text-center">
-                            <i class="fas fa-file-upload fa-2x mb-2"></i>
-                            <h4>@(entregas?.Count ?? 0)</h4>
-                            <p>Entregas Realizadas</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-success text-white">
-                        <div class="card-body text-center">
-                            <i class="fas fa-check-circle fa-2x mb-2"></i>
-                            <h4>@(entregas?.Count(e => !string.IsNullOrEmpty(e.Retroalimentacion)) ?? 0)</h4>
-                            <p>Entregas Revisadas</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-warning text-white">
-                        <div class="card-body text-center">
-                            <i class="fas fa-clock fa-2x mb-2"></i>
-                            <h4>@(entregas?.Count(e => string.IsNullOrEmpty(e.Retroalimentacion) && string.IsNullOrEmpty(e.ArchivoRuta)) ?? 0)</h4>
-                            <p>Pendientes</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-info text-white">
-                        <div class="card-body text-center">
-                            <i class="fas fa-upload fa-2x mb-2"></i>
-                            <h4>@(entregas?.Count(e => string.IsNullOrEmpty(e.Retroalimentacion) && !string.IsNullOrEmpty(e.ArchivoRuta)) ?? 0)</h4>
-                            <p>Enviadas</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-danger text-white">
-                        <div class="card-body text-center">
-                            <i class="fas fa-edit fa-2x mb-2"></i>
-                            <h4>@(entregas?.Count(e => !string.IsNullOrEmpty(e.Retroalimentacion) && e.Retroalimentacion.StartsWith("CAMBIOS SOLICITADOS:")) ?? 0)</h4>
-                            <p>Requieren Cambios</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-primary text-white">
-                        <div class="card-body text-center">
-                            <i class="fas fa-users fa-2x mb-2"></i>
-                            <h4>@((companeros?.Count ?? 0) + 1)</h4>
-                            <p>Miembros del Grupo</p>
                         </div>
                     </div>
                 </div>

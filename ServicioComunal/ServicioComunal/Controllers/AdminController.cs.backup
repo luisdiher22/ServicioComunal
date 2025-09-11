@@ -221,22 +221,13 @@ namespace ServicioComunal.Controllers
         [HttpGet]
         public IActionResult ObtenerAnexosDisponibles()
         {
-            var anexos = new[]
-            {
-                new { Id = 1, Nombre = "Anexo #1 - Información Básica", Archivo = "Anexo #1 Interactivo.pdf" },
-                new { Id = 2, Nombre = "Anexo #2 - Propuesta de Proyecto", Archivo = "Anexo #2 Interactivo.pdf" },
-                new { Id = 3, Nombre = "Anexo #3 - Plan de Trabajo", Archivo = "Anexo #3 Interactivo.pdf" },
-                new { Id = 5, Nombre = "Anexo #5 - Evaluación Final", Archivo = "Anexo #5 Interactivo.pdf" }
-            };
+            // Array vacío ya que se eliminaron todos los formularios del sistema duplicados
+            var anexos = new object[0];
 
-            var anexosConInfo = anexos.Select(a => new
-            {
-                a.Id,
-                a.Nombre,
-                a.Archivo,
-                Existe = System.IO.File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "formularios", a.Archivo)),
-                RutaDescarga = $"/uploads/formularios/{a.Archivo}"
-            }).ToList();
+            var anexosConInfo = new List<object>();
+
+            return Json(new { success = true, anexos = anexosConInfo });
+        }
 
             return Json(new { success = true, anexos = anexosConInfo });
         }

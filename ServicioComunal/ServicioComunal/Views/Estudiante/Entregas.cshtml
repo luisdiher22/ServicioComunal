@@ -25,9 +25,6 @@
                 <a class="nav-link active" href="@Url.Action("Entregas", "Estudiante")">
                     <i class="fas fa-file-upload"></i> Entregas
                 </a>
-                <a class="nav-link" href="@Url.Action("GestionGrupos", "Estudiante")">
-                    <i class="fas fa-users-cog"></i> Gestión de Grupos
-                </a>
                 <a class="nav-link" href="@Url.Action("MisSolicitudes", "Estudiante")">
                     <i class="fas fa-bell"></i> Solicitudes
                 </a>
@@ -51,58 +48,58 @@
             </div>
 
             <!-- Estadísticas de entregas -->
-            <div class="row mb-4">
-                <div class="col-md-3">
-                    <div class="card bg-primary text-white">
-                        <div class="card-body text-center">
-                            <i class="fas fa-file-upload fa-2x mb-2"></i>
-                            <h4>@(entregas?.Count ?? 0)</h4>
-                            <p>Total Entregas</p>
+            <div class="row mb-3">
+                <div class="col-md-2">
+                    <div class="card bg-primary text-white" style="height: 90px;">
+                        <div class="card-body text-center p-2">
+                            <i class="fas fa-file-upload mb-1"></i>
+                            <h6 class="mb-0">@(entregas?.Count ?? 0)</h6>
+                            <small style="font-size: 0.7rem;">Total Entregas</small>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card bg-success text-white">
-                        <div class="card-body text-center">
-                            <i class="fas fa-check-circle fa-2x mb-2"></i>
-                            <h4>@(entregas?.Count(e => !string.IsNullOrEmpty(e.Retroalimentacion)) ?? 0)</h4>
-                            <p>Revisadas</p>
+                <div class="col-md-2">
+                    <div class="card bg-success text-white" style="height: 90px;">
+                        <div class="card-body text-center p-2">
+                            <i class="fas fa-check-circle mb-1"></i>
+                            <h6 class="mb-0">@(entregas?.Count(e => !string.IsNullOrEmpty(e.Retroalimentacion)) ?? 0)</h6>
+                            <small style="font-size: 0.7rem;">Revisadas</small>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card bg-warning text-white">
-                        <div class="card-body text-center">
-                            <i class="fas fa-clock fa-2x mb-2"></i>
-                            <h4>@(entregas?.Count(e => string.IsNullOrEmpty(e.Retroalimentacion) && string.IsNullOrEmpty(e.ArchivoRuta)) ?? 0)</h4>
-                            <p>Pendientes</p>
+                <div class="col-md-2">
+                    <div class="card bg-warning text-white" style="height: 90px;">
+                        <div class="card-body text-center p-2">
+                            <i class="fas fa-clock mb-1"></i>
+                            <h6 class="mb-0">@(entregas?.Count(e => string.IsNullOrEmpty(e.Retroalimentacion) && string.IsNullOrEmpty(e.ArchivoRuta)) ?? 0)</h6>
+                            <small style="font-size: 0.7rem;">Pendientes</small>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card bg-info text-white">
-                        <div class="card-body text-center">
-                            <i class="fas fa-upload fa-2x mb-2"></i>
-                            <h4>@(entregas?.Count(e => string.IsNullOrEmpty(e.Retroalimentacion) && !string.IsNullOrEmpty(e.ArchivoRuta)) ?? 0)</h4>
-                            <p>Enviadas</p>
+                <div class="col-md-2">
+                    <div class="card bg-info text-white" style="height: 90px;">
+                        <div class="card-body text-center p-2">
+                            <i class="fas fa-upload mb-1"></i>
+                            <h6 class="mb-0">@(entregas?.Count(e => string.IsNullOrEmpty(e.Retroalimentacion) && !string.IsNullOrEmpty(e.ArchivoRuta)) ?? 0)</h6>
+                            <small style="font-size: 0.7rem;">Enviadas</small>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card bg-danger text-white">
-                        <div class="card-body text-center">
-                            <i class="fas fa-edit fa-2x mb-2"></i>
-                            <h4>@(entregas?.Count(e => !string.IsNullOrEmpty(e.Retroalimentacion) && e.Retroalimentacion.StartsWith("CAMBIOS SOLICITADOS:")) ?? 0)</h4>
-                            <p>Requieren Cambios</p>
+                <div class="col-md-2">
+                    <div class="card bg-danger text-white" style="height: 90px;">
+                        <div class="card-body text-center p-2">
+                            <i class="fas fa-edit mb-1"></i>
+                            <h6 class="mb-0">@(entregas?.Count(e => !string.IsNullOrEmpty(e.Retroalimentacion) && e.Retroalimentacion.StartsWith("CAMBIOS SOLICITADOS:")) ?? 0)</h6>
+                            <small style="font-size: 0.7rem;">Requieren Cambios</small>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card bg-info text-white">
-                        <div class="card-body text-center">
-                            <i class="fas fa-calendar-alt fa-2x mb-2"></i>
-                            <h4>@(entregas?.Count(e => e.FechaLimite > DateTime.Now) ?? 0)</h4>
-                            <p>En Plazo</p>
+                <div class="col-md-2">
+                    <div class="card bg-secondary text-white" style="height: 90px;">
+                        <div class="card-body text-center p-2">
+                            <i class="fas fa-calendar-alt mb-1"></i>
+                            <h6 class="mb-0">@(entregas?.Count(e => e.FechaLimite > DateTime.Now) ?? 0)</h6>
+                            <small style="font-size: 0.7rem;">En Plazo</small>
                         </div>
                     </div>
                 </div>
@@ -127,7 +124,6 @@
                                                 <th><i class="fas fa-file"></i> Nombre</th>
                                                 <th><i class="fas fa-info-circle"></i> Descripción</th>
                                                 <th><i class="fas fa-calendar"></i> Fecha Límite</th>
-                                                <th><i class="fas fa-user"></i> Asignado por</th>
                                                 <th><i class="fas fa-flag"></i> Estado</th>
                                                 <th><i class="fas fa-cogs"></i> Acciones</th>
                                             </tr>
@@ -151,16 +147,6 @@
                                                         else if (entrega.FechaLimite <= DateTime.Now.AddDays(2))
                                                         {
                                                             <br><small class="text-warning"><i class="fas fa-clock"></i> Próxima a vencer</small>
-                                                        }
-                                                    </td>
-                                                    <td>
-                                                        @if (entrega.Profesor != null)
-                                                        {
-                                                            <span>@entrega.Profesor.Nombre @entrega.Profesor.Apellidos</span>
-                                                        }
-                                                        else
-                                                        {
-                                                            <span class="text-muted">Sin asignar</span>
                                                         }
                                                     </td>
                                                     <td>

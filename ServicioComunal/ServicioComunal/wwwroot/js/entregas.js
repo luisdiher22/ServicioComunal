@@ -192,7 +192,7 @@ async function verEntrega(id) {
             if (tieneArchivo && tieneRetroalimentacion) {
                 estadoHtml = '<span class="badge badge-success"><i class="fas fa-check"></i> Completada</span>';
             } else if (tieneArchivo) {
-                estadoHtml = '<span class="badge badge-info"><i class="fas fa-upload"></i> Entregada</span>';
+                estadoHtml = '<span class="badge badge-info"><i class="fas fa-upload"></i> Pendiente revisión tutor</span>';
             } else {
                 estadoHtml = '<span class="badge badge-secondary"><i class="fas fa-clock"></i> Pendiente</span>';
             }
@@ -333,6 +333,7 @@ function filtrarEntregas() {
     const filas = document.querySelectorAll('.entrega-row');
     
     filas.forEach(fila => {
+        const id = fila.getAttribute('data-id');
         const nombre = fila.getAttribute('data-nombre');
         const descripcion = fila.getAttribute('data-descripcion');
         const grupo = fila.getAttribute('data-grupo');
@@ -340,8 +341,8 @@ function filtrarEntregas() {
         
         let mostrar = true;
         
-        // Filtro por búsqueda (nombre o descripción)
-        if (busqueda && !nombre.includes(busqueda) && !descripcion.includes(busqueda)) {
+        // Filtro por búsqueda (ID, nombre o descripción)
+        if (busqueda && !id.includes(busqueda) && !nombre.includes(busqueda) && !descripcion.includes(busqueda)) {
             mostrar = false;
         }
         
@@ -359,8 +360,8 @@ function filtrarEntregas() {
     });
 }
 
-// Función para limpiar búsqueda
-function limpiarBusqueda() {
+// Función para limpiar filtros
+function limpiarFiltros() {
     document.getElementById('buscarEntrega').value = '';
     document.getElementById('filtroEstado').value = '';
     document.getElementById('filtroGrupo').value = '';
