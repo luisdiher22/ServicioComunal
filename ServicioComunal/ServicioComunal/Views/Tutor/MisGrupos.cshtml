@@ -59,12 +59,19 @@
                                 <div class="integrantes-list">
                                     @foreach (var grupoEstudiante in grupo.GruposEstudiantes)
                                     {
+                                        var esLider = grupo.LiderIdentificacion.HasValue && grupoEstudiante.Estudiante.Identificacion == grupo.LiderIdentificacion.Value;
                                         <div class="integrante-item">
                                             <div class="avatar-large">
                                                 @grupoEstudiante.Estudiante.Nombre.Substring(0, 1)@grupoEstudiante.Estudiante.Apellidos.Substring(0, 1)
                                             </div>
                                             <div class="integrante-info">
-                                                <span class="nombre">@grupoEstudiante.Estudiante.Nombre @grupoEstudiante.Estudiante.Apellidos</span>
+                                                <span class="nombre">
+                                                    @if (esLider)
+                                                    {
+                                                        <i class="fas fa-crown" style="color: #d4af37; margin-right: 4px;" title="Líder"></i>
+                                                    }
+                                                    @grupoEstudiante.Estudiante.Nombre @grupoEstudiante.Estudiante.Apellidos
+                                                </span>
                                                 <small class="cedula">@grupoEstudiante.Estudiante.Identificacion</small>
                                             </div>
                                         </div>
@@ -89,9 +96,6 @@
                         </div>
 
                         <div class="grupo-actions-section">
-                            <button class="btn btn-primary" onclick="verDetalles(@grupo.Numero)">
-                                <i class="fas fa-eye"></i> Ver Detalles
-                            </button>
                             <a href="@Url.Action("Revisiones", "Tutor", new { grupo = grupo.Numero })" class="btn btn-outline-primary">
                                 <i class="fas fa-clipboard-check"></i> Ver Entregas
                             </a>

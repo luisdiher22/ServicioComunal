@@ -54,7 +54,7 @@
     <div class="card mb-4">
         <div class="card-body">
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label">Filtrar por rol:</label>
                     <select class="form-select" id="filtroRol" onchange="filtrarUsuarios()">
                         <option value="">Todos los roles</option>
@@ -63,7 +63,7 @@
                         <option value="Estudiante">Estudiante</option>
                     </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label">Filtrar por estado:</label>
                     <select class="form-select" id="filtroEstado" onchange="filtrarUsuarios()">
                         <option value="">Todos los estados</option>
@@ -72,9 +72,15 @@
                         <option value="requiere-cambio">Requiere cambio contraseña</option>
                     </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label">Buscar usuario:</label>
                     <input type="text" class="form-control" id="buscarUsuario" placeholder="Nombre de usuario o identificación" onkeyup="filtrarUsuarios()">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="button" class="btn btn-outline-secondary w-100" onclick="limpiarFiltrosUsuarios()">
+                        <i class="fas fa-times"></i> Limpiar
+                    </button>
                 </div>
             </div>
         </div>
@@ -285,6 +291,13 @@
                 
                 fila.style.display = mostrar ? '' : 'none';
             });
+        }
+
+        function limpiarFiltrosUsuarios() {
+            document.getElementById('filtroRol').value = '';
+            document.getElementById('filtroEstado').value = '';
+            document.getElementById('buscarUsuario').value = '';
+            filtrarUsuarios();
         }
 
         function guardarNuevaContraseña() {

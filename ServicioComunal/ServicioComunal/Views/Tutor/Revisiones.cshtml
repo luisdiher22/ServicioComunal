@@ -27,44 +27,44 @@
         }
     </div>
 
-    <div class="revisiones-container">
-        <!-- Filtro de grupos -->
-        <div class="filtros-section mb-3">
-            <div class="card">
-                <div class="card-body py-2">
-                    <div class="row align-items-center">
-                        <div class="col-md-6">
-                            <label for="filtroGrupo" class="form-label mb-0">Filtrar por grupo:</label>
-                            <select class="form-select form-select-sm" id="filtroGrupo" onchange="cambiarGrupo()">
-                                <option value="">Todos los grupos</option>
-                                @if (ViewBag.GruposAsignados != null)
+    <!-- Filtro de grupos fuera del grid -->
+    <div class="filtros-section mb-2" style="margin-top: -15px;">
+        <div class="card">
+            <div class="card-body py-2">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <label for="filtroGrupo" class="form-label mb-0">Filtrar por grupo:</label>
+                        <select class="form-select form-select-sm" id="filtroGrupo" onchange="cambiarGrupo()">
+                            <option value="">Todos los grupos</option>
+                            @if (ViewBag.GruposAsignados != null)
+                            {
+                                @foreach (int grupoNum in ViewBag.GruposAsignados)
                                 {
-                                    @foreach (int grupoNum in ViewBag.GruposAsignados)
-                                    {
-                                        <option value="@grupoNum" @(ViewBag.GrupoFiltrado == grupoNum ? "selected" : "")>
-                                            Grupo @grupoNum
-                                        </option>
-                                    }
+                                    <option value="@grupoNum" @(ViewBag.GrupoFiltrado == grupoNum ? "selected" : "")>
+                                        Grupo @grupoNum
+                                    </option>
                                 }
-                            </select>
-                        </div>
-                        <div class="col-md-6 text-end">
-                            <small class="text-muted">
-                                @if (ViewBag.GrupoFiltrado != null)
-                                {
-                                    <span>Grupo específico seleccionado</span>
-                                }
-                                else
-                                {
-                                    <span>Mostrando todos los grupos asignados</span>
-                                }
-                            </small>
-                        </div>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <small class="text-muted">
+                            @if (ViewBag.GrupoFiltrado != null)
+                            {
+                                <span>Grupo específico seleccionado</span>
+                            }
+                            else
+                            {
+                                <span>Mostrando todos los grupos asignados</span>
+                            }
+                        </small>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
+    <div class="revisiones-container">
         <div class="entregables-lista">
             <div class="lista-header">
                 <h3>Entregables por Revisar</h3>
@@ -73,8 +73,21 @@
 
             @if (Model != null && Model.Any())
             {
+                var entregasOrdenadas = Model
+                    .OrderBy(e => {
+                        var tieneRetroalimentacion = !string.IsNullOrEmpty(e.Retroalimentacion);
+                        var tieneArchivo = !string.IsNullOrEmpty(e.ArchivoRuta);
+                        
+                        if (!tieneRetroalimentacion && tieneArchivo) return 1; // Listo para revisión
+                        if (!tieneRetroalimentacion && !tieneArchivo) return 2; // Pendiente
+                        if (tieneRetroalimentacion && e.Retroalimentacion.StartsWith("CAMBIOS SOLICITADOS")) return 3; // Cambios solicitados
+                        if (tieneRetroalimentacion && e.Retroalimentacion.StartsWith("APROBADO:")) return 4; // Aprobados
+                        return 5; // Otros casos
+                    })
+                    .ThenByDescending(e => e.FechaEntrega ?? DateTime.MinValue) // Fecha de mayor a menor
+                    .ToList();
                 <div class="entregables-grid">
-                    @foreach (var entrega in Model)
+                    @foreach (var entrega in entregasOrdenadas)
                     {
                         var estudiante = entrega.Grupo.GruposEstudiantes.FirstOrDefault()?.Estudiante;
                         var tieneRetroalimentacion = !string.IsNullOrEmpty(entrega.Retroalimentacion);
@@ -210,9 +223,11 @@
 /* Estilos específicos para Revisiones */
 .revisiones-container {
     display: grid;
-    grid-template-columns: 1fr 400px;
-    gap: 24px;
-    height: calc(100vh - 200px);
+    grid-template-columns: 1fr 440px;
+    gap: 18px;
+    height: calc(100vh - 160px);
+    align-items: flex-start;
+    margin-top: 10px;
 }
 
 .entregables-lista {
@@ -223,6 +238,8 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    min-height: 520px;
+    max-height: 80vh;
 }
 
 .lista-header {
@@ -343,9 +360,10 @@
     flex-direction: column;
     overflow: hidden;
     position: sticky;
-    top: 20px;
+    top: 8px;
     height: fit-content;
-    max-height: calc(100vh - 200px);
+    min-height: 340px;
+    max-height: 80vh;
 }
 
 .detalle-header {
