@@ -255,6 +255,65 @@
     </div>
 </div>
 
+<!-- Modal de edición -->
+<div class="modal fade" id="modalEditarEntrega" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-primary">
+                    <i class="fas fa-edit"></i>
+                    Editar Entrega
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEditarEntrega">
+                    <input type="hidden" id="editEntregaId" />
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="editNombre" class="form-label">Nombre <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editNombre" required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="editTipoAnexo" class="form-label">Tipo de Anexo <span class="text-danger">*</span></label>
+                            <select class="form-select" id="editTipoAnexo" required>
+                                <option value="">Seleccione un tipo</option>
+                                <option value="PDF">PDF</option>
+                                <option value="Documento">Documento</option>
+                                <option value="Imagen">Imagen</option>
+                                <option value="Video">Video</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editDescripcion" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="editDescripcion" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editFechaLimite" class="form-label">Fecha Límite <span class="text-danger">*</span></label>
+                        <input type="datetime-local" class="form-control" id="editFechaLimite" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </button>
+                <button type="button" id="btnGuardarEdicion" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    Guardar Cambios
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     .badge-estado {
         font-size: 0.8em;
@@ -356,6 +415,9 @@ function mostrarEntregas(entregas) {
                 <div class="btn-group btn-group-sm">
                     <button class="btn btn-outline-primary" onclick="verDetalleEntrega(${entrega.identificacion})">
                         <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-outline-warning" onclick="editarEntrega(${entrega.identificacion})">
+                        <i class="fas fa-edit"></i>
                     </button>
                     <button class="btn btn-outline-danger" onclick="eliminarEntrega(${entrega.identificacion})">
                         <i class="fas fa-trash"></i>
@@ -504,4 +566,75 @@ function verDetalleEntrega(entregaId) {
     // Implementar según necesidades
     alert('Ver detalle de entrega ' + entregaId);
 }
+
+async function editarEntrega(entregaId) {
+    try {
+        const response = await fetch(`/Home/ObtenerEntregaParaEdicion/${entregaId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            const entrega = data.entrega;
+            
+            // Llenar los campos del modal
+            document.getElementById('editEntregaId').value = entrega.id;
+            document.getElementById('editNombre').value = entrega.nombre;
+            document.getElementById('editDescripcion').value = entrega.descripcion || '';
+            document.getElementById('editTipoAnexo').value = entrega.tipoAnexo;
+            
+            // Formatear la fecha para datetime-local
+            if (entrega.fechaLimite) {
+                const fecha = new Date(entrega.fechaLimite);
+                const fechaFormateada = fecha.toISOString().slice(0, 16);
+                document.getElementById('editFechaLimite').value = fechaFormateada;
+            }
+            
+            // Mostrar el modal
+            const modal = new bootstrap.Modal(document.getElementById('modalEditarEntrega'));
+            modal.show();
+        } else {
+            alert('Error al cargar la entrega: ' + data.message);
+        }
+    } catch (error) {
+        alert('Error al obtener los datos de la entrega: ' + error.message);
+    }
+}
+
+document.getElementById('btnGuardarEdicion').addEventListener('click', async function() {
+    const form = document.getElementById('formEditarEntrega');
+    
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const request = {
+        EntregaId: parseInt(document.getElementById('editEntregaId').value),
+        Nombre: document.getElementById('editNombre').value,
+        Descripcion: document.getElementById('editDescripcion').value,
+        FechaLimite: document.getElementById('editFechaLimite').value,
+        TipoAnexo: document.getElementById('editTipoAnexo').value
+    };
+    
+    try {
+        const response = await fetch('/Home/EditarEntregaAdmin', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(request)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Entrega actualizada exitosamente');
+            bootstrap.Modal.getInstance(document.getElementById('modalEditarEntrega')).hide();
+            cargarEntregas(); // Recargar la lista
+        } else {
+            alert('Error: ' + data.message);
+        }
+    } catch (error) {
+        alert('Error al guardar los cambios: ' + error.message);
+    }
+});
 </script>

@@ -2529,6 +2529,11 @@ namespace ServicioComunal.Controllers
             try
             {
                 var entrega = await _context.Entregas
+                    .Include(e => e.Grupo)
+                        .ThenInclude(g => g.GruposEstudiantes)
+                            .ThenInclude(ge => ge.Estudiante)
+                    .Include(e => e.Profesor)
+                    .Include(e => e.Formulario)
                     .FirstOrDefaultAsync(e => e.Identificacion == id);
 
                 if (entrega == null)
@@ -2536,6 +2541,17 @@ namespace ServicioComunal.Controllers
                     return Json(new { success = false, message = "Entrega no encontrada" });
                 }
 
+                // Eliminar primero las notificaciones relacionadas con esta entrega
+                var notificaciones = await _context.Notificaciones
+                    .Where(n => n.EntregaId == id)
+                    .ToListAsync();
+                
+                if (notificaciones.Any())
+                {
+                    _context.Notificaciones.RemoveRange(notificaciones);
+                }
+
+                // Ahora eliminar la entrega
                 _context.Entregas.Remove(entrega);
                 await _context.SaveChangesAsync();
 
@@ -2543,7 +2559,9 @@ namespace ServicioComunal.Controllers
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = $"Error al eliminar entrega: {ex.Message}" });
+                var innerException = ex.InnerException?.Message ?? "No inner exception";
+                var detailedError = $"Error: {ex.Message} | Inner: {innerException}";
+                return Json(new { success = false, message = detailedError });
             }
         }
 
@@ -2583,6 +2601,8 @@ namespace ServicioComunal.Controllers
         {
             try
             {
+                Console.WriteLine($"Buscando entrega con ID: {id}");
+                
                 var entrega = await _context.Entregas
                     .Include(e => e.Grupo)
                     .Include(e => e.Formulario) // Incluir información del formulario
@@ -2590,10 +2610,13 @@ namespace ServicioComunal.Controllers
 
                 if (entrega == null)
                 {
-                    return Json(new { success = false, message = "Entrega no encontrada" });
+                    Console.WriteLine($"Entrega no encontrada con ID: {id}");
+                    return Json(new { success = false, message = $"Entrega no encontrada con ID: {id}" });
                 }
 
-                return Json(new { 
+                Console.WriteLine($"Entrega encontrada: {entrega.Nombre}");
+
+                var resultado = new { 
                     success = true, 
                     entrega = new {
                         identificacion = entrega.Identificacion,
@@ -2607,11 +2630,22 @@ namespace ServicioComunal.Controllers
                         formularioIdentificacion = entrega.FormularioIdentificacion,
                         formularioNombre = entrega.Formulario?.Nombre // Incluir nombre del formulario
                     }
-                });
+                };
+
+                Console.WriteLine($"Devolviendo resultado: {System.Text.Json.JsonSerializer.Serialize(resultado)}");
+                return Json(resultado);
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = $"Error al obtener entrega: {ex.Message}" });
+                Console.WriteLine($"Error en ObtenerEntrega: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                }
+                
+                var innerException = ex.InnerException?.Message ?? "No inner exception";
+                var detailedError = $"Error al obtener entrega: {ex.Message} | Inner: {innerException}";
+                return Json(new { success = false, message = detailedError });
             }
         }
 
@@ -3521,7 +3555,11 @@ namespace ServicioComunal.Controllers
         {
             try
             {
-                var entrega = await _context.Entregas.FindAsync(request.EntregaId);
+                var entrega = await _context.Entregas
+                    .Include(e => e.Grupo)
+                    .ThenInclude(g => g.GruposEstudiantes)
+                    .FirstOrDefaultAsync(e => e.Identificacion == request.EntregaId);
+                
                 if (entrega == null)
                 {
                     return Json(new { success = false, message = "Entrega no encontrada" });
@@ -3537,6 +3575,7 @@ namespace ServicioComunal.Controllers
                     }
                 }
 
+                // Forzar la eliminación incluso si hay dependencias
                 _context.Entregas.Remove(entrega);
                 await _context.SaveChangesAsync();
 
@@ -3545,6 +3584,76 @@ namespace ServicioComunal.Controllers
             catch (Exception ex)
             {
                 return Json(new { success = false, message = "Error al eliminar entrega: " + ex.Message });
+            }
+        }
+
+        // Obtener entrega para edición
+        [HttpGet]
+        public async Task<IActionResult> ObtenerEntregaParaEdicion(int entregaId)
+        {
+            try
+            {
+                var entrega = await _context.Entregas
+                    .Include(e => e.Grupo)
+                    .Include(e => e.Profesor)
+                    .FirstOrDefaultAsync(e => e.Identificacion == entregaId);
+
+                if (entrega == null)
+                {
+                    return Json(new { success = false, message = "Entrega no encontrada" });
+                }
+
+                return Json(new 
+                { 
+                    success = true, 
+                    entrega = new 
+                    {
+                        identificacion = entrega.Identificacion,
+                        nombre = entrega.Nombre,
+                        descripcion = entrega.Descripcion,
+                        fechaLimite = entrega.FechaLimite.ToString("yyyy-MM-ddTHH:mm"),
+                        grupoNumero = entrega.GrupoNumero,
+                        profesorIdentificacion = entrega.ProfesorIdentificacion,
+                        tipoAnexo = entrega.TipoAnexo
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al obtener la entrega: " + ex.Message });
+            }
+        }
+
+        // Editar entrega
+        [HttpPost]
+        public async Task<IActionResult> EditarEntregaAdmin([FromBody] EditarEntregaAdminRequest request)
+        {
+            try
+            {
+                var entrega = await _context.Entregas.FindAsync(request.EntregaId);
+                if (entrega == null)
+                {
+                    return Json(new { success = false, message = "Entrega no encontrada" });
+                }
+
+                // Actualizar los campos editables
+                entrega.Nombre = request.Nombre;
+                entrega.Descripcion = request.Descripcion;
+                entrega.FechaLimite = request.FechaLimite;
+                entrega.TipoAnexo = request.TipoAnexo;
+                
+                if (request.ProfesorIdentificacion.HasValue)
+                {
+                    entrega.ProfesorIdentificacion = request.ProfesorIdentificacion;
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Entrega actualizada exitosamente" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al actualizar entrega: " + ex.Message });
             }
         }
 
@@ -3739,5 +3848,15 @@ namespace ServicioComunal.Controllers
     public class EliminarEntregaAdminRequest
     {
         public int EntregaId { get; set; }
+    }
+
+    public class EditarEntregaAdminRequest
+    {
+        public int EntregaId { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+        public string Descripcion { get; set; } = string.Empty;
+        public DateTime FechaLimite { get; set; }
+        public int TipoAnexo { get; set; }
+        public int? ProfesorIdentificacion { get; set; }
     }
 }

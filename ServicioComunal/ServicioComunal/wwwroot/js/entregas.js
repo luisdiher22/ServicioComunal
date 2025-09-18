@@ -255,45 +255,116 @@ async function verEntrega(id) {
 
 // Función para editar entrega
 async function editarEntrega(id) {
+    console.log('Iniciando edición para entrega ID:', id);
+    
     try {
+        console.log('Haciendo petición a:', `/Home/ObtenerEntrega/${id}`);
         const response = await fetch(`/Home/ObtenerEntrega/${id}`);
         const result = await response.json();
 
+        console.log('Respuesta del servidor:', result);
+
         if (result.success) {
             const entrega = result.entrega;
+            console.log('Datos de la entrega:', entrega);
             
-            document.getElementById('entregaId').value = entrega.identificacion;
-            document.getElementById('entregaNombre').value = entrega.nombre;
-            document.getElementById('entregaDescripcion').value = entrega.descripcion;
-            
-            // Convertir fecha al formato datetime-local
-            const fechaLimite = new Date(entrega.fechaLimite);
-            const fechaLocal = new Date(fechaLimite.getTime() - fechaLimite.getTimezoneOffset() * 60000);
-            document.getElementById('entregaFechaLimite').value = fechaLocal.toISOString().slice(0, 16);
-            
-            document.getElementById('entregaGrupo').value = entrega.grupoNumero;
-            
-            // Establecer el formulario seleccionado si existe
-            if (entrega.formularioIdentificacion) {
-                document.getElementById('entregaFormulario').value = entrega.formularioIdentificacion;
+            // Abrir el modal primero
+            console.log('Abriendo modal primero...');
+            const modalElement = document.getElementById('modalEntrega');
+            if (!modalElement) {
+                throw new Error('Elemento modal no encontrado');
+            }
+
+            // Configurar el modal
+            if (typeof $ !== 'undefined' && $.fn.modal) {
+                console.log('Usando jQuery para abrir modal');
+                $('#modalEntrega').modal('show');
+                
+                // Esperar a que el modal se abra completamente
+                $('#modalEntrega').on('shown.bs.modal', function () {
+                    llenarFormularioEdicion(entrega);
+                });
             } else {
-                document.getElementById('entregaFormulario').value = '';
+                console.log('Usando Bootstrap nativo para abrir modal');
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+                
+                // Esperar a que el modal se abra completamente
+                modalElement.addEventListener('shown.bs.modal', function () {
+                    llenarFormularioEdicion(entrega);
+                });
             }
             
-            document.getElementById('modalEntregaLabel').textContent = 'Editar Entrega';
-            document.getElementById('modoEdicion').style.display = 'block';
-            document.getElementById('seccionDestinatarios').style.display = 'none';
-            document.getElementById('infoNuevaEntrega').style.display = 'none';
-            esEdicion = true;
-            
-            const modal = new bootstrap.Modal(document.getElementById('modalEntrega'));
-            modal.show();
         } else {
+            console.error('Error del servidor:', result.message);
             mostrarAlerta(result.message, 'danger');
         }
     } catch (error) {
-        console.error('Error:', error);
-        mostrarAlerta('Error al cargar la entrega', 'danger');
+        console.error('Error completo:', error);
+        mostrarAlerta('Error al cargar la entrega: ' + error.message, 'danger');
+    }
+}
+
+// Función para llenar el formulario de edición una vez que el modal está completamente abierto
+function llenarFormularioEdicion(entrega) {
+    console.log('Llenando formulario de edición con:', entrega);
+    
+    try {
+        // Verificar que los elementos existan antes de usarlos
+        const elementoId = document.getElementById('entregaId');
+        const elementoNombre = document.getElementById('entregaNombre');
+        const elementoDescripcion = document.getElementById('entregaDescripcion');
+        const elementoFechaLimite = document.getElementById('entregaFechaLimite');
+        const elementoGrupo = document.getElementById('entregaGrupo');
+        
+        console.log('Elementos DOM encontrados en modal abierto:', {
+            id: !!elementoId,
+            nombre: !!elementoNombre,
+            descripcion: !!elementoDescripcion,
+            fechaLimite: !!elementoFechaLimite,
+            grupo: !!elementoGrupo
+        });
+        
+        if (!elementoId || !elementoNombre || !elementoDescripcion || !elementoFechaLimite || !elementoGrupo) {
+            throw new Error('Uno o más elementos del formulario no fueron encontrados después de abrir el modal');
+        }
+        
+        elementoId.value = entrega.identificacion;
+        elementoNombre.value = entrega.nombre;
+        elementoDescripcion.value = entrega.descripcion;
+        
+        // Convertir fecha al formato datetime-local
+        const fechaLimite = new Date(entrega.fechaLimite);
+        const fechaLocal = new Date(fechaLimite.getTime() - fechaLimite.getTimezoneOffset() * 60000);
+        elementoFechaLimite.value = fechaLocal.toISOString().slice(0, 16);
+        
+        elementoGrupo.value = entrega.grupoNumero;
+        
+        // Configurar elementos del modal
+        const modalLabel = document.getElementById('modalEntregaLabel');
+        const modoEdicion = document.getElementById('modoEdicion');
+        const seccionDestinatarios = document.getElementById('seccionDestinatarios');
+        const infoNuevaEntrega = document.getElementById('infoNuevaEntrega');
+        
+        console.log('Elementos del modal encontrados:', {
+            modalLabel: !!modalLabel,
+            modoEdicion: !!modoEdicion,
+            seccionDestinatarios: !!seccionDestinatarios,
+            infoNuevaEntrega: !!infoNuevaEntrega
+        });
+        
+        if (modalLabel) modalLabel.textContent = 'Editar Entrega';
+        if (modoEdicion) modoEdicion.style.display = 'block';
+        if (seccionDestinatarios) seccionDestinatarios.style.display = 'none';
+        if (infoNuevaEntrega) infoNuevaEntrega.style.display = 'none';
+        
+        esEdicion = true;
+        
+        console.log('Formulario de edición llenado exitosamente');
+        
+    } catch (error) {
+        console.error('Error al llenar formulario:', error);
+        mostrarAlerta('Error al cargar los datos en el formulario: ' + error.message, 'danger');
     }
 }
 
@@ -454,3 +525,29 @@ document.addEventListener('DOMContentLoaded', function() {
     mostrarSeccionTipoRecurso();
     mostrarSeccionGrupoEspecifico();
 });
+
+// Función de prueba para verificar elementos (puedes llamarla desde la consola)
+function probarElementosModal() {
+    const elementos = {
+        modalEntrega: document.getElementById('modalEntrega'),
+        entregaId: document.getElementById('entregaId'),
+        entregaNombre: document.getElementById('entregaNombre'),
+        entregaDescripcion: document.getElementById('entregaDescripcion'),
+        entregaFechaLimite: document.getElementById('entregaFechaLimite'),
+        entregaGrupo: document.getElementById('entregaGrupo'),
+        modalEntregaLabel: document.getElementById('modalEntregaLabel'),
+        modoEdicion: document.getElementById('modoEdicion'),
+        seccionDestinatarios: document.getElementById('seccionDestinatarios'),
+        infoNuevaEntrega: document.getElementById('infoNuevaEntrega')
+    };
+    
+    console.log('Elementos del modal:', elementos);
+    
+    Object.keys(elementos).forEach(key => {
+        if (!elementos[key]) {
+            console.error(`Elemento faltante: ${key}`);
+        }
+    });
+    
+    return elementos;
+}
