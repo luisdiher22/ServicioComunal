@@ -155,7 +155,8 @@ namespace ServicioComunal.Controllers
             var entregas = await _context.Entregas
                 .Where(e => gruposAFiltrar.Contains(e.GrupoNumero))
                 .Include(e => e.Grupo)
-                .ThenInclude(g => g.GruposEstudiantes)
+                .ThenInclude(g => g.Lider) // Incluir información del líder del grupo
+                .Include(e => e.Grupo.GruposEstudiantes)
                 .ThenInclude(ge => ge.Estudiante)
                 .Include(e => e.Formulario)
                 .OrderBy(e => e.FechaLimite < DateTime.Now ? 0 : 1)  // Vencidas primero

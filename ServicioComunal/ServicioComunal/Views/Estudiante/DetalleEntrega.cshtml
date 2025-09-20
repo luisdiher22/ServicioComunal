@@ -230,12 +230,26 @@
                                 @if (!string.IsNullOrEmpty(Model.Retroalimentacion) && Model.Retroalimentacion.StartsWith("CAMBIOS SOLICITADOS:"))
                                 {
                                     <hr>
-                                    <p class="text-center text-warning"><strong>¿Necesitas subir una nueva versión?</strong></p>
+                                    @if (ViewBag.EsLider == true)
+                                    {
+                                        <p class="text-center text-warning"><strong>¿Necesitas subir una nueva versión?</strong></p>
+                                    }
+                                    else
+                                    {
+                                        <p class="text-center text-muted"><strong>El líder del grupo puede subir una nueva versión si es necesario</strong></p>
+                                    }
                                 }
                                 else if (string.IsNullOrEmpty(Model.Retroalimentacion))
                                 {
                                     <hr>
-                                    <p class="text-muted text-center">¿Necesitas subir una nueva versión?</p>
+                                    @if (ViewBag.EsLider == true)
+                                    {
+                                        <p class="text-muted text-center">¿Necesitas subir una nueva versión?</p>
+                                    }
+                                    else
+                                    {
+                                        <p class="text-center text-muted">Solo el líder del grupo puede subir nuevas versiones</p>
+                                    }
                                 }
                             }
 
@@ -243,15 +257,28 @@
                                 (!string.IsNullOrEmpty(Model.Retroalimentacion) && Model.Retroalimentacion.StartsWith("CAMBIOS SOLICITADOS:")) ||
                                 string.IsNullOrEmpty(Model.Retroalimentacion))
                             {
-                                @if (Model.TipoAnexo > 0)
+                                @if (ViewBag.EsLider == false)
                                 {
-                                    <div class="alert alert-info text-center mb-3">
-                                        <i class="fas fa-info-circle"></i>
-                                        <strong>Nota:</strong> Esta entrega corresponde al Anexo #@Model.TipoAnexo. 
-                                        Puedes descargar la plantilla arriba como referencia y luego subir tu entrega completada aquí.
+                                    <div class="alert alert-warning text-center">
+                                        <i class="fas fa-crown"></i>
+                                        <strong>Solo el líder del grupo puede realizar entregas</strong>
+                                        <p class="mb-0 mt-2">
+                                            Las entregas deben ser realizadas únicamente por el estudiante líder del grupo. 
+                                            Si necesitas subir una entrega, coordina con tu líder de grupo.
+                                        </p>
                                     </div>
                                 }
-                <form id="formSubirEntrega" enctype="multipart/form-data" class="flex-grow-1 d-flex flex-column">
+                                else
+                                {
+                                    @if (Model.TipoAnexo > 0)
+                                    {
+                                        <div class="alert alert-info text-center mb-3">
+                                            <i class="fas fa-info-circle"></i>
+                                            <strong>Nota:</strong> Esta entrega corresponde al Anexo #@Model.TipoAnexo. 
+                                            Puedes descargar la plantilla arriba como referencia y luego subir tu entrega completada aquí.
+                                        </div>
+                                    }
+                                    <form id="formSubirEntrega" enctype="multipart/form-data" class="flex-grow-1 d-flex flex-column">
                                         <div class="mb-3 flex-grow-1">
                                             <label for="archivoEntrega" class="form-label">Seleccionar archivo:</label>
                                             <input type="file" class="form-control" id="archivoEntrega" name="archivo" 
@@ -274,6 +301,7 @@
                                             </button>
                                         </div>
                                     </form>
+                                }
                             }
                         </div>
                     </div>

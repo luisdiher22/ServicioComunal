@@ -868,6 +868,7 @@ namespace ServicioComunal.Controllers
 
             ViewBag.Estudiante = estudiante;
             ViewBag.Grupo = grupoEstudiante.Grupo;
+            ViewBag.EsLider = grupoEstudiante.Grupo?.LiderIdentificacion == estudiante.Identificacion;
 
             return View(entrega);
         }
@@ -1143,6 +1144,15 @@ namespace ServicioComunal.Controllers
                 if (grupoEstudiante == null)
                 {
                     return Json(new { success = false, message = "No estás asignado a ningún grupo" });
+                }
+
+                // Verificar que el estudiante es el líder del grupo
+                var grupo = await _context.Grupos
+                    .FirstOrDefaultAsync(g => g.Numero == grupoEstudiante.GrupoNumero);
+
+                if (grupo == null || grupo.LiderIdentificacion != estudiante.Identificacion)
+                {
+                    return Json(new { success = false, message = "Solo el líder del grupo puede realizar entregas" });
                 }
 
                 var entrega = await _context.Entregas

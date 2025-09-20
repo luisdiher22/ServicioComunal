@@ -89,7 +89,7 @@
                 <div class="entregables-grid">
                     @foreach (var entrega in entregasOrdenadas)
                     {
-                        var estudiante = entrega.Grupo.GruposEstudiantes.FirstOrDefault()?.Estudiante;
+                        var liderGrupo = entrega.Grupo.Lider; // Obtener el líder del grupo que realizó la entrega
                         var tieneRetroalimentacion = !string.IsNullOrEmpty(entrega.Retroalimentacion);
                         var tieneArchivo = !string.IsNullOrEmpty(entrega.ArchivoRuta);
                         
@@ -105,7 +105,18 @@
                                     <h4>@entrega.Nombre</h4>
                                     <div class="entregable-meta">
                                         <span class="grupo"><i class="fas fa-users"></i> Grupo @entrega.Grupo.Numero</span>
-                                        <span class="estudiante"><i class="fas fa-user"></i> @(estudiante?.Nombre) @(estudiante?.Apellidos)</span>
+                                        <span class="estudiante">
+                                            <i class="fas fa-user"></i> 
+                                            @if (liderGrupo != null)
+                                            {
+                                                @liderGrupo.Nombre @liderGrupo.Apellidos
+                                                <i class="fas fa-crown text-warning ms-1" title="Líder del grupo"></i>
+                                            }
+                                            else
+                                            {
+                                                <text>Líder no asignado</text>
+                                            }
+                                        </span>
                                     </div>
                                 </div>
                                 <div class="entregable-status">
@@ -553,7 +564,7 @@ let entregableSeleccionado = null;
 let entregablesData = [
     @foreach (var entrega in Model ?? new List<ServicioComunal.Models.Entrega>())
     {
-        var estudiante = entrega.Grupo.GruposEstudiantes.FirstOrDefault()?.Estudiante;
+        var liderGrupo = entrega.Grupo.Lider; // Obtener el líder del grupo que realizó la entrega
         <text>{
             identificacion: @entrega.Identificacion,
             nombre: "@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(entrega.Nombre))",
@@ -563,17 +574,17 @@ let entregablesData = [
             retroalimentacion: "@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(entrega.Retroalimentacion ?? ""))",
             grupo: {
                 numero: @entrega.Grupo.Numero,
-                gruposEstudiantes: [
-                    @if (estudiante != null)
-                    {
-                        <text>{
-                            estudiante: {
-                                nombre: "@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(estudiante.Nombre))",
-                                apellidos: "@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(estudiante.Apellidos))"
-                            }
-                        }</text>
-                    }
-                ]
+                lider: @if (liderGrupo != null)
+                {
+                    <text>{
+                        nombre: "@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(liderGrupo.Nombre))",
+                        apellidos: "@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(liderGrupo.Apellidos))"
+                    }</text>
+                }
+                else
+                {
+                    <text>null</text>
+                }
             }
         },</text>
     }
@@ -604,9 +615,9 @@ function mostrarDetalle(entregaId) {
     // Llenar los datos
     document.getElementById('detalleTitulo').textContent = entregable.nombre;
     
-    const estudiante = entregable.grupo.gruposEstudiantes[0]?.estudiante;
-    document.getElementById('detalleEstudiante').textContent = 
-        estudiante ? `${estudiante.nombre} ${estudiante.apellidos}` : 'No definido';
+    const liderGrupo = entregable.grupo.lider;
+    document.getElementById('detalleEstudiante').innerHTML = 
+        liderGrupo ? `${liderGrupo.nombre} ${liderGrupo.apellidos} <i class="fas fa-crown text-warning ms-1" title="Líder del grupo"></i>` : 'Líder no asignado';
     document.getElementById('detalleGrupo').textContent = `Grupo ${entregable.grupo.numero}`;
     document.getElementById('detalleFecha').textContent = entregable.fechaEntrega ? 
         new Date(entregable.fechaEntrega).toLocaleDateString('es-ES') : 'No entregado';
