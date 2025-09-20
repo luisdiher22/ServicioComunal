@@ -1157,7 +1157,7 @@ namespace ServicioComunal.Controllers
                 // Verificar fecha límite
                 if (DateTime.Now > entrega.FechaLimite)
                 {
-                    return Json(new { success = false, message = "La fecha límite para esta entrega ya pasó" });
+                    return Json(new { success = false, message = "Esta entrega ya no acepta nuevos archivos debido a que ha vencido el plazo de entrega. Si necesitas hacer una entrega tardía, comunícate con tu tutor." });
                 }
 
                 // Validar tipo de archivo

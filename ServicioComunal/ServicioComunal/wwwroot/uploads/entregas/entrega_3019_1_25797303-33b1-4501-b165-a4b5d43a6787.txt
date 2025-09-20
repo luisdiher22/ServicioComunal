@@ -1,0 +1,26 @@
+Admin:
+-La columna en el modulo de entregas se extiende según la descripción, si es muy larga deforma la tabla y se extiende innecesariamente, mejor hacerlo con un campo amplio fijo que muestre bien toda la tabla
+-Añadir botón de limpiar filtros en entregas
+-La barra de búsqueda tiene como texto de fondo "buscar por grupo", cuando en realidad no busca por grupo
+-Sería útil que también se pueda buscar por id
+-Cambiar el nombre de los estados de las entregas (no se entiende entregada y completada)
+-Será necesaria la opción de seleccionar más de un grupo en la opción de "Enviar a un grupo específico" en Nueva Entrega?
+-Aún no se puede editar ni eliminar una entrega
+
+Tutor:
+-Falta implementar "ver detalles" para cada grupo, sería bueno que esta opción se muestre solo la del inicio, y que al redirigirlo a Mis Grupos ya no se muestre la opción
+-En el módulo "Mis grupos" sería bueno que, a la hora de darle a "ver entregas" se muestre solo las entregas del grupo en específico
+-Revisar el sorting (ordenamiento) de cada entrega listada en el módulo "Revisiones"
+-Es necesario mostrar la ruta del archivo del entregable (en revisiones)?
+-En revisiones, cual es el estudiante que aparece debajo del grupo? (debería ser el estudiante que realizó la entrega o el líder?)
+-En Mis Grupos, no se indica cual es el estudiante líder
+
+Estudiante: 
+-El modulo Entregas se ve descuadrado
+-Cambiar el mensaje que aparece cuando se intenta hacer una entrega ya vencida
+-Cambiar el mensaje innecesario "Subiendo entrega" (por ejemplo, a la hora de hacer una entrega vencida, no será válida pero igual sale ese mensaje)
+-En entregas, el atributo "Asignado por:" siempre aparece "Sin asignar"
+-Revisar la vista de Detalles de entrega
+
+
+El máx. de integrantes por grupo no funciona
