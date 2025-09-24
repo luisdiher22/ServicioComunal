@@ -14,15 +14,18 @@
             </div>
 
             <nav class="nav flex-column">
-                <a class="nav-link" href="@Url.Action("Dashboard", "Estudiante")">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard
-                </a>
-                <a class="nav-link" href="@Url.Action("MiGrupo", "Estudiante")">
-                    <i class="fas fa-users"></i> Mi Grupo
-                </a>
-                <a class="nav-link" href="@Url.Action("Entregas", "Estudiante")">
-                    <i class="fas fa-file-upload"></i> Entregas
-                </a>
+                @if (ViewBag.TieneGrupo == null || (bool)ViewBag.TieneGrupo)
+                {
+                    <a class="nav-link" href="@Url.Action("Dashboard", "Estudiante")">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                    <a class="nav-link" href="@Url.Action("MiGrupo", "Estudiante")">
+                        <i class="fas fa-users"></i> Mi Grupo
+                    </a>
+                    <a class="nav-link" href="@Url.Action("Entregas", "Estudiante")">
+                        <i class="fas fa-file-upload"></i> Entregas
+                    </a>
+                }
                 <a class="nav-link" href="@Url.Action("MisSolicitudes", "Estudiante")">
                     <i class="fas fa-bell"></i> Solicitudes
                 </a>

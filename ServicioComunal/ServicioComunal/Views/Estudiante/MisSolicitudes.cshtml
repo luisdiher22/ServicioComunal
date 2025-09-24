@@ -2,6 +2,10 @@
     ViewData["Title"] = "Mis Solicitudes";
     var solicitudesEnviadas = ViewBag.SolicitudesEnviadas as List<ServicioComunal.Models.Solicitud>;
     var solicitudesRecibidas = ViewBag.SolicitudesRecibidas as List<ServicioComunal.Models.Solicitud>;
+    var tieneGrupo = (bool)ViewBag.TieneGrupo;
+    var estudiante = ViewBag.Estudiante as ServicioComunal.Models.Estudiante;
+    var grupo = ViewBag.Grupo as ServicioComunal.Models.Grupo;
+    var gruposDisponibles = ViewBag.GruposDisponibles as List<ServicioComunal.Models.Grupo>;
 }
 
 <div class="container-fluid estudiante-theme">
@@ -10,19 +14,31 @@
         <div class="col-md-3 sidebar p-3">
             <div class="text-center mb-4">
                 <img src="~/images/logo-liceo.svg" alt="Logo" style="width: 60px; height: 60px;">
-                <h5 class="mt-2">Panel de Estudiante</h5>
+                <h5 class="mt-2">@estudiante?.Nombre @estudiante?.Apellidos</h5>
+                <small class="text-muted">Estudiante - @estudiante?.Clase</small>
             </div>
 
             <nav class="nav flex-column">
-                <a class="nav-link" href="@Url.Action("Dashboard", "Estudiante")">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard
-                </a>
-                <a class="nav-link" href="@Url.Action("MiGrupo", "Estudiante")">
-                    <i class="fas fa-users"></i> Mi Grupo
-                </a>
-                <a class="nav-link" href="@Url.Action("Entregas", "Estudiante")">
-                    <i class="fas fa-file-upload"></i> Entregas
-                </a>
+                @if (tieneGrupo)
+                {
+                    <a class="nav-link" href="@Url.Action("Dashboard", "Estudiante")">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                    <a class="nav-link" href="@Url.Action("MiGrupo", "Estudiante")">
+                        <i class="fas fa-users"></i> Mi Grupo
+                    </a>
+                    <a class="nav-link" href="@Url.Action("Entregas", "Estudiante")">
+                        <i class="fas fa-file-upload"></i> Entregas
+                    </a>
+                }
+                else
+                {
+                    <div class="alert alert-warning alert-sm">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <small>Sin grupo asignado</small>
+                    </div>
+                }
+                
                 <a class="nav-link active" href="@Url.Action("MisSolicitudes", "Estudiante")">
                     <i class="fas fa-bell"></i> Solicitudes
                 </a>
@@ -40,19 +56,102 @@
         <div class="col-md-9 main-content p-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2>Mis Solicitudes</h2>
-                <a href="@Url.Action("MiGrupo", "Estudiante")" class="btn btn-primary">
-                    <i class="fas fa-arrow-left"></i> Volver a Mi Grupo
-                </a>
+                @if (tieneGrupo)
+                {
+                    <a href="@Url.Action("MiGrupo", "Estudiante")" class="btn btn-primary">
+                        <i class="fas fa-arrow-left"></i> Volver a Mi Grupo
+                    </a>
+                }
+                else
+                {
+                    <div class="text-muted">
+                        <small><i class="fas fa-info-circle"></i> Busca un grupo al que solicitar ingreso</small>
+                    </div>
+                }
             </div>
 
-            <!-- Solicitudes Enviadas -->
-            <div class="row mb-4">
-                <div class="col-md-12">
-                    <div class="card">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0">
-                                <i class="fas fa-paper-plane"></i> Solicitudes Enviadas
-                            </h5>
+            <!-- Grupos Disponibles (solo para estudiantes sin grupo) -->
+            @if (!tieneGrupo && gruposDisponibles != null && gruposDisponibles.Any())
+            {
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-users"></i> Grupos Disponibles para Solicitar Ingreso
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                @if (gruposDisponibles.Count == 0)
+                                {
+                                    <p class="text-muted">No hay grupos disponibles en este momento.</p>
+                                }
+                                else
+                                {
+                                    <div class="row">
+                                        @foreach (var grupoDisponible in gruposDisponibles)
+                                        {
+                                            <div class="col-md-6 mb-3">
+                                                <div class="card border-success">
+                                                    <div class="card-body">
+                                                        <h6 class="card-title">
+                                                            <i class="fas fa-users text-success"></i> Grupo @grupoDisponible.Numero
+                                                        </h6>
+                                                        <div class="mb-2">
+                                                            <strong>Líder:</strong>
+                                                            @if (grupoDisponible.Lider != null)
+                                                            {
+                                                                <span class="text-primary">
+                                                                    <i class="fas fa-crown text-warning"></i> 
+                                                                    @grupoDisponible.Lider.Nombre @grupoDisponible.Lider.Apellidos
+                                                                </span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="text-muted">No asignado</span>
+                                                            }
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <small class="text-muted">
+                                                                <i class="fas fa-user-friends"></i> 
+                                                                @grupoDisponible.GruposEstudiantes.Count miembro(s)
+                                                            </small>
+                                                        </div>
+                                                        @if (grupoDisponible.Lider != null)
+                                                        {
+                                                            <button class="btn btn-outline-success btn-sm" 
+                                                                    onclick="enviarSolicitud(@grupoDisponible.Numero, '@grupoDisponible.Lider.Nombre @grupoDisponible.Lider.Apellidos')">
+                                                                <i class="fas fa-paper-plane"></i> Solicitar Ingreso
+                                                            </button>
+                                                        }
+                                                        else
+                                                        {
+                                                            <button class="btn btn-secondary btn-sm" disabled>
+                                                                <i class="fas fa-ban"></i> Sin líder asignado
+                                                            </button>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Solicitudes Enviadas (solo para estudiantes sin grupo) -->
+            @if (!tieneGrupo)
+            {
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-paper-plane"></i> Solicitudes Enviadas
+                                </h5>
                         </div>
                         <div class="card-body">
                             @if (solicitudesEnviadas != null && solicitudesEnviadas.Any())
@@ -160,18 +259,21 @@
                     </div>
                 </div>
             </div>
+            }
 
-            <!-- Solicitudes Recibidas -->
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="card">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="mb-0">
-                                <i class="fas fa-inbox"></i> Solicitudes Recibidas
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            @if (solicitudesRecibidas != null && solicitudesRecibidas.Any())
+            <!-- Solicitudes Recibidas - Solo para estudiantes con grupo -->
+            @if (tieneGrupo)
+            {
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-inbox"></i> Solicitudes Recibidas
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                @if (solicitudesRecibidas != null && solicitudesRecibidas.Any())
                             {
                                 @foreach (var solicitud in solicitudesRecibidas)
                                 {
@@ -250,6 +352,7 @@
                     </div>
                 </div>
             </div>
+            }
         </div>
     </div>
 </div>
@@ -304,6 +407,38 @@
 </style>
 
 <script>
+    function enviarSolicitud(grupoNumero, liderNombre) {
+        if (!confirm(`¿Estás seguro de que deseas solicitar ingreso al grupo ${grupoNumero} liderado por ${liderNombre}?`)) {
+            return;
+        }
+        
+        // Obtener token CSRF
+        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+        
+        // Crear FormData en lugar de JSON
+        const formData = new FormData();
+        formData.append('grupoNumero', grupoNumero);
+        formData.append('__RequestVerificationToken', token);
+        
+        fetch('@Url.Action("SolicitarIngreso", "Estudiante")', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message || 'Solicitud enviada correctamente');
+                location.reload();
+            } else {
+                alert('Error: ' + (data.message || 'No se pudo enviar la solicitud'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al enviar la solicitud. Por favor intenta de nuevo.');
+        });
+    }
+
     function eliminarSolicitud(solicitudId) {
         if (confirm('¿Estás seguro de que quieres eliminar esta solicitud? Esta acción no se puede deshacer.')) {
             // Obtener token CSRF

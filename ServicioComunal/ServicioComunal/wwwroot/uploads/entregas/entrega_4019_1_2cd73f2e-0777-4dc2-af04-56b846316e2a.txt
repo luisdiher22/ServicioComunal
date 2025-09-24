@@ -1,0 +1,97 @@
+-Bug grave, si me logueo con un estudiante que ya tiene grupo, si paso del dashboard inicial a solicitudes, desaparecen algunos módulos y aparecen otros
+-Los encabezados de las ventanas emergentes tienen un color inapropiado de letra (ej, a la hora de entrar a la opción de importar desde Excel)
+-Alertas que simplemente no se ven (ej, a la hora de descargar plantilla en importar estudiantes)
+-Bug, en un usuario sin grupo, a la hora de solicitar ingreso, sale un error de usuario no autenticado
+-No concuerda la clase del estudiante a la hora de editar
+-A la hora de cerrar sesión y volver mediante la flecha del navegador, no cierra sesión (no debe permitir hacer otra acción luego de cerrar)
+-En configuración - Formulario, a la hora de editar sale "Profesor Asignado", lo cual es confuso.
+-En configuración - Entregas, no se puede editar ninguna entrega, y el profesor asignado no aparece
+-En Gestión Grupos, el botón de Exportar no sirve.
+-En Gestión Grupos, en gestión avanzada de grupo, se debería añadir la opción de quitar líder del grupo en caso de que se asigne de forma accidental
+-En Gestión Grupos, en la opción de gestion de estudiantes de un grupo, sale un botón de test inservible.
+-En Gestión Grupos, en la opción de gestionar estudiantes, puede existir la opción de quitar los botones generalizados, para evitar accidentes.
+-Cambiar el color del botón de limpiar y recrear 
+-Revisar el tema de roles de profesor (profesor guía, coordinadora....)
+-En Asignar Tutores, en asignar grupo a un tutor, si añado y elimino varias veces un grupo la pantalla se empieza a oscurecer cada vez más
+-La opción importar (estudiantes y profesores) no es uniforme
+-En el módulo usuarios, no funciona el botón desactivar usuario
+-¿El archivo de los formularios no debe ser obligatorio?
+-¿El formulario asociado a una entrega no es obligatorio?
+
+-A la hora del estudiante darle a la opción de editar sale un error.
+-Solicitar ingreso a un grupo no sirve
+-No hay forma de subir otra vez la entrega luego de que el tutor solicita cambios
+-No se pueden eliminar ni editar entregas
+-Revisar el sorting de las entregas (todos) y de las revisiones (tutor)
+
+
+
+Notis:
+Estudiante
+-Funciona entrega nueva 
+-Funciona retroalimentación 
+-Funciona requiere cambios
+-Funciona entrega aprobada
+-No funciona el recordatorio de entrega en 24 horas en entregas que no ha mandado nada
+
+Tutor:
+-Funciona noti de grupo asignado
+-Funciona que un estudiante envió un entregable
+
+-La columna en el modulo de entregas (admin) se extiende según la descripción, si es muy larga deforma la tabla y se extiende innecesariamente, mejor hacerlo con un campo amplio fijo que muestre bien toda la tabla
+-Añadir botón de limpiar filtros en entregas (admin)
+-La barra de búsqueda tiene como texto de fondo "buscar por grupo", cuando en realidad no busca por grupo
+-Sería útil que también se pueda buscar por id (entregas admin)
+-Cambiar el nombre de los estados de las entregas (no se entiende entregada y completada)
+-Será necesaria la opción de seleccionar más de un grupo en la opción de "Enviar a un grupo específico" en Nueva Entrega?
+
+Tutor:
+-Falta implementar "ver detalles" para cada grupo, sería bueno que esta opción se muestre solo como la del inicio, y que al redirigirlo a Mis Grupos ya no se muestre la opción
+-Falta implementar "contactar grupo"
+-En el módulo "Mis grupos" sería bueno que, a la hora de darle a ver entregas se muestre solo las entregas del grupo en específico
+-Revisar el sorting (ordenamiento) de cada entrega listada en el módulo "Revisiones"
+-Es necesario mostrar la ruta del archivo del entregable (en revisiones)?
+-En revisiones, cual es el estudiante que aparece debajo del grupo? (debería ser el estudiante que realizó la entrega)
+
+
+Estudiante: 
+-El modulo Entregas se ve descuadrado
+-Cambiar el mensaje que aparece cuando se hace una entrega vencida
+-Cambiar el mensaje innecesario "Subiendo entrega"
+-En entregas, el atributo "Asignado por:" siempre aparece "Sin asignar"
+-Revisar la vista de Detalles de entrega
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Duda: En el módulo de revisiones, en la ventana de entregables por revisar, que ocurre si una entrega está vencida? Que se hace con esas, se siguen mostrando?
+
+Opción para eliminar usuarios y estudiantes (reset all cuando termine el ciclo lectivo)
+Fase de inicio (estudiantes o tutor sin grupo)
+Actualizar manuales
+
+A la hora de crear un docente o estudiante nuevo, no se crea un nuevo usuario
+¿Que ocurre cuando hay 2 estudiantes con el mismo nombre y primer apellido (a la hora de crear un usuario)?

@@ -9,6 +9,15 @@ using System.Text.Json;
 namespace ServicioComunal.Controllers
 {
     /// <summary>
+    /// DTO para solicitudes de ingreso a grupos
+    /// </summary>
+    public class SolicitudIngresoDto
+    {
+        public int GrupoNumero { get; set; }
+        public string? Mensaje { get; set; }
+    }
+
+    /// <summary>
     /// Controlador que maneja las funcionalidades específicas de los estudiantes.
     /// Incluye gestión de grupos, solicitudes de ingreso y dashboards.
     /// </summary>
@@ -30,8 +39,28 @@ namespace ServicioComunal.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
+        // Método que se ejecuta antes de cada acción para configurar información del grupo
+        private async Task ConfigurarInfoGrupoAsync()
+        {
+            var usuarioActual = _usuarioService.ObtenerUsuarioActual();
+            if (usuarioActual != null)
+            {
+                var estudiante = await _context.Estudiantes
+                    .FirstOrDefaultAsync(e => e.Identificacion == usuarioActual.Identificacion);
+                
+                if (estudiante != null)
+                {
+                    var grupoEstudiante = await _context.GruposEstudiantes
+                        .FirstOrDefaultAsync(ge => ge.EstudianteIdentificacion == estudiante.Identificacion);
+                    
+                    ViewBag.TieneGrupo = grupoEstudiante != null;
+                }
+            }
+        }
+
         public async Task<IActionResult> Dashboard()
         {
+            await ConfigurarInfoGrupoAsync();
             var usuarioActual = _usuarioService.ObtenerUsuarioActual();
             if (usuarioActual == null)
             {
@@ -54,8 +83,8 @@ namespace ServicioComunal.Controllers
 
             if (grupoEstudiante == null)
             {
-                // Si no está en ningún grupo, redirigir a mi grupo
-                return RedirectToAction("MiGrupo");
+                // Si no está en ningún grupo, redirigir a solicitudes
+                return RedirectToAction("MisSolicitudes");
             }
 
             // Si está en un grupo, mostrar el dashboard
@@ -178,6 +207,28 @@ namespace ServicioComunal.Controllers
                 return Forbid();
             }
 
+            // Verificar si el estudiante está en algún grupo
+            var grupoEstudiante = await _context.GruposEstudiantes
+                .Include(ge => ge.Grupo)
+                .FirstOrDefaultAsync(ge => ge.EstudianteIdentificacion == estudiante.Identificacion);
+
+            ViewBag.TieneGrupo = grupoEstudiante != null;
+            ViewBag.Estudiante = estudiante;
+            ViewBag.Grupo = grupoEstudiante?.Grupo;
+
+            // Si el estudiante NO tiene grupo, mostrar grupos disponibles para solicitar ingreso
+            if (grupoEstudiante == null)
+            {
+                var gruposDisponibles = await _context.Grupos
+                    .Include(g => g.Lider)
+                    .Include(g => g.GruposEstudiantes)
+                    .ThenInclude(ge => ge.Estudiante)
+                    .Where(g => g.LiderIdentificacion != null) // Solo grupos con líder asignado
+                    .ToListAsync();
+
+                ViewBag.GruposDisponibles = gruposDisponibles;
+            }
+
             // Obtener solicitudes enviadas por el estudiante
             var solicitudesEnviadas = await _context.Solicitudes
                 .Include(s => s.EstudianteDestinatario)
@@ -202,6 +253,7 @@ namespace ServicioComunal.Controllers
 
         public async Task<IActionResult> MiPerfil()
         {
+            await ConfigurarInfoGrupoAsync();
             var usuarioActual = _usuarioService.ObtenerUsuarioActual();
             if (usuarioActual == null)
             {
@@ -224,17 +276,10 @@ namespace ServicioComunal.Controllers
         {
             try
             {
-                var usuario = HttpContext.Session.GetString("Usuario");
-                if (string.IsNullOrEmpty(usuario))
-                {
-                    return Json(new { success = false, message = "Usuario no autenticado" });
-                }
-
-                // Obtener el usuario actual
-                var usuarioActual = await _context.Usuarios.FirstOrDefaultAsync(u => u.NombreUsuario == usuario);
+                var usuarioActual = _usuarioService.ObtenerUsuarioActual();
                 if (usuarioActual == null)
                 {
-                    return Json(new { success = false, message = "Usuario no encontrado" });
+                    return Json(new { success = false, message = "Usuario no autenticado" });
                 }
 
                 // Obtener el estudiante
@@ -317,17 +362,10 @@ namespace ServicioComunal.Controllers
         {
             try
             {
-                var usuario = HttpContext.Session.GetString("Usuario");
-                if (string.IsNullOrEmpty(usuario))
-                {
-                    return Json(new { success = false, message = "Usuario no autenticado" });
-                }
-
-                // Obtener el usuario actual
-                var usuarioActual = await _context.Usuarios.FirstOrDefaultAsync(u => u.NombreUsuario == usuario);
+                var usuarioActual = _usuarioService.ObtenerUsuarioActual();
                 if (usuarioActual == null)
                 {
-                    return Json(new { success = false, message = "Usuario no encontrado" });
+                    return Json(new { success = false, message = "Usuario no autenticado" });
                 }
 
                 // Buscar la solicitud
@@ -748,8 +786,8 @@ namespace ServicioComunal.Controllers
 
             if (grupoEstudiante == null)
             {
-                // Si no está en ningún grupo, redirigir a mi grupo
-                return RedirectToAction("MiGrupo");
+                // Si no está en ningún grupo, redirigir a solicitudes
+                return RedirectToAction("MisSolicitudes");
             }
 
             ViewBag.Estudiante = estudiante;
@@ -805,8 +843,8 @@ namespace ServicioComunal.Controllers
 
             if (grupoEstudiante == null)
             {
-                // Si no está en ningún grupo, redirigir a mi grupo
-                return RedirectToAction("MiGrupo");
+                // Si no está en ningún grupo, redirigir a solicitudes
+                return RedirectToAction("MisSolicitudes");
             }
 
             ViewBag.Estudiante = estudiante;
@@ -850,7 +888,7 @@ namespace ServicioComunal.Controllers
 
             if (grupoEstudiante == null)
             {
-                return RedirectToAction("MiGrupo");
+                return RedirectToAction("MisSolicitudes");
             }
 
             // Obtener la entrega específica

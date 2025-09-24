@@ -207,11 +207,16 @@
 
         // Inicializar cuando se carga la página
         document.addEventListener('DOMContentLoaded', function() {
-            notificacionesModal = new bootstrap.Modal(document.getElementById('notificacionesModal'));
-            actualizarConteoNotificaciones();
-            
-            // Actualizar cada 6 minutos
-            setInterval(actualizarConteoNotificaciones, 360000);
+            @if (ViewData["DisableNotifications"] as bool? != true)
+            {
+                <text>
+                notificacionesModal = new bootstrap.Modal(document.getElementById('notificacionesModal'));
+                actualizarConteoNotificaciones();
+                
+                // Actualizar cada 6 minutos
+                setInterval(actualizarConteoNotificaciones, 360000);
+                </text>
+            }
         });
 
         // Función para toggle del modal de notificaciones
