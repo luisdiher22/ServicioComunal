@@ -117,6 +117,29 @@ namespace ServicioComunal.Controllers
                     return Json(new { success = false, message = "Todos los campos son requeridos" });
                 }
 
+                // Verificar si ya existe un usuario con esa identificación
+                var existeUsuario = await _context.Usuarios
+                    .AnyAsync(u => u.Identificacion == estudiante.Identificacion);
+
+                // Si no existe usuario, crearlo automáticamente
+                if (!existeUsuario)
+                {
+                    // Generar nombre de usuario en formato primer_nombre.primer_apellido
+                    string nombreUsuario = GenerarNombreUsuario(estudiante.Nombre, estudiante.Apellidos);
+                    
+                    var usuario = new ServicioComunal.Models.Usuario
+                    {
+                        Identificacion = estudiante.Identificacion,
+                        NombreUsuario = nombreUsuario,
+                        Contraseña = ServicioComunal.Utilities.PasswordHelper.HashPassword(estudiante.Identificacion.ToString()),
+                        Rol = "Estudiante",
+                        RequiereCambioContraseña = true,
+                        FechaCreacion = DateTime.Now,
+                        Activo = true
+                    };
+                    _context.Usuarios.Add(usuario);
+                }
+
                 _context.Estudiantes.Add(estudiante);
                 await _context.SaveChangesAsync();
 
@@ -176,10 +199,24 @@ namespace ServicioComunal.Controllers
                     return Json(new { success = false, message = "No se puede eliminar un estudiante que pertenece a un grupo" });
                 }
 
+                // Buscar y eliminar el usuario asociado si existe
+                var usuario = await _context.Usuarios
+                    .FirstOrDefaultAsync(u => u.Identificacion == estudiante.Identificacion);
+
+                if (usuario != null)
+                {
+                    _context.Usuarios.Remove(usuario);
+                }
+
                 _context.Estudiantes.Remove(estudiante);
                 await _context.SaveChangesAsync();
 
-                return Json(new { success = true, message = "Estudiante eliminado exitosamente" });
+                return Json(new { 
+                    success = true, 
+                    message = usuario != null ? 
+                        "Estudiante y usuario eliminados exitosamente" : 
+                        "Estudiante eliminado exitosamente" 
+                });
             }
             catch (Exception)
             {
@@ -420,9 +457,11 @@ namespace ServicioComunal.Controllers
                         {
                             Identificacion = profesor.Identificacion,
                             NombreUsuario = nombreUsuario,
-                            Contraseña = profesor.Identificacion.ToString(), // Contraseña temporal = cédula
+                            Contraseña = ServicioComunal.Utilities.PasswordHelper.HashPassword(profesor.Identificacion.ToString()),
                             Rol = "Administrador",
-                            RequiereCambioContraseña = true
+                            RequiereCambioContraseña = true,
+                            FechaCreacion = DateTime.Now,
+                            Activo = true
                         };
                         _context.Usuarios.Add(usuario);
                     }
@@ -1116,29 +1155,48 @@ namespace ServicioComunal.Controllers
                         .FirstOrDefaultAsync(u => u.Identificacion == profesor.Identificacion);
                     if (usuario != null)
                     {
-                        // Si el nuevo rol permite tener usuario (como Profesor), actualizar rol
-                        if (request.NuevoRol == "Profesor")
+                        // Si el nuevo rol es Tutor, mantener el usuario pero cambiar rol
+                        if (request.NuevoRol == "Tutor")
                         {
-                            usuario.Rol = "Profesor";
-                            Console.WriteLine($"Usuario actualizado de Administrador a Profesor para {profesor.Nombre}");
+                            usuario.Rol = "Tutor";
+                            Console.WriteLine($"Usuario actualizado de Administrador a Tutor para {profesor.Nombre}");
                         }
                         else
                         {
-                            // Para otros roles, eliminar usuario
+                            // Para otros roles que no necesitan acceso al sistema, eliminar usuario
                             _context.Usuarios.Remove(usuario);
                             Console.WriteLine($"Usuario eliminado para {profesor.Nombre} (rol: {request.NuevoRol})");
                         }
                     }
                 }
-                // Si ya existe un usuario con rol diferente, actualizar
-                else
+                // Si se cambia de otro rol a Tutor y no existe usuario, crearlo
+                else if (request.NuevoRol == "Tutor")
                 {
                     var usuario = await _context.Usuarios
                         .FirstOrDefaultAsync(u => u.Identificacion == profesor.Identificacion);
-                    if (usuario != null)
+                    
+                    if (usuario == null)
                     {
-                        usuario.Rol = request.NuevoRol;
-                        Console.WriteLine($"Usuario existente actualizado de {usuario.Rol} a {request.NuevoRol} para {profesor.Nombre}");
+                        // Crear usuario para el tutor
+                        string nombreUsuario = GenerarNombreUsuario(profesor.Nombre, profesor.Apellidos);
+                        
+                        var nuevoUsuario = new ServicioComunal.Models.Usuario
+                        {
+                            Identificacion = profesor.Identificacion,
+                            NombreUsuario = nombreUsuario,
+                            Contraseña = PasswordHelper.HashPassword(profesor.Identificacion.ToString()),
+                            Rol = "Tutor",
+                            RequiereCambioContraseña = true,
+                            FechaCreacion = DateTime.Now,
+                            Activo = true
+                        };
+                        _context.Usuarios.Add(nuevoUsuario);
+                        Console.WriteLine($"Usuario Tutor creado: {nombreUsuario} para {profesor.Nombre}");
+                    }
+                    else
+                    {
+                        usuario.Rol = "Tutor";
+                        Console.WriteLine($"Usuario existente actualizado a Tutor para {profesor.Nombre}");
                     }
                 }
 
@@ -1148,7 +1206,8 @@ namespace ServicioComunal.Controllers
                 return Json(new { 
                     success = true, 
                     message = $"Rol cambiado exitosamente de {rolAnterior} a {request.NuevoRol}" +
-                              (request.NuevoRol == "Administrador" ? ". Se ha creado acceso de administrador." : "")
+                              (request.NuevoRol == "Administrador" ? ". Se ha creado acceso de administrador." :
+                               request.NuevoRol == "Tutor" ? ". Se ha mantenido/creado acceso de tutor." : "")
                 });
             }
             catch (Exception ex)
@@ -1290,10 +1349,39 @@ namespace ServicioComunal.Controllers
                     return Json(new { success = false, message = "Todos los campos son requeridos" });
                 }
 
+                // Verificar si ya existe un usuario con esa identificación
+                var existeUsuario = await _context.Usuarios
+                    .AnyAsync(u => u.Identificacion == tutor.Identificacion);
+
+                // Para docentes que necesitan acceso al sistema, crear usuario
+                var rolesConAcceso = new[] { "Tutor", "Administrador" };
+                if (!existeUsuario && rolesConAcceso.Contains(tutor.Rol))
+                {
+                    // Generar nombre de usuario en formato primer_nombre.primer_apellido
+                    string nombreUsuario = GenerarNombreUsuario(tutor.Nombre, tutor.Apellidos);
+                    
+                    var usuario = new ServicioComunal.Models.Usuario
+                    {
+                        Identificacion = tutor.Identificacion,
+                        NombreUsuario = nombreUsuario,
+                        Contraseña = ServicioComunal.Utilities.PasswordHelper.HashPassword(tutor.Identificacion.ToString()),
+                        Rol = tutor.Rol, // Usar el rol del docente, no fijo "Tutor"
+                        RequiereCambioContraseña = true,
+                        FechaCreacion = DateTime.Now,
+                        Activo = true
+                    };
+                    _context.Usuarios.Add(usuario);
+                }
+
                 _context.Profesores.Add(tutor);
                 await _context.SaveChangesAsync();
 
-                return Json(new { success = true, message = "Tutor creado exitosamente" });
+                return Json(new { 
+                    success = true, 
+                    message = rolesConAcceso.Contains(tutor.Rol) ? 
+                        $"Docente creado exitosamente. Se ha creado un usuario {tutor.Rol.ToLower()} con contraseña temporal igual a su cédula." :
+                        "Docente creado exitosamente"
+                });
             }
             catch (Exception)
             {
@@ -1375,10 +1463,25 @@ namespace ServicioComunal.Controllers
 
                 // Quitar asignaciones antes de eliminar
                 _context.GruposProfesores.RemoveRange(tutor.GruposProfesores);
+
+                // Buscar y eliminar el usuario asociado si existe
+                var usuario = await _context.Usuarios
+                    .FirstOrDefaultAsync(u => u.Identificacion == tutor.Identificacion);
+
+                if (usuario != null)
+                {
+                    _context.Usuarios.Remove(usuario);
+                }
+
                 _context.Profesores.Remove(tutor);
                 await _context.SaveChangesAsync();
 
-                return Json(new { success = true, message = "Tutor eliminado exitosamente" });
+                return Json(new { 
+                    success = true, 
+                    message = usuario != null ? 
+                        "Tutor y usuario eliminados exitosamente" : 
+                        "Tutor eliminado exitosamente" 
+                });
             }
             catch (Exception)
             {

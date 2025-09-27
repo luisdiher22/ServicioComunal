@@ -116,7 +116,7 @@
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center">
-                                        <i class="fas @(usuario.Rol == "Administrador" ? "fa-user-shield" : usuario.Rol == "Profesor" ? "fa-chalkboard-teacher" : "fa-graduation-cap") me-2 text-@(usuario.Rol == "Administrador" ? "danger" : usuario.Rol == "Profesor" ? "warning" : "primary")"></i>
+                                        <i class="fas @(usuario.Rol == "Administrador" ? "fa-user-shield" : usuario.Rol == "Tutor" ? "fa-chalkboard-teacher" : "fa-graduation-cap") me-2 text-@(usuario.Rol == "Administrador" ? "danger" : usuario.Rol == "Tutor" ? "warning" : "primary")"></i>
                                         @usuario.NombreUsuario
                                     </div>
                                 </td>
@@ -139,7 +139,7 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="badge bg-@(usuario.Rol == "Administrador" ? "danger" : usuario.Rol == "Profesor" ? "warning" : "primary")">
+                                    <span class="badge bg-@(usuario.Rol == "Administrador" ? "danger" : usuario.Rol == "Tutor" ? "warning" : "primary")">
                                         @usuario.Rol
                                     </span>
                                 </td>

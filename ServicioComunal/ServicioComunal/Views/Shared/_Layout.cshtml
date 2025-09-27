@@ -28,7 +28,7 @@
     else
     {
         <!-- Header -->
-        <header class="@((Context.Session.GetString("UsuarioRol") == "Profesor") ? "dashboard-header tutor-theme" : "dashboard-header")">
+        <header class="@((Context.Session.GetString("UsuarioRol") == "Tutor") ? "dashboard-header tutor-theme" : "dashboard-header")">
             <div class="header-content">
                 <div class="header-left">
                     <img src="~/images/logo-liceo.svg" alt="Logo" class="header-logo">
@@ -50,9 +50,9 @@
 
         <div class="dashboard-container">
             <!-- Sidebar -->
-            <aside class="@((Context.Session.GetString("UsuarioRol") == "Profesor") ? "sidebar tutor-theme" : "sidebar")">
+            <aside class="@((Context.Session.GetString("UsuarioRol") == "Tutor") ? "sidebar tutor-theme" : "sidebar")">
                 <nav class="sidebar-nav">
-                    @if (Context.Session.GetString("UsuarioRol") == "Profesor")
+                    @if (Context.Session.GetString("UsuarioRol") == "Tutor")
                     {
                         <a href="@Url.Action("Dashboard", "Tutor")" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Tutor" && ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")">
                             <i class="fas fa-home"></i>

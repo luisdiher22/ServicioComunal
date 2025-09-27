@@ -80,7 +80,7 @@ namespace ServicioComunal.Controllers
                         nombreCompleto = $"{estudiante.Nombre} {estudiante.Apellidos}";
                     }
                 }
-                else if (user.Rol == "Profesor" || user.Rol == "Administrador")
+                else if (user.Rol == "Tutor" || user.Rol == "Administrador")
                 {
                     var profesor = await _context.Profesores
                         .FirstOrDefaultAsync(p => p.Identificacion == user.Identificacion);
@@ -105,7 +105,7 @@ namespace ServicioComunal.Controllers
                 }
 
                 // Redireccionar según el rol
-                if (user.Rol == "Profesor")
+                if (user.Rol == "Tutor")
                 {
                     return RedirectToAction("Dashboard", "Tutor");
                 }
@@ -199,7 +199,7 @@ namespace ServicioComunal.Controllers
                         // Redireccionar según el rol después del cambio exitoso
                         await Task.Delay(2000); // Pequeña pausa para mostrar el mensaje de éxito
                         
-                        if (user.Rol == "Profesor")
+                        if (user.Rol == "Tutor")
                         {
                             return RedirectToAction("Dashboard", "Tutor");
                         }

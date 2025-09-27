@@ -8,7 +8,7 @@ using System.Text.Json.Serialization;
 
 namespace ServicioComunal.Controllers
 {
-    [RequireAuth("Profesor")]
+    [RequireAuth("Tutor")]
     public class TutorController : Controller
     {
         private readonly ServicioComunalDbContext _context;
@@ -26,7 +26,7 @@ namespace ServicioComunal.Controllers
             var usuario = await _context.Usuarios
                 .FirstOrDefaultAsync(u => u.Identificacion == identificacion);
             
-            if (usuario?.Rol != "Profesor") return false;
+            if (usuario?.Rol != "Tutor") return false;
 
             var profesor = await _context.Profesores
                 .FirstOrDefaultAsync(p => p.Identificacion == identificacion);
@@ -47,7 +47,7 @@ namespace ServicioComunal.Controllers
             var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
             var usuarioRol = HttpContext.Session.GetString("UsuarioRol");
             
-            if (usuarioId == null || usuarioRol != "Profesor")
+            if (usuarioId == null || (usuarioRol != "Tutor"))
             {
                 return RedirectToAction("Login", "Auth");
             }
@@ -124,7 +124,7 @@ namespace ServicioComunal.Controllers
             var tutorId = HttpContext.Session.GetInt32("UsuarioId");
             var usuarioRol = HttpContext.Session.GetString("UsuarioRol");
             
-            if (tutorId == null || usuarioRol != "Profesor")
+            if (tutorId == null || usuarioRol != "Tutor")
             {
                 return RedirectToAction("Login", "Auth");
             }
