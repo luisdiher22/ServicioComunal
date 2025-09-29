@@ -471,6 +471,79 @@ namespace ServicioComunal.Controllers
                 return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
+
+        /// <summary>
+        /// Muestra la página de perfil del tutor
+        /// </summary>
+        public async Task<IActionResult> MiPerfil()
+        {
+            var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+            var usuarioRol = HttpContext.Session.GetString("UsuarioRol");
+            
+            if (usuarioId == null || usuarioRol != "Tutor")
+            {
+                return RedirectToAction("AccessDenied", "Shared");
+            }
+
+            var profesor = await _context.Profesores
+                .FirstOrDefaultAsync(p => p.Identificacion == usuarioId.Value);
+
+            if (profesor == null)
+            {
+                return RedirectToAction("AccessDenied", "Shared");
+            }
+
+            // Obtener los grupos asignados al tutor
+            var gruposAsignados = await _context.GruposProfesores
+                .Include(gp => gp.Grupo)
+                .ThenInclude(g => g.GruposEstudiantes)
+                .Where(gp => gp.ProfesorIdentificacion == usuarioId.Value)
+                .ToListAsync();
+
+            ViewBag.GruposAsignados = gruposAsignados;
+            
+            return View(profesor);
+        }
+
+        /// <summary>
+        /// Cambia la contraseña del tutor actual
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> CambiarContraseña([FromBody] CambiarContraseñaTutorRequest request)
+        {
+            try
+            {
+                var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+                var usuarioRol = HttpContext.Session.GetString("UsuarioRol");
+                
+                if (usuarioId == null || usuarioRol != "Tutor")
+                {
+                    return Json(new { success = false, message = "Usuario no autenticado" });
+                }
+
+                var usuario = await _context.Usuarios
+                    .FirstOrDefaultAsync(u => u.Identificacion == usuarioId.Value);
+
+                if (usuario == null)
+                {
+                    return Json(new { success = false, message = "Usuario no encontrado" });
+                }
+
+                // Usar el servicio de usuario para cambiar la contraseña con validación
+                var usuarioService = HttpContext.RequestServices.GetRequiredService<UsuarioService>();
+                var (exito, mensaje) = await usuarioService.CambiarContraseñaConValidacionAsync(
+                    usuario.NombreUsuario, 
+                    request.ContraseñaActual, 
+                    request.NuevaContraseña);
+
+                return Json(new { success = exito, message = mensaje });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al cambiar contraseña del tutor: {ex.Message}");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
     }
 
     // Extensión para obtener el inicio de la semana
@@ -500,5 +573,14 @@ namespace ServicioComunal.Controllers
         
         [JsonPropertyName("comentarios")]
         public string Comentarios { get; set; } = string.Empty;
+    }
+
+    public class CambiarContraseñaTutorRequest
+    {
+        [JsonPropertyName("contraseñaActual")]
+        public string ContraseñaActual { get; set; } = string.Empty;
+        
+        [JsonPropertyName("nuevaContraseña")]
+        public string NuevaContraseña { get; set; } = string.Empty;
     }
 }

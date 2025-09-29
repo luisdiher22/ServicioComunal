@@ -1,0 +1,211 @@
+@model ServicioComunal.Models.Profesor
+@{
+    ViewData["Title"] = "Mi Perfil - Tutor";
+    ViewData["UserRole"] = "Tutor";
+}
+
+<div class="dashboard-content tutor-theme">
+    <div class="content-header">
+        <h1>Mi Perfil</h1>
+        <p>Información personal y configuración de cuenta</p>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Información personal -->
+            <div class="card">
+                <div class="card-header bg-tutor text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-id-card"></i> Información Personal
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Número de Identificación:</label>
+                            <p class="text-muted">@Model?.Identificacion</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Nombre Completo:</label>
+                            <p class="text-muted">@Model?.Nombre @Model?.Apellidos</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Rol:</label>
+                            <p class="text-muted">
+                                <span class="badge bg-tutor">@Model?.Rol</span>
+                            </p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Estado del Usuario:</label>
+                            <p class="text-muted"><span class="badge bg-success">Activo</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información de grupos asignados -->
+            <div class="card mt-4">
+                <div class="card-header bg-tutor text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users"></i> Grupos Asignados
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.GruposAsignados != null && ((List<ServicioComunal.Models.GrupoProfesor>)ViewBag.GruposAsignados).Any())
+                    {
+                        <div class="row">
+                            @foreach (var grupoProfesor in (List<ServicioComunal.Models.GrupoProfesor>)ViewBag.GruposAsignados)
+                            {
+                                var grupo = grupoProfesor.Grupo;
+                                <div class="col-md-6 mb-3">
+                                    <div class="border rounded p-3">
+                                        <h6 class="text-tutor">Grupo @grupo.Numero</h6>
+                                        <small class="text-muted">@grupo.GruposEstudiantes.Count estudiante(s)</small>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No tienes grupos asignados actualmente.</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Cambio de contraseña -->
+            <div class="card">
+                <div class="card-header bg-tutor text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-key"></i> Cambiar Contraseña
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="formCambiarContraseña" onsubmit="cambiarContraseña(event)">
+                        <div class="mb-3">
+                            <label for="contraseñaActual" class="form-label">Contraseña Actual</label>
+                            <input type="password" class="form-control" id="contraseñaActual" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="nuevaContraseña" class="form-label">Nueva Contraseña</label>
+                            <input type="password" class="form-control" id="nuevaContraseña" required minlength="8">
+                            <div class="form-text">Mínimo 8 caracteres, debe incluir al menos un número</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirmarContraseña" class="form-label">Confirmar Nueva Contraseña</label>
+                            <input type="password" class="form-control" id="confirmarContraseña" required>
+                        </div>
+                        <button type="submit" class="btn btn-tutor w-100">
+                            <i class="fas fa-save"></i> Cambiar Contraseña
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Información adicional -->
+            <div class="card mt-4">
+                <div class="card-header bg-tutor text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle"></i> Información del Sistema
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Rol:</strong> Tutor</p>
+                    <p><strong>Estado:</strong> <span class="badge bg-success">Activo</span></p>
+                    <p><strong>Último acceso:</strong> Ahora</p>
+                    <hr>
+                    <p class="text-muted small">
+                        Si necesitas actualizar tu información personal, 
+                        contacta con el administrador del sistema.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-tutor {
+        background-color: #8B4513 !important; /* Color café para el tema tutor */
+    }
+
+    .btn-tutor {
+        background-color: #8B4513;
+        border-color: #8B4513;
+        color: white;
+    }
+
+    .btn-tutor:hover {
+        background-color: #A0522D;
+        border-color: #A0522D;
+        color: white;
+    }
+
+    .text-tutor {
+        color: #8B4513;
+    }
+
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border: 1px solid rgba(0, 0, 0, 0.125);
+        margin-bottom: 1rem;
+    }
+</style>
+
+<script>
+    function cambiarContraseña(event) {
+        event.preventDefault();
+        
+        const contraseñaActual = document.getElementById('contraseñaActual').value;
+        const nuevaContraseña = document.getElementById('nuevaContraseña').value;
+        const confirmarContraseña = document.getElementById('confirmarContraseña').value;
+        
+        // Validaciones básicas
+        if (nuevaContraseña !== confirmarContraseña) {
+            alert('Las contraseñas no coinciden');
+            return;
+        }
+        
+        if (nuevaContraseña.length < 8) {
+            alert('La nueva contraseña debe tener al menos 8 caracteres');
+            return;
+        }
+        
+        if (!/\d/.test(nuevaContraseña)) {
+            alert('La nueva contraseña debe contener al menos un número');
+            return;
+        }
+        
+        // Enviar solicitud al servidor
+        fetch('@Url.Action("CambiarContraseña", "Tutor")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+            },
+            body: JSON.stringify({
+                contraseñaActual: contraseñaActual,
+                nuevaContraseña: nuevaContraseña
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Contraseña cambiada exitosamente');
+                document.getElementById('formCambiarContraseña').reset();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al cambiar la contraseña');
+        });
+    }
+</script>
+
+@Html.AntiForgeryToken()

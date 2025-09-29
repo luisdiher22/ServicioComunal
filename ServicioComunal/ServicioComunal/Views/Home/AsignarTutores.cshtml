@@ -1,14 +1,14 @@
 @model IEnumerable<ServicioComunal.Models.Profesor>
 @{
-    ViewData["Title"] = "Asignar Tutores";
+    ViewData["Title"] = "Administrar Docentes";
     Layout = "_Layout";
 }
 
 <div class="dashboard-content">
     <div class="content-header">
         <div class="header-left">
-            <h1>Asignar Tutores</h1>
-            <p>Gestionar asignación de tutores a grupos</p>
+            <h1>Administrar Docentes</h1>
+            <p>Gestionar información referente a los profesores registrados</p>
         </div>
         <div class="header-actions">
             <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalImportar">
@@ -64,7 +64,7 @@
                 <i class="fas fa-chalkboard-teacher"></i>
             </div>
             <div class="stat-info">
-                <div class="stat-number" id="totalTutores">@Model.Count()</div>
+                <div class="stat-number" id="totalTutores">@Model.Count(t => t.Rol == "Tutor")</div>
                 <div class="stat-label">Total Tutores</div>
             </div>
         </div>
@@ -73,8 +73,8 @@
                 <i class="fas fa-users"></i>
             </div>
             <div class="stat-info">
-                <div class="stat-number" id="conGrupos">@Model.Count(t => t.GruposProfesores.Any())</div>
-                <div class="stat-label">Con Grupos</div>
+                <div class="stat-number" id="conGrupos">@Model.Count(t => t.Rol == "Tutor" && t.GruposProfesores.Any())</div>
+                <div class="stat-label">Tutores con Grupos</div>
             </div>
         </div>
         <div class="stat-card">
@@ -82,8 +82,8 @@
                 <i class="fas fa-check-circle"></i>
             </div>
             <div class="stat-info">
-                <div class="stat-number" id="disponibles">@Model.Count(t => !t.GruposProfesores.Any())</div>
-                <div class="stat-label">Disponibles</div>
+                <div class="stat-number" id="disponibles">@Model.Count(t => t.Rol == "Tutor" && !t.GruposProfesores.Any())</div>
+                <div class="stat-label">Tutores disponibles</div>
             </div>
         </div>
         <div class="stat-card">
@@ -91,7 +91,9 @@
                 <i class="fas fa-chart-pie"></i>
             </div>
             <div class="stat-info">
-                <div class="stat-number" id="promedio">@(Model.Any() ? Math.Round(Model.Average(t => t.GruposProfesores.Count), 1) : 0)</div>
+                <div class="stat-number" id="promedio">@{
+                    var soloTutores = Model.Where(t => t.Rol == "Tutor");
+                }@(soloTutores.Any() ? Math.Round(soloTutores.Average(t => t.GruposProfesores.Count), 1) : 0)</div>
                 <div class="stat-label">Grupos por Tutor</div>
             </div>
         </div>
@@ -101,7 +103,7 @@
     <div class="table-section">
         <div class="table-card">
             <div class="table-header">
-                <h3>Lista de Tutores</h3>
+                <h3>Lista de Docentes</h3>
                 <div class="table-actions">
                     <button type="button" class="btn btn-outline-success btn-sm" onclick="asignacionAutomatica()">
                         <i class="fas fa-magic"></i>
@@ -117,7 +119,7 @@
                 <table class="table table-hover" id="tablaTutores">
                     <thead>
                         <tr>
-                            <th>Tutor</th>
+                            <th>Docente</th>
                             <th>Rol</th>
                             <th>Grupos Asignados</th>
                             <th>Disponibilidad</th>

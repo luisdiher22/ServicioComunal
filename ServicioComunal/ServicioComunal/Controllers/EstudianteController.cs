@@ -1444,6 +1444,35 @@ namespace ServicioComunal.Controllers
                 return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
+
+        /// <summary>
+        /// Cambia la contraseña del estudiante actual
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> CambiarContraseña([FromBody] CambiarContraseñaEstudianteRequest request)
+        {
+            try
+            {
+                var usuarioActual = _usuarioService.ObtenerUsuarioActual();
+                if (usuarioActual == null)
+                {
+                    return Json(new { success = false, message = "Usuario no autenticado" });
+                }
+
+                // Usar el servicio de usuario para cambiar la contraseña con validación
+                var (exito, mensaje) = await _usuarioService.CambiarContraseñaConValidacionAsync(
+                    usuarioActual.NombreUsuario, 
+                    request.ContraseñaActual, 
+                    request.NuevaContraseña);
+
+                return Json(new { success = exito, message = mensaje });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al cambiar contraseña del estudiante");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
     }
 
     public class CambiarLiderRequest
