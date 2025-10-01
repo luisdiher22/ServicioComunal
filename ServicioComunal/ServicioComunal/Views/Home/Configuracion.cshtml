@@ -13,22 +13,23 @@
 
     <!-- Tiles de Configuración Principal -->
     <div class="dashboard-cards">
-        <!-- Tile: Configuración General -->
-        <div class="dashboard-card config-tile">
-            <div class="card-icon config">
-                <i class="fas fa-cogs"></i>
+        <!-- Tile: Operaciones de Sistema -->
+        <div class="dashboard-card danger-tile">
+            <div class="card-icon danger">
+                <i class="fas fa-exclamation-triangle"></i>
             </div>
             <div class="card-content">
-                <h3>Configuración General</h3>
-                <p>Ajustar parámetros del sistema</p>
+                <h3>Operaciones Críticas</h3>
+                <p>Operaciones que requieren máxima precaución</p>
             </div>
             <div class="card-stats">
                 <div class="config-setting">
-                    <label>Max. integrantes por grupo:</label>
-                    <input type="number" class="form-control-inline" id="maxIntegrantes" value="@ViewBag.MaxIntegrantesPorGrupo" min="1" max="20">
-                    <button class="btn btn-sm btn-primary" onclick="guardarConfiguracion()">
-                        <i class="fas fa-save"></i> Guardar
+                    <button class="btn btn-danger" onclick="confirmarEliminacionTotal()">
+                        <i class="fas fa-trash-alt"></i> Eliminar Todos los Estudiantes
                     </button>
+                    <small class="text-muted d-block mt-2">
+                        Elimina TODOS los estudiantes, usuarios de estudiantes y grupos del sistema
+                    </small>
                 </div>
             </div>
         </div>
@@ -311,4 +312,143 @@
 
 @section Scripts {
     <script src="~/js/configuracion.js"></script>
+    
+    <style>
+        .danger-tile {
+            border-left: 4px solid #dc3545 !important;
+        }
+        
+        .danger-tile .card-icon.danger {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+        }
+        
+        .danger-tile:hover {
+            border-left-color: #bd2130 !important;
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.2);
+        }
+    </style>
+    
+    <script>
+        function confirmarEliminacionTotal() {
+            console.log('🗑️ Función confirmarEliminacionTotal llamada');
+            
+            Swal.fire({
+                title: '⚠️ PELIGRO: Eliminación Total',
+                html: `
+                    <div style="text-align: left;">
+                        <p><strong>Esta operación eliminará PERMANENTEMENTE:</strong></p>
+                        <ul style="margin: 10px 0;">
+                            <li>Todos los estudiantes registrados</li>
+                            <li>Todos los usuarios de estudiantes</li>
+                            <li>Todos los grupos formados</li>
+                            <li>Todas las relaciones estudiante-grupo</li>
+                        </ul>
+                        <p class="text-danger"><strong>¡Esta acción NO se puede deshacer!</strong></p>
+                        <p>Para continuar, escriba exactamente: <code>ELIMINAR TODO</code></p>
+                        <input type="text" id="confirmacionTexto" class="form-control mt-2" placeholder="Escriba aquí...">
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Continuar con Eliminación',
+                cancelButtonText: 'Cancelar Operación',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                preConfirm: () => {
+                    const confirmText = document.getElementById('confirmacionTexto').value;
+                    if (confirmText !== 'ELIMINAR TODO') {
+                        Swal.showValidationMessage('Debe escribir exactamente: ELIMINAR TODO');
+                        return false;
+                    }
+                    return true;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    segundaConfirmacion();
+                }
+            });
+        }
+        
+        function segundaConfirmacion() {
+            Swal.fire({
+                title: '🛑 ÚLTIMA CONFIRMACIÓN',
+                text: '¿Está ABSOLUTAMENTE SEGURO de que desea eliminar TODOS los datos de estudiantes? Esta acción es IRREVERSIBLE.',
+                icon: 'error',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'SÍ, ELIMINAR TODO',
+                cancelButtonText: 'NO, Cancelar',
+                allowOutsideClick: false,
+                allowEscapeKey: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    ejecutarEliminacionTotal();
+                }
+            });
+        }
+        
+        function ejecutarEliminacionTotal() {
+            // Mostrar progreso
+            Swal.fire({
+                title: 'Eliminando datos...',
+                html: 'Por favor espere, esta operación puede tardar varios minutos.',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            fetch('@Url.Action("EliminarTodosLosEstudiantes", "Home")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Eliminación Completada',
+                        html: `
+                            <div style="text-align: left;">
+                                <p><strong>Datos eliminados exitosamente:</strong></p>
+                                <ul>
+                                    <li>Estudiantes eliminados: ${result.estudiantesEliminados || 0}</li>
+                                    <li>Usuarios eliminados: ${result.usuariosEliminados || 0}</li>
+                                    <li>Grupos eliminados: ${result.gruposEliminados || 0}</li>
+                                </ul>
+                                <p class="text-success">El sistema ha sido reiniciado correctamente.</p>
+                            </div>
+                        `,
+                        confirmButtonText: 'Entendido'
+                    }).then(() => {
+                        // Recargar la página para reflejar los cambios
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error en la Eliminación',
+                        text: result.message || 'Ocurrió un error durante la eliminación de datos.',
+                        confirmButtonText: 'Entendido'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de Conexión',
+                    text: 'No se pudo completar la operación. Verifique la conexión.',
+                    confirmButtonText: 'Entendido'
+                });
+            });
+        }
+    </script>
 }

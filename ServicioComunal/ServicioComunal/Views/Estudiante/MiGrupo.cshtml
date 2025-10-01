@@ -325,15 +325,21 @@
 
 <script>
 function abrirModalCambiarLider() {
-    const modal = new bootstrap.Modal(document.getElementById('modalCambiarLider'));
-    modal.show();
+    const modalElement = document.getElementById('modalCambiarLider');
+    
+    if (modalElement) {
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+    } else {
+        console.error('Error: Modal no encontrado - verificar HTML');
+    }
 }
 
 function confirmarCambioLider() {
     const selectNuevoLider = document.getElementById('selectNuevoLider');
     const confirmarTransferencia = document.getElementById('confirmarTransferencia');
     
-    if (!selectNuevoLider.value) {
+    if (!selectNuevoLider || !selectNuevoLider.value) {
         Swal.fire({
             icon: 'error',
             title: 'Error',
@@ -342,7 +348,7 @@ function confirmarCambioLider() {
         return;
     }
     
-    if (!confirmarTransferencia.checked) {
+    if (!confirmarTransferencia || !confirmarTransferencia.checked) {
         Swal.fire({
             icon: 'error',
             title: 'Error',
@@ -379,8 +385,7 @@ function cambiarLider() {
     fetch('@Url.Action("CambiarLider", "Estudiante")', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
-            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+            'Content-Type': 'application/json'
         },
         body: JSON.stringify(data)
     })
@@ -409,7 +414,7 @@ function cambiarLider() {
         Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'Error al procesar la solicitud'
+            text: 'Error al procesar la solicitud: ' + error.message
         });
     });
 }

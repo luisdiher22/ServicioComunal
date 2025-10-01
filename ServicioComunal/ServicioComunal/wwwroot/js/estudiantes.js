@@ -16,7 +16,10 @@ function inicializarEventos() {
     });
 
     modalEstudiante.addEventListener('shown.bs.modal', function () {
-        limpiarValidacion();
+        // Solo limpiar validación si no estamos en modo edición
+        if (!modoEdicion) {
+            limpiarValidacion();
+        }
     });
 
     // Validación solo en blur después del primer intento
@@ -152,7 +155,7 @@ function editarEstudiante(identificacion) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                cargarDatosEnFormulario(data.estudiante);
+                cargarDatosEnFormulario(data.estudiante, true);
                 document.getElementById('modalEstudianteLabel').textContent = 'Editar Estudiante';
                 const modal = new bootstrap.Modal(document.getElementById('modalEstudiante'));
                 modal.show();
@@ -166,15 +169,48 @@ function editarEstudiante(identificacion) {
         });
 }
 
-function cargarDatosEnFormulario(estudiante) {
-    document.getElementById('estudianteId').value = estudiante.identificacion;
-    document.getElementById('identificacion').value = estudiante.identificacion;
-    document.getElementById('nombre').value = estudiante.nombre;
-    document.getElementById('apellidos').value = estudiante.apellidos;
-    document.getElementById('clase').value = estudiante.clase;
+function abrirModalAgregar() {
+    // Resetear modo edición y limpiar formulario
+    modoEdicion = false;
+    cargarDatosEnFormulario(null, false);
+    
+    // Cambiar título del modal
+    document.getElementById('modalEstudianteLabel').textContent = 'Agregar Estudiante';
+    
+    // Abrir modal
+    const modal = new bootstrap.Modal(document.getElementById('modalEstudiante'));
+    modal.show();
+}
+
+function cargarDatosEnFormulario(estudiante, esEdicion = false) {
+    if (estudiante) {
+        document.getElementById('estudianteId').value = estudiante.identificacion || '';
+        document.getElementById('identificacion').value = estudiante.identificacion || '';
+        document.getElementById('nombre').value = estudiante.nombre || '';
+        document.getElementById('apellidos').value = estudiante.apellidos || '';
+        document.getElementById('clase').value = estudiante.clase || '';
+    } else {
+        // Limpiar formulario si no hay datos
+        document.getElementById('estudianteId').value = '';
+        document.getElementById('identificacion').value = '';
+        document.getElementById('nombre').value = '';
+        document.getElementById('apellidos').value = '';
+        document.getElementById('clase').value = '';
+    }
     
     // En modo edición, deshabilitar el campo de cédula
-    document.getElementById('identificacion').disabled = true;
+    setTimeout(() => {
+        const campoIdentificacion = document.getElementById('identificacion');
+        if (campoIdentificacion) {
+            if (esEdicion && estudiante) {
+                campoIdentificacion.disabled = true;
+                campoIdentificacion.setAttribute('readonly', 'readonly');
+            } else {
+                campoIdentificacion.disabled = false;
+                campoIdentificacion.removeAttribute('readonly');
+            }
+        }
+    }, 50);
 }
 
 function eliminarEstudiante(identificacion) {
@@ -248,7 +284,20 @@ function guardarEstudiante() {
         return;
     }
     
+    // Habilitar temporalmente el campo identificacion si está deshabilitado
+    const campoIdentificacion = document.getElementById('identificacion');
+    const estabaDeshabilite = campoIdentificacion.disabled;
+    if (estabaDeshabilite) {
+        campoIdentificacion.disabled = false;
+    }
+    
     const formData = new FormData(form);
+    
+    // Restaurar el estado del campo
+    if (estabaDeshabilite) {
+        campoIdentificacion.disabled = true;
+    }
+    
     const estudiante = {
         identificacion: parseInt(formData.get('identificacion')),
         nombre: formData.get('nombre').trim(),
@@ -258,7 +307,8 @@ function guardarEstudiante() {
     
     // Si estamos en modo edición, incluir la identificación original
     if (modoEdicion) {
-        estudiante.identificacionOriginal = parseInt(formData.get('identificacionOriginal'));
+        const estudianteId = formData.get('estudianteId');
+        estudiante.identificacionOriginal = parseInt(estudianteId);
     }
     
     const url = modoEdicion ? '/Home/ActualizarEstudiante' : '/Home/CrearEstudiante';
@@ -379,7 +429,11 @@ function limpiarValidacion() {
     const campos = form.querySelectorAll('.form-control, .form-select');
     campos.forEach(campo => {
         campo.classList.remove('is-valid', 'is-invalid');
-        campo.disabled = false;
+        
+        // Solo habilitar campos que no sean el campo de identificación en modo edición
+        if (!(modoEdicion && campo.id === 'identificacion')) {
+            campo.disabled = false;
+        }
         
         // Remover y agregar required para evitar validación HTML5 automática
         if (campo.hasAttribute('required')) {

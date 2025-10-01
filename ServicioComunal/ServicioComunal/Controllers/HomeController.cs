@@ -393,7 +393,7 @@ namespace ServicioComunal.Controllers
             }
         }
 
-        public async Task<IActionResult> AsignarTutores()
+        public async Task<IActionResult> AdministrarDocentes()
         {
             try
             {
@@ -489,7 +489,7 @@ namespace ServicioComunal.Controllers
             if (archivo == null || archivo.Length == 0)
             {
                 TempData["Error"] = "Por favor seleccione un archivo válido.";
-                return RedirectToAction("AsignarTutores");
+                return RedirectToAction("AdministrarDocentes");
             }
 
             var extensionesPermitidas = new[] { ".xlsx", ".xls" };
@@ -498,7 +498,7 @@ namespace ServicioComunal.Controllers
             if (!extensionesPermitidas.Contains(extension))
             {
                 TempData["Error"] = "Solo se permiten archivos Excel (.xlsx, .xls).";
-                return RedirectToAction("AsignarTutores");
+                return RedirectToAction("AdministrarDocentes");
             }
 
             try
@@ -518,7 +518,7 @@ namespace ServicioComunal.Controllers
                         if (rowCount < 2)
                         {
                             TempData["Error"] = "El archivo debe contener al menos una fila de datos además del encabezado.";
-                            return RedirectToAction("AsignarTutores");
+                            return RedirectToAction("AdministrarDocentes");
                         }
 
                         for (int row = 2; row <= rowCount; row++)
@@ -596,12 +596,12 @@ namespace ServicioComunal.Controllers
                 else
                     TempData["Warning"] = mensaje.ToString();
 
-                return RedirectToAction("AsignarTutores");
+                return RedirectToAction("AdministrarDocentes");
             }
             catch (Exception ex)
             {
                 TempData["Error"] = $"Error al importar archivo: {ex.Message}";
-                return RedirectToAction("AsignarTutores");
+                return RedirectToAction("AdministrarDocentes");
             }
         }
 
@@ -1461,7 +1461,33 @@ namespace ServicioComunal.Controllers
                     return Json(new { success = false, message = "Tutor no encontrado" });
                 }
 
-                // Quitar asignaciones antes de eliminar
+                // Eliminar notificaciones relacionadas con las asignaciones del tutor
+                var gruposAsignados = tutor.GruposProfesores.Select(gp => gp.GrupoNumero).ToList();
+                if (gruposAsignados.Any())
+                {
+                    var notificacionesGrupoAsignado = await _context.Notificaciones
+                        .Where(n => n.GrupoId.HasValue && gruposAsignados.Contains(n.GrupoId.Value) && 
+                                   n.UsuarioDestino == id &&
+                                   n.TipoNotificacion == TipoNotificacion.GrupoAsignado)
+                        .ToListAsync();
+
+                    if (notificacionesGrupoAsignado.Any())
+                    {
+                        _context.Notificaciones.RemoveRange(notificacionesGrupoAsignado);
+                    }
+                }
+
+                // Eliminar otras notificaciones donde el tutor sea el origen o destino
+                var notificacionesDelTutor = await _context.Notificaciones
+                    .Where(n => n.UsuarioDestino == id || n.UsuarioOrigen == id)
+                    .ToListAsync();
+
+                if (notificacionesDelTutor.Any())
+                {
+                    _context.Notificaciones.RemoveRange(notificacionesDelTutor);
+                }
+
+                // Quitar asignaciones después de limpiar notificaciones
                 _context.GruposProfesores.RemoveRange(tutor.GruposProfesores);
 
                 // Buscar y eliminar el usuario asociado si existe
@@ -1483,9 +1509,9 @@ namespace ServicioComunal.Controllers
                         "Tutor eliminado exitosamente" 
                 });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return Json(new { success = false, message = "Error al eliminar el tutor" });
+                return Json(new { success = false, message = "Error al eliminar el tutor: " + ex.Message });
             }
         }
 
@@ -1528,6 +1554,127 @@ namespace ServicioComunal.Controllers
             {
                 ViewBag.Error = $"Error al cargar la configuración: {ex.Message}";
                 return View();
+            }
+        }
+
+        /// <summary>
+        /// Elimina TODOS los estudiantes, usuarios de estudiantes y grupos del sistema
+        /// ¡OPERACIÓN IRREVERSIBLE!
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> EliminarTodosLosEstudiantes()
+        {
+            try
+            {
+                // Contadores para el reporte
+                int estudiantesEliminados = 0;
+                int usuariosEliminados = 0;
+                int gruposEliminados = 0;
+                int relacionesEliminadas = 0;
+                int entregasEliminadas = 0;
+                int notificacionesEliminadas = 0;
+                int solicitudesEliminadas = 0;
+
+                using (var transaction = await _context.Database.BeginTransactionAsync())
+                {
+                    try
+                    {
+                        // 1. Eliminar todas las notificaciones relacionadas con grupos y estudiantes
+                        var notificacionesGrupos = await _context.Notificaciones
+                            .Where(n => n.GrupoId != null)
+                            .ToListAsync();
+
+                        var usuariosEstudiantesIds = await _context.Usuarios
+                            .Where(u => u.Rol == "Estudiante")
+                            .Select(u => u.Identificacion)
+                            .ToListAsync();
+
+                        var notificacionesEstudiantes = await _context.Notificaciones
+                            .Where(n => usuariosEstudiantesIds.Contains(n.UsuarioDestino) ||
+                                       (n.UsuarioOrigen.HasValue && usuariosEstudiantesIds.Contains(n.UsuarioOrigen.Value)))
+                            .ToListAsync();
+                        
+                        var todasLasNotificaciones = notificacionesGrupos.Union(notificacionesEstudiantes).Distinct().ToList();
+                        notificacionesEliminadas = todasLasNotificaciones.Count;
+                        _context.Notificaciones.RemoveRange(todasLasNotificaciones);
+
+                        // 2. Eliminar todas las entregas (ya que se van a eliminar todos los grupos)
+                        var entregasPorGrupos = await _context.Entregas.ToListAsync();
+                        entregasEliminadas = entregasPorGrupos.Count;
+                        _context.Entregas.RemoveRange(entregasPorGrupos);
+
+                        // 3. Eliminar todas las relaciones GruposProfesores
+                        var gruposProfesores = await _context.GruposProfesores.ToListAsync();
+                        _context.GruposProfesores.RemoveRange(gruposProfesores);
+
+                        // 4. Eliminar todas las relaciones GruposEstudiantes
+                        var gruposEstudiantes = await _context.GruposEstudiantes.ToListAsync();
+                        relacionesEliminadas = gruposEstudiantes.Count;
+                        _context.GruposEstudiantes.RemoveRange(gruposEstudiantes);
+
+                        // 5. Eliminar todos los grupos
+                        var grupos = await _context.Grupos.ToListAsync();
+                        gruposEliminados = grupos.Count;
+                        _context.Grupos.RemoveRange(grupos);
+
+                        // 6. Eliminar todas las solicitudes relacionadas con estudiantes
+                        var estudiantesIds = await _context.Estudiantes
+                            .Select(e => e.Identificacion)
+                            .ToListAsync();
+
+                        var solicitudes = await _context.Solicitudes
+                            .Where(s => estudiantesIds.Contains(s.EstudianteRemitenteId) || 
+                                       estudiantesIds.Contains(s.EstudianteDestinatarioId))
+                            .ToListAsync();
+                        
+                        solicitudesEliminadas = solicitudes.Count;
+                        _context.Solicitudes.RemoveRange(solicitudes);
+
+                        // 7. Eliminar todos los usuarios de estudiantes
+                        var usuariosEstudiantes = await _context.Usuarios
+                            .Where(u => u.Rol == "Estudiante")
+                            .ToListAsync();
+                        usuariosEliminados = usuariosEstudiantes.Count;
+                        _context.Usuarios.RemoveRange(usuariosEstudiantes);
+
+                        // 8. Eliminar todos los estudiantes
+                        var estudiantes = await _context.Estudiantes.ToListAsync();
+                        estudiantesEliminados = estudiantes.Count;
+                        _context.Estudiantes.RemoveRange(estudiantes);
+
+                        // Guardar todos los cambios
+                        await _context.SaveChangesAsync();
+
+                        // Confirmar la transacción
+                        await transaction.CommitAsync();
+
+                        return Json(new
+                        {
+                            success = true,
+                            message = "Eliminación completada exitosamente",
+                            estudiantesEliminados,
+                            usuariosEliminados,
+                            gruposEliminados,
+                            relacionesEliminadas,
+                            entregasEliminadas,
+                            notificacionesEliminadas,
+                            solicitudesEliminadas
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        await transaction.RollbackAsync();
+                        throw; // Re-lanzar la excepción para que sea capturada por el catch exterior
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Error durante la eliminación: " + ex.Message
+                });
             }
         }
 
@@ -1908,14 +2055,26 @@ namespace ServicioComunal.Controllers
                     return Json(new { success = false, message = "Asignación no encontrada" });
                 }
 
+                // Eliminar notificaciones relacionadas con la asignación del grupo al tutor
+                var notificacionesGrupoAsignado = await _context.Notificaciones
+                    .Where(n => n.GrupoId == request.GrupoNumero && 
+                               n.UsuarioDestino == request.TutorId &&
+                               n.TipoNotificacion == TipoNotificacion.GrupoAsignado)
+                    .ToListAsync();
+
+                if (notificacionesGrupoAsignado.Any())
+                {
+                    _context.Notificaciones.RemoveRange(notificacionesGrupoAsignado);
+                }
+
                 _context.GruposProfesores.Remove(asignacion);
                 await _context.SaveChangesAsync();
 
                 return Json(new { success = true, message = "Grupo quitado del tutor exitosamente" });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return Json(new { success = false, message = "Error al quitar grupo del tutor" });
+                return Json(new { success = false, message = "Error al quitar grupo del tutor: " + ex.Message });
             }
         }
 
@@ -3302,30 +3461,7 @@ namespace ServicioComunal.Controllers
             }
         }
 
-        [HttpPost]
-        public async Task<IActionResult> CambiarEstadoUsuario([FromBody] CambiarEstadoUsuarioRequest request)
-        {
-            try
-            {
-                var usuario = await _context.Usuarios
-                    .FirstOrDefaultAsync(u => u.Identificacion == request.UsuarioId);
 
-                if (usuario == null)
-                {
-                    return Json(new { success = false, message = "Usuario no encontrado" });
-                }
-
-                usuario.Activo = request.Activo;
-                await _context.SaveChangesAsync();
-
-                string mensaje = request.Activo ? "Usuario activado exitosamente" : "Usuario desactivado exitosamente";
-                return Json(new { success = true, message = mensaje });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = $"Error al cambiar estado: {ex.Message}" });
-            }
-        }
 
         [HttpPost]
         public async Task<IActionResult> MarcarCambioContraseñaRealizado([FromBody] MarcarCambioContraseñaRequest request)
@@ -3914,11 +4050,7 @@ namespace ServicioComunal.Controllers
         public int UsuarioId { get; set; }
     }
 
-    public class CambiarEstadoUsuarioRequest
-    {
-        public int UsuarioId { get; set; }
-        public bool Activo { get; set; }
-    }
+
 
     public class MarcarCambioContraseñaRequest
     {

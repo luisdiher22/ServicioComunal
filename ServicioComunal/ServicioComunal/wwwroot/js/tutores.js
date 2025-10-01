@@ -18,7 +18,10 @@ function inicializarEventos() {
     });
 
     modalTutor.addEventListener('shown.bs.modal', function () {
-        limpiarValidacion();
+        // Solo limpiar validación si no estamos en modo edición
+        if (!modoEdicion) {
+            limpiarValidacion();
+        }
     });
 
     // Validación solo en blur después del primer intento
@@ -190,7 +193,7 @@ function editarTutor(identificacion) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                cargarDatosEnFormulario(data.tutor);
+                cargarDatosEnFormulario(data.tutor, true);
                 document.getElementById('modalTutorLabel').textContent = 'Editar Tutor';
                 const modal = new bootstrap.Modal(document.getElementById('modalTutor'));
                 modal.show();
@@ -204,15 +207,49 @@ function editarTutor(identificacion) {
         });
 }
 
-function cargarDatosEnFormulario(tutor) {
-    document.getElementById('tutorId').value = tutor.identificacion;
-    document.getElementById('identificacion').value = tutor.identificacion;
-    document.getElementById('nombre').value = tutor.nombre;
-    document.getElementById('apellidos').value = tutor.apellidos;
-    document.getElementById('rol').value = tutor.rol;
+function cargarDatosEnFormulario(tutor, esEdicion = false) {
+    if (tutor) {
+        document.getElementById('tutorId').value = tutor.identificacion || '';
+        document.getElementById('identificacion').value = tutor.identificacion || '';
+        document.getElementById('nombre').value = tutor.nombre || '';
+        document.getElementById('apellidos').value = tutor.apellidos || '';
+        document.getElementById('rol').value = tutor.rol || '';
+    } else {
+        // Limpiar formulario si no hay datos
+        document.getElementById('tutorId').value = '';
+        document.getElementById('identificacion').value = '';
+        document.getElementById('nombre').value = '';
+        document.getElementById('apellidos').value = '';
+        document.getElementById('rol').value = '';
+    }
     
     // En modo edición, deshabilitar el campo de cédula
-    document.getElementById('identificacion').disabled = true;
+    setTimeout(() => {
+        const campoIdentificacion = document.getElementById('identificacion');
+        if (campoIdentificacion) {
+            if (esEdicion && tutor) {
+                campoIdentificacion.disabled = true;
+                campoIdentificacion.setAttribute('readonly', 'readonly');
+            } else {
+                campoIdentificacion.disabled = false;
+                campoIdentificacion.removeAttribute('readonly');
+            }
+        }
+    }, 50);
+}
+
+// Función para abrir el modal para agregar (sin datos precargados)
+function abrirModalAgregar() {
+    // Resetear modo edición y limpiar formulario
+    modoEdicion = false;
+    cargarDatosEnFormulario(null, false);
+    
+    // Cambiar título del modal
+    document.getElementById('modalTutorLabel').textContent = 'Agregar Docente';
+    
+    // Mostrar el modal
+    var modal = new bootstrap.Modal(document.getElementById('modalTutor'));
+    modal.show();
 }
 
 function asignarGrupos(identificacion) {
@@ -482,7 +519,20 @@ function guardarTutor() {
         return;
     }
     
+    // Habilitar temporalmente el campo identificacion si está deshabilitado
+    const campoIdentificacion = document.getElementById('identificacion');
+    const estabaDeshabilite = campoIdentificacion.disabled;
+    if (estabaDeshabilite) {
+        campoIdentificacion.disabled = false;
+    }
+    
     const formData = new FormData(form);
+    
+    // Restaurar el estado del campo
+    if (estabaDeshabilite) {
+        campoIdentificacion.disabled = true;
+    }
+    
     const tutor = {
         identificacion: parseInt(formData.get('identificacion')),
         nombre: formData.get('nombre').trim(),
@@ -492,7 +542,8 @@ function guardarTutor() {
     
     // Si estamos en modo edición, incluir la identificación original
     if (modoEdicion) {
-        tutor.identificacionOriginal = parseInt(formData.get('identificacionOriginal'));
+        const tutorId = formData.get('tutorId');
+        tutor.identificacionOriginal = parseInt(tutorId);
     }
     
     const url = modoEdicion ? '/Home/ActualizarTutor' : '/Home/CrearTutor';
@@ -613,7 +664,11 @@ function limpiarValidacion() {
     const campos = form.querySelectorAll('.form-control, .form-select');
     campos.forEach(campo => {
         campo.classList.remove('is-valid', 'is-invalid');
-        campo.disabled = false;
+        
+        // Solo habilitar campos que no sean el campo de identificación en modo edición
+        if (!(modoEdicion && campo.id === 'identificacion')) {
+            campo.disabled = false;
+        }
         
         // Remover y agregar required para evitar validación HTML5 automática
         if (campo.hasAttribute('required')) {

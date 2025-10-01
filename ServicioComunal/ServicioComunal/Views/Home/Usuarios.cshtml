@@ -175,9 +175,6 @@
                                         <button type="button" class="btn btn-sm btn-outline-warning" onclick="restablecerContraseña(@usuario.Identificacion, '@usuario.NombreUsuario')" title="Restablecer contraseña a cédula">
                                             <i class="fas fa-undo"></i>
                                         </button>
-                                        <button type="button" class="btn btn-sm btn-outline-@(usuario.Activo ? "warning" : "success")" onclick="cambiarEstadoUsuario(@usuario.Identificacion, @usuario.Activo.ToString().ToLower())" title="@(usuario.Activo ? "Desactivar" : "Activar") usuario">
-                                            <i class="fas fa-@(usuario.Activo ? "user-slash" : "user-check")"></i>
-                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -349,30 +346,7 @@
             });
         }
 
-        function toggleEstadoUsuario(usuarioId, estadoActual) {
-            const accion = estadoActual ? 'desactivar' : 'activar';
-            
-            if (confirm(`¿Estás seguro de que quieres ${accion} este usuario?`)) {
-                fetch('@Url.Action("CambiarEstadoUsuario", "Home")', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        usuarioId: usuarioId,
-                        activo: !estadoActual
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('Error al cambiar estado: ' + data.message);
-                    }
-                });
-            }
-        }
+
 
         function restablecerContraseña(usuarioId, nombreUsuario) {
             if (confirm(`¿Restablecer la contraseña de ${nombreUsuario} a su cédula?\n\nEsto marcará que debe cambiar la contraseña en el próximo login.`)) {

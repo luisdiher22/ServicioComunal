@@ -1974,9 +1974,38 @@ input, textarea, select {
     right: 20px;
     z-index: 1055;
     min-width: 300px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-    border: none;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    border: 2px solid !important;
     border-radius: 8px;
+    background-color: #ffffff !important;
+    color: #333333 !important;
+    font-weight: 500;
+    opacity: 1 !important;
+}
+
+/* Colores específicos para cada tipo de notificación */
+.notification-toast.alert-success {
+    border-color: #198754 !important;
+    background-color: #ffffff !important;
+    color: #198754 !important;
+}
+
+.notification-toast.alert-danger {
+    border-color: #dc3545 !important;
+    background-color: #ffffff !important;
+    color: #dc3545 !important;
+}
+
+.notification-toast.alert-info {
+    border-color: #0dcaf0 !important;
+    background-color: #ffffff !important;
+    color: #0dcaf0 !important;
+}
+
+.notification-toast.alert-warning {
+    border-color: #ffc107 !important;
+    background-color: #ffffff !important;
+    color: #e58e09 !important;
 }
 
 .notification-toast i {
