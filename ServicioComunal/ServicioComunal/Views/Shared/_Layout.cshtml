@@ -171,8 +171,9 @@
                 if (modalInstance) {
                     modalInstance.hide();
                 }
+            });
         });
-    }
+    </script>
     
     <!-- Modal de Notificaciones -->
     <div class="modal fade" id="notificacionesModal" tabindex="-1" aria-labelledby="notificacionesModalLabel" aria-hidden="true">
@@ -212,10 +213,17 @@
 
         // Inicializar cuando se carga la página
         document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar notificaciones si no están deshabilitadas
             @if (ViewData["DisableNotifications"] as bool? != true)
             {
                 <text>
-                notificacionesModal = new bootstrap.Modal(document.getElementById('notificacionesModal'));
+                // Intentar inicializar modal
+                const modalElement = document.getElementById('notificacionesModal');
+                if (modalElement) {
+                    notificacionesModal = new bootstrap.Modal(modalElement);
+                }
+                
+                // Actualizar conteo de notificaciones
                 actualizarConteoNotificaciones();
                 
                 // Actualizar cada 6 minutos
@@ -226,6 +234,17 @@
 
         // Función para toggle del modal de notificaciones
         function toggleNotifications() {
+            // Inicializar modal si no está inicializado
+            if (!notificacionesModal) {
+                const modalElement = document.getElementById('notificacionesModal');
+                if (modalElement) {
+                    notificacionesModal = new bootstrap.Modal(modalElement);
+                } else {
+                    console.error('Modal de notificaciones no encontrado');
+                    return;
+                }
+            }
+            
             cargarNotificaciones();
             notificacionesModal.show();
         }

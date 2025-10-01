@@ -164,14 +164,46 @@ namespace ServicioComunal.Controllers
                     return Json(new { success = false, message = "Estudiante no encontrado" });
                 }
 
-                // Actualizar campos
+                // Verificar si cambió el nombre o apellidos para actualizar el nombre de usuario
+                bool nombreCambio = estudianteExistente.Nombre != estudiante.Nombre || 
+                                   estudianteExistente.Apellidos != estudiante.Apellidos;
+
+                // Actualizar campos del estudiante
                 estudianteExistente.Nombre = estudiante.Nombre;
                 estudianteExistente.Apellidos = estudiante.Apellidos;
                 estudianteExistente.Clase = estudiante.Clase;
 
+                // Si cambió el nombre o apellidos, actualizar también el nombre de usuario
+                if (nombreCambio)
+                {
+                    var usuarioExistente = await _context.Usuarios
+                        .FirstOrDefaultAsync(u => u.Identificacion == estudiante.Identificacion);
+
+                    if (usuarioExistente != null)
+                    {
+                        // Obtener nombres de usuario existentes para evitar duplicados
+                        var nombresUsuarioExistentes = await _context.Usuarios
+                            .Where(u => u.Identificacion != estudiante.Identificacion)
+                            .Select(u => u.NombreUsuario.ToLower())
+                            .ToListAsync();
+
+                        // Generar nuevo nombre de usuario único
+                        string nuevoNombreUsuario = GenerarNombreUsuarioUnico(
+                            estudiante.Nombre, 
+                            estudiante.Apellidos, 
+                            nombresUsuarioExistentes);
+
+                        usuarioExistente.NombreUsuario = nuevoNombreUsuario;
+                    }
+                }
+
                 await _context.SaveChangesAsync();
 
-                return Json(new { success = true, message = "Estudiante actualizado exitosamente" });
+                string mensaje = nombreCambio ? 
+                    "Estudiante y nombre de usuario actualizados exitosamente" : 
+                    "Estudiante actualizado exitosamente";
+
+                return Json(new { success = true, message = mensaje });
             }
             catch (Exception)
             {
@@ -372,6 +404,158 @@ namespace ServicioComunal.Controllers
             }
         }
 
+        public async Task<IActionResult> ExportarDocentesExcel()
+        {
+            try
+            {
+                // Configurar licencia de EPPlus (modo no comercial)
+                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+                var docentes = await _context.Profesores
+                    .Include(p => p.GruposProfesores)
+                        .ThenInclude(gp => gp.Grupo)
+                    .OrderBy(p => p.Apellidos)
+                    .ThenBy(p => p.Nombre)
+                    .ToListAsync();
+
+                using (var package = new ExcelPackage())
+                {
+                    // Hoja principal de datos
+                    var worksheet = package.Workbook.Worksheets.Add("Docentes");
+
+                    // Encabezados con el orden específico: Apellido, Nombre, Cédula
+                    worksheet.Cells[1, 1].Value = "Apellidos";
+                    worksheet.Cells[1, 2].Value = "Nombre";
+                    worksheet.Cells[1, 3].Value = "Cédula";
+                    worksheet.Cells[1, 4].Value = "Rol";
+                    worksheet.Cells[1, 5].Value = "Estado";
+                    worksheet.Cells[1, 6].Value = "Grupos Asignados";
+
+                    // Estilo para encabezados
+                    using (var range = worksheet.Cells[1, 1, 1, 6])
+                    {
+                        range.Style.Font.Bold = true;
+                        range.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                        range.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thick);
+                    }
+
+                    // Datos
+                    int row = 2;
+                    foreach (var docente in docentes)
+                    {
+                        // Orden específico: Apellidos, Nombre, Cédula
+                        worksheet.Cells[row, 1].Value = docente.Apellidos;
+                        worksheet.Cells[row, 2].Value = docente.Nombre;
+                        worksheet.Cells[row, 3].Value = docente.Identificacion;
+                        worksheet.Cells[row, 4].Value = docente.Rol;
+
+                        var tieneGrupos = docente.GruposProfesores.Any();
+                        worksheet.Cells[row, 5].Value = tieneGrupos ? "Con Grupos" : "Sin Grupos";
+                        
+                        // Lista de grupos asignados
+                        if (tieneGrupos)
+                        {
+                            var gruposAsignados = string.Join(", ", 
+                                docente.GruposProfesores.Select(gp => $"Grupo {gp.Grupo.Numero}"));
+                            worksheet.Cells[row, 6].Value = gruposAsignados;
+                        }
+                        else
+                        {
+                            worksheet.Cells[row, 6].Value = "";
+                        }
+
+                        // Estilo condicional para el estado
+                        if (tieneGrupos)
+                        {
+                            worksheet.Cells[row, 5].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                            worksheet.Cells[row, 5].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGreen);
+                        }
+                        else
+                        {
+                            worksheet.Cells[row, 5].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                            worksheet.Cells[row, 5].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightYellow);
+                        }
+
+                        row++;
+                    }
+
+                    // Ajustar ancho de columnas
+                    worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+
+                    // Agregar bordes a toda la tabla
+                    using (var range = worksheet.Cells[1, 1, row - 1, 6])
+                    {
+                        range.Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                        range.Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                        range.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                        range.Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                    }
+
+                    // Hoja de estadísticas
+                    var statsWorksheet = package.Workbook.Worksheets.Add("Estadísticas");
+                    
+                    // Título
+                    statsWorksheet.Cells[1, 1].Value = "Reporte de Docentes - Servicio Comunal";
+                    statsWorksheet.Cells[1, 1, 1, 2].Merge = true;
+                    statsWorksheet.Cells[1, 1].Style.Font.Bold = true;
+                    statsWorksheet.Cells[1, 1].Style.Font.Size = 16;
+
+                    // Fecha de generación
+                    statsWorksheet.Cells[2, 1].Value = "Fecha de generación:";
+                    statsWorksheet.Cells[2, 2].Value = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
+
+                    // Estadísticas generales
+                    statsWorksheet.Cells[4, 1].Value = "ESTADÍSTICAS GENERALES";
+                    statsWorksheet.Cells[4, 1].Style.Font.Bold = true;
+
+                    statsWorksheet.Cells[5, 1].Value = "Total de docentes:";
+                    statsWorksheet.Cells[5, 2].Value = docentes.Count();
+
+                    statsWorksheet.Cells[6, 1].Value = "Con grupos asignados:";
+                    statsWorksheet.Cells[6, 2].Value = docentes.Count(d => d.GruposProfesores.Any());
+
+                    statsWorksheet.Cells[7, 1].Value = "Sin grupos asignados:";
+                    statsWorksheet.Cells[7, 2].Value = docentes.Count(d => !d.GruposProfesores.Any());
+
+                    // Estadísticas por rol
+                    statsWorksheet.Cells[9, 1].Value = "ESTADÍSTICAS POR ROL";
+                    statsWorksheet.Cells[9, 1].Style.Font.Bold = true;
+
+                    var estadisticasPorRol = docentes.GroupBy(d => d.Rol).Select(g => new
+                    {
+                        Rol = g.Key,
+                        Total = g.Count(),
+                        ConGrupos = g.Count(d => d.GruposProfesores.Any()),
+                        SinGrupos = g.Count(d => !d.GruposProfesores.Any())
+                    }).ToList();
+
+                    int statsRow = 10;
+                    foreach (var stat in estadisticasPorRol)
+                    {
+                        statsWorksheet.Cells[statsRow, 1].Value = $"Rol {stat.Rol}:";
+                        statsWorksheet.Cells[statsRow, 2].Value = $"Total: {stat.Total}, Con grupos: {stat.ConGrupos}, Sin grupos: {stat.SinGrupos}";
+                        statsRow++;
+                    }
+
+                    // Ajustar columnas de la hoja de estadísticas
+                    statsWorksheet.Cells[statsWorksheet.Dimension.Address].AutoFitColumns();
+
+                    // Generar el archivo
+                    var fileName = $"Docentes_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+                    var fileBytes = package.GetAsByteArray();
+
+                    return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+                }
+            }
+            catch (Exception ex)
+            {
+                // En caso de error, redirigir con mensaje
+                TempData["Error"] = $"Error al exportar: {ex.Message}";
+                return RedirectToAction("AdministrarDocentes");
+            }
+        }
+
         public async Task<IActionResult> GestionGrupos()
         {
             try
@@ -484,12 +668,12 @@ namespace ServicioComunal.Controllers
         }
 
         [HttpPost]
+        [HttpPost]
         public async Task<IActionResult> ImportarProfesores(IFormFile archivo)
         {
             if (archivo == null || archivo.Length == 0)
             {
-                TempData["Error"] = "Por favor seleccione un archivo válido.";
-                return RedirectToAction("AdministrarDocentes");
+                return Json(new { success = false, message = "Por favor seleccione un archivo válido." });
             }
 
             var extensionesPermitidas = new[] { ".xlsx", ".xls" };
@@ -497,111 +681,152 @@ namespace ServicioComunal.Controllers
             
             if (!extensionesPermitidas.Contains(extension))
             {
-                TempData["Error"] = "Solo se permiten archivos Excel (.xlsx, .xls).";
-                return RedirectToAction("AdministrarDocentes");
+                return Json(new { success = false, message = "Solo se permiten archivos Excel (.xlsx, .xls)." });
             }
 
             try
             {
                 var profesoresImportados = 0;
                 var profesoresExistentes = 0;
+                var usuariosCreados = 0;
                 var errores = new List<string>();
+                var advertencias = new List<string>();
 
-                using (var stream = archivo.OpenReadStream())
+                using (var transaction = await _context.Database.BeginTransactionAsync())
                 {
-                    ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-                    using (var package = new ExcelPackage(stream))
+                    try
                     {
-                        var worksheet = package.Workbook.Worksheets[0];
-                        var rowCount = worksheet.Dimension?.Rows ?? 0;
-
-                        if (rowCount < 2)
+                        using (var stream = archivo.OpenReadStream())
                         {
-                            TempData["Error"] = "El archivo debe contener al menos una fila de datos además del encabezado.";
-                            return RedirectToAction("AdministrarDocentes");
-                        }
-
-                        for (int row = 2; row <= rowCount; row++)
-                        {
-                            try
+                            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+                            using (var package = new ExcelPackage(stream))
                             {
-                                var apellidos = worksheet.Cells[row, 1].Value?.ToString()?.Trim();
-                                var nombre = worksheet.Cells[row, 2].Value?.ToString()?.Trim();
-                                var cedulaTexto = worksheet.Cells[row, 3].Value?.ToString()?.Trim();
+                                var worksheet = package.Workbook.Worksheets[0];
+                                var rowCount = worksheet.Dimension?.Rows ?? 0;
 
-                                if (string.IsNullOrWhiteSpace(apellidos) || 
-                                    string.IsNullOrWhiteSpace(nombre) || 
-                                    string.IsNullOrWhiteSpace(cedulaTexto))
+                                if (rowCount < 2)
                                 {
-                                    errores.Add($"Fila {row}: Datos incompletos");
-                                    continue;
+                                    return Json(new { success = false, message = "El archivo debe contener al menos una fila de datos además del encabezado." });
                                 }
 
-                                if (!int.TryParse(cedulaTexto, out int cedula))
+                                // Obtener profesores y usuarios existentes para evitar consultas repetidas
+                                var profesoresExistentesDb = await _context.Profesores
+                                    .Select(p => p.Identificacion)
+                                    .ToListAsync();
+                                
+                                var usuariosExistentesDb = await _context.Usuarios
+                                    .Select(u => u.Identificacion)
+                                    .ToListAsync();
+
+                                var nombresUsuarioExistentes = await _context.Usuarios
+                                    .Select(u => u.NombreUsuario.ToLower())
+                                    .ToListAsync();
+
+                                for (int row = 2; row <= rowCount; row++)
                                 {
-                                    errores.Add($"Fila {row}: Cédula inválida ({cedulaTexto})");
-                                    continue;
+                                    try
+                                    {
+                                        var apellidos = worksheet.Cells[row, 1].Value?.ToString()?.Trim();
+                                        var nombre = worksheet.Cells[row, 2].Value?.ToString()?.Trim();
+                                        var cedulaTexto = worksheet.Cells[row, 3].Value?.ToString()?.Trim();
+
+                                        if (string.IsNullOrWhiteSpace(apellidos) || 
+                                            string.IsNullOrWhiteSpace(nombre) || 
+                                            string.IsNullOrWhiteSpace(cedulaTexto))
+                                        {
+                                            errores.Add($"Fila {row}: Datos incompletos");
+                                            continue;
+                                        }
+
+                                        if (!int.TryParse(cedulaTexto, out int cedula))
+                                        {
+                                            errores.Add($"Fila {row}: Cédula inválida ({cedulaTexto})");
+                                            continue;
+                                        }
+
+                                        // Verificar si ya existe el profesor
+                                        if (profesoresExistentesDb.Contains(cedula))
+                                        {
+                                            profesoresExistentes++;
+                                            advertencias.Add($"Profesor {nombre} {apellidos} (ID: {cedula}) ya existe");
+                                            continue;
+                                        }
+
+                                        // Crear profesor
+                                        var profesor = new ServicioComunal.Models.Profesor
+                                        {
+                                            Identificacion = cedula,
+                                            Nombre = nombre,
+                                            Apellidos = apellidos,
+                                            Rol = "Tutor" // Rol por defecto para importación masiva
+                                        };
+
+                                        _context.Profesores.Add(profesor);
+                                        profesoresImportados++;
+
+                                        // Crear usuario si no existe
+                                        if (!usuariosExistentesDb.Contains(cedula))
+                                        {
+                                            string nombreUsuario = GenerarNombreUsuarioUnico(nombre, apellidos, nombresUsuarioExistentes);
+                                            
+                                            var usuario = new ServicioComunal.Models.Usuario
+                                            {
+                                                Identificacion = cedula,
+                                                NombreUsuario = nombreUsuario,
+                                                Contraseña = PasswordHelper.HashPassword(cedula.ToString()),
+                                                Rol = "Tutor", // Mismo rol que el profesor
+                                                RequiereCambioContraseña = true,
+                                                FechaCreacion = DateTime.Now,
+                                                Activo = true
+                                            };
+
+                                            _context.Usuarios.Add(usuario);
+                                            usuariosCreados++;
+                                            nombresUsuarioExistentes.Add(nombreUsuario.ToLower());
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        errores.Add($"Fila {row}: {ex.Message}");
+                                    }
                                 }
 
-                                // Verificar si ya existe
-                                var existeProfesor = await _context.Profesores
-                                    .AnyAsync(p => p.Identificacion == cedula);
-
-                                if (existeProfesor)
+                                if (profesoresImportados == 0)
                                 {
-                                    profesoresExistentes++;
-                                    continue;
+                                    return Json(new { success = false, message = "No se importó ningún profesor nuevo." });
                                 }
 
-                                var profesor = new ServicioComunal.Models.Profesor
-                                {
-                                    Identificacion = cedula,
-                                    Nombre = nombre,
-                                    Apellidos = apellidos,
-                                    Rol = "Tutor" // Rol por defecto para importación masiva
-                                };
-
-                                _context.Profesores.Add(profesor);
-                                profesoresImportados++;
-                            }
-                            catch (Exception ex)
-                            {
-                                errores.Add($"Fila {row}: {ex.Message}");
+                                await _context.SaveChangesAsync();
+                                await transaction.CommitAsync();
                             }
                         }
-
-                        await _context.SaveChangesAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        await transaction.RollbackAsync();
+                        throw;
                     }
                 }
 
-                var mensaje = new StringBuilder();
-                mensaje.AppendLine($"Importación completada:");
-                mensaje.AppendLine($"- Profesores importados: {profesoresImportados}");
+                var mensaje = $"Importación completada: {profesoresImportados} profesores y {usuariosCreados} usuarios creados.";
                 if (profesoresExistentes > 0)
-                    mensaje.AppendLine($"- Profesores ya existentes (omitidos): {profesoresExistentes}");
-                if (errores.Any())
                 {
-                    mensaje.AppendLine($"- Errores encontrados: {errores.Count}");
-                    mensaje.AppendLine("Errores:");
-                    foreach (var error in errores.Take(5))
-                    {
-                        mensaje.AppendLine($"  • {error}");
-                    }
-                    if (errores.Count > 5)
-                        mensaje.AppendLine($"  • ... y {errores.Count - 5} errores más");
+                    mensaje += $" {profesoresExistentes} profesores ya existían.";
                 }
 
-                if (profesoresImportados > 0)
-                    TempData["Success"] = mensaje.ToString();
-                else
-                    TempData["Warning"] = mensaje.ToString();
-
-                return RedirectToAction("AdministrarDocentes");
+                return Json(new { 
+                    success = true, 
+                    message = mensaje,
+                    procesados = profesoresImportados + profesoresExistentes,
+                    nuevos = profesoresImportados,
+                    usuariosCreados = usuariosCreados,
+                    errores = errores.Count,
+                    advertencias = advertencias.Count > 0 ? advertencias : null
+                });
             }
             catch (Exception ex)
             {
-                TempData["Error"] = $"Error al importar archivo: {ex.Message}";
-                return RedirectToAction("AdministrarDocentes");
+                return Json(new { success = false, message = $"Error al importar archivo: {ex.Message}" });
             }
         }
 
@@ -1433,13 +1658,46 @@ namespace ServicioComunal.Controllers
                     return Json(new { success = false, message = "Tutor no encontrado" });
                 }
 
+                // Verificar si cambió el nombre o apellidos para actualizar el nombre de usuario
+                bool nombreCambio = tutorExistente.Nombre != tutor.Nombre || 
+                                   tutorExistente.Apellidos != tutor.Apellidos;
+
+                // Actualizar campos del tutor
                 tutorExistente.Nombre = tutor.Nombre;
                 tutorExistente.Apellidos = tutor.Apellidos;
                 tutorExistente.Rol = tutor.Rol;
 
+                // Si cambió el nombre o apellidos, actualizar también el nombre de usuario
+                if (nombreCambio)
+                {
+                    var usuarioExistente = await _context.Usuarios
+                        .FirstOrDefaultAsync(u => u.Identificacion == tutor.Identificacion);
+
+                    if (usuarioExistente != null)
+                    {
+                        // Obtener nombres de usuario existentes para evitar duplicados
+                        var nombresUsuarioExistentes = await _context.Usuarios
+                            .Where(u => u.Identificacion != tutor.Identificacion)
+                            .Select(u => u.NombreUsuario.ToLower())
+                            .ToListAsync();
+
+                        // Generar nuevo nombre de usuario único
+                        string nuevoNombreUsuario = GenerarNombreUsuarioUnico(
+                            tutor.Nombre, 
+                            tutor.Apellidos, 
+                            nombresUsuarioExistentes);
+
+                        usuarioExistente.NombreUsuario = nuevoNombreUsuario;
+                    }
+                }
+
                 await _context.SaveChangesAsync();
 
-                return Json(new { success = true, message = "Tutor actualizado exitosamente" });
+                string mensaje = nombreCambio ? 
+                    "Tutor y nombre de usuario actualizados exitosamente" : 
+                    "Tutor actualizado exitosamente";
+
+                return Json(new { success = true, message = mensaje });
             }
             catch (Exception)
             {

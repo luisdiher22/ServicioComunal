@@ -922,3 +922,40 @@ function cambiarRol(identificacion, nuevoRol) {
         }
     });
 }
+
+// Función para exportar docentes a Excel
+function exportarDocentes() {
+    // Mostrar notificación de procesamiento
+    const notificacionProceso = document.createElement('div');
+    notificacionProceso.className = 'alert alert-info alert-dismissible fade show notification-toast';
+    notificacionProceso.id = 'exportNotificationDocentes';
+    notificacionProceso.innerHTML = `
+        <i class="fas fa-spinner fa-spin"></i>
+        Generando archivo Excel... Por favor espere.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(notificacionProceso);
+    
+    // Crear un enlace temporal para la descarga
+    const link = document.createElement('a');
+    link.href = '/Home/ExportarDocentesExcel';
+    link.download = '';
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    
+    // Simular click en el enlace
+    link.click();
+    
+    // Limpiar el enlace temporal
+    document.body.removeChild(link);
+    
+    // Remover notificación de procesamiento después de 3 segundos
+    setTimeout(() => {
+        const notification = document.getElementById('exportNotificationDocentes');
+        if (notification && notification.parentNode) {
+            notification.remove();
+            // Mostrar notificación de éxito
+            mostrarNotificacion('Archivo Excel de docentes generado exitosamente. La descarga debería iniciar automáticamente.', 'success');
+        }
+    }, 3000);
+}
