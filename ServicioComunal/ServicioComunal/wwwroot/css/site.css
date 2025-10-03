@@ -769,74 +769,237 @@ input, textarea, select {
 
 /* Responsive mejorado para login */
 @media (max-width: 768px) {
+    .login-container {
+        padding: 10px;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+    }
+    
     .login-card {
-        padding: 35px 30px;
-        margin: 15px;
-        max-width: 380px;
+        padding: 30px 25px;
+        margin: 10px auto;
+        max-width: 400px;
+        width: 100%;
     }
     
     .login-title {
-        font-size: 28px;
+        font-size: 26px;
     }
     
     .login-subtitle {
         font-size: 14px;
-        margin-bottom: 30px;
+        margin-bottom: 25px;
+        line-height: 1.4;
     }
     
     .logo {
-        width: 100px;
-        height: 100px;
+        width: 90px;
+        height: 90px;
     }
     
     .form-control {
-        padding: 14px 18px;
-        font-size: 14px;
+        padding: 14px 16px;
+        font-size: 16px; /* Evita zoom en iOS */
     }
     
     .btn-login {
         padding: 16px;
-        font-size: 15px;
+        font-size: 16px;
     }
     
     .floating-shape {
         display: none;
     }
+    
+    .help-text {
+        font-size: 13px;
+        padding: 12px;
+        line-height: 1.5;
+    }
+    
+    .footer-links {
+        gap: 10px;
+    }
+    
+    .footer-link {
+        font-size: 12px;
+        padding: 6px 12px;
+    }
 }
 
 @media (max-width: 480px) {
+    .login-container {
+        padding: 5px;
+    }
+    
     .login-card {
-        padding: 30px 25px;
-        margin: 10px;
-        border-radius: 20px;
+        padding: 25px 20px;
+        margin: 5px auto;
+        border-radius: 16px;
+        max-width: 350px;
     }
     
     .login-title {
-        font-size: 24px;
+        font-size: 22px;
     }
     
     .login-subtitle {
         font-size: 13px;
+        margin-bottom: 20px;
     }
     
-    .form-options {
-        flex-direction: column;
-        gap: 15px;
-        align-items: flex-start;
+    .logo {
+        width: 80px;
+        height: 80px;
     }
     
-    .footer-links {
-        flex-direction: column;
-        gap: 8px;
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        font-size: 13px;
+    }
+    
+    .form-control {
+        padding: 12px 14px;
+        font-size: 16px; /* Mantener 16px para evitar zoom */
+        border-radius: 10px;
+    }
+    
+    .btn-login {
+        padding: 14px;
+        font-size: 15px;
+        margin-top: 5px;
+    }
+    
+    .help-section {
+        margin-top: 20px;
+        padding-top: 20px;
+    }
+    
+    .help-title {
+        font-size: 14px;
+        margin-bottom: 10px;
     }
     
     .help-text {
         font-size: 12px;
-        padding: 12px;
+        padding: 10px;
+        line-height: 1.4;
     }
     
+    .login-footer {
+        margin-top: 20px;
+        padding-top: 15px;
+    }
+    
+    .footer-title {
+        font-size: 11px;
+        margin-bottom: 10px;
+    }
+    
+    .footer-links {
+        flex-direction: column;
+        gap: 6px;
+    }
+    
+    .footer-link {
+        font-size: 11px;
+        padding: 5px 10px;
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* Mejoras específicas para iOS */
+@media (max-width: 480px) {
+    input[type="text"],
+    input[type="password"],
     .form-control {
-        padding: 12px 16px;
+        font-size: 16px !important; /* Crítico para evitar zoom en iOS */
+        -webkit-appearance: none;
+        appearance: none;
+        border-radius: 10px;
+        background-color: white;
+    }
+    
+    .form-control:focus {
+        -webkit-appearance: none;
+        appearance: none;
+    }
+}
+
+/* Mejoras para Android Chrome */
+@media (max-width: 480px) {
+    .login-card {
+        /* Prevent zoom on input focus */
+        zoom: 1;
+    }
+    
+    /* Better touch targets */
+    .btn-login,
+    .footer-link,
+    .form-control {
+        min-height: 44px;
+        touch-action: manipulation;
+    }
+}
+
+/* Portrait específico para móviles */
+@media (max-width: 480px) and (orientation: portrait) {
+    .login-container {
+        padding: 10px 5px;
+    }
+    
+    .login-card {
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+}
+
+/* Landscape específico para móviles */
+@media (max-width: 768px) and (orientation: landscape) and (max-height: 480px) {
+    .login-container {
+        padding: 5px;
+        align-items: flex-start;
+        padding-top: 10px;
+    }
+    
+    .login-card {
+        padding: 20px;
+        margin: 5px auto;
+        max-width: 600px;
+    }
+    
+    .logo {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .login-title {
+        font-size: 20px;
+    }
+    
+    .login-subtitle {
+        font-size: 12px;
+        margin-bottom: 15px;
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .help-section,
+    .login-footer {
+        margin-top: 15px;
+        padding-top: 10px;
+    }
+    
+    .help-text {
+        font-size: 11px;
+        padding: 8px;
     }
 }
 
@@ -2766,6 +2929,95 @@ body.tutor-theme {
     background-size: 100% 100%, 100% 100%, 20px 20px, 20px 20px;
 }
 
+/* ===== TEMA ESTUDIANTE (ADAPTADO) ===== */
+
+/* Contenedor específico para estudiante */
+.container-fluid.estudiante-theme {
+    background: linear-gradient(135deg, #f5f1e8 0%, #ede4d3 100%);
+    min-height: 100vh;
+}
+
+/* Sidebar específico de estudiante */
+.estudiante-theme .sidebar {
+    background-color: #ffffff;
+    border-right: 1px solid #e0d5c7;
+    box-shadow: 2px 0 10px rgba(139, 119, 101, 0.08);
+}
+
+.estudiante-theme .nav-link {
+    color: #495057;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    transition: all 0.3s ease;
+}
+
+.estudiante-theme .nav-link:hover {
+    background-color: #f5f1e8;
+    color: #6c8d47;
+    text-decoration: none;
+}
+
+.estudiante-theme .nav-link.active {
+    background: linear-gradient(135deg, #6c8d47 0%, #5a7a3a 100%);
+    color: white;
+    font-weight: 500;
+}
+
+.estudiante-theme .nav-link.text-danger:hover {
+    background-color: #f8d7da;
+    color: #dc3545;
+}
+
+/* Main content para estudiante */
+.estudiante-theme .main-content {
+    background: transparent;
+    padding: 20px;
+}
+
+/* Cards específicas para estudiante */
+.estudiante-theme .card {
+    border: 1px solid #e0d5c7;
+    box-shadow: 0 2px 10px rgba(139, 119, 101, 0.08);
+    border-radius: 12px;
+}
+
+.estudiante-theme .card:hover {
+    box-shadow: 0 4px 20px rgba(139, 119, 101, 0.15);
+}
+
+.estudiante-theme .card-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 1px solid #e0d5c7;
+}
+
+/* Botones para estudiante */
+.estudiante-theme .btn-primary {
+    background: linear-gradient(135deg, #6c8d47 0%, #5a7a3a 100%);
+    border-color: #6c8d47;
+}
+
+.estudiante-theme .btn-primary:hover {
+    background: linear-gradient(135deg, #5a7a3a 0%, #4a6832 100%);
+    border-color: #5a7a3a;
+}
+
+.estudiante-theme .btn-success {
+    background: linear-gradient(135deg, #6c8d47 0%, #5a7a3a 100%);
+    border-color: #6c8d47;
+}
+
+.estudiante-theme .btn-info {
+    background: linear-gradient(135deg, #8b7765 0%, #6f5d4f 100%);
+    border-color: #8b7765;
+}
+
+.estudiante-theme .btn-warning {
+    background: linear-gradient(135deg, #d4a574 0%, #b8936a 100%);
+    border-color: #d4a574;
+    color: white;
+}
+
 /* Header del Dashboard para Tutor */
 .dashboard-header.tutor-theme {
     background: linear-gradient(135deg, #8b7765 0%, #6f5d4f 100%);
@@ -3554,6 +3806,372 @@ body.tutor-theme {
     }
 }
 
+/* ===== RESPONSIVE ESPECÍFICO POR ROL DE USUARIO ===== */
+
+/* RESPONSIVE PARA ADMINISTRADOR */
+@media (max-width: 991.98px) {
+    /* El administrador usa el layout estándar que ya está optimizado */
+    .dashboard-content h1 {
+        font-size: 24px;
+        text-align: center;
+    }
+    
+    .content-header p {
+        font-size: 14px;
+        text-align: center;
+    }
+}
+
+/* RESPONSIVE PARA TUTOR */
+@media (max-width: 991.98px) {
+    .tutor-theme .dashboard-content {
+        padding: 15px 10px;
+    }
+    
+    .tutor-theme .content-header h1 {
+        font-size: 24px;
+        text-align: center;
+        margin-bottom: 8px;
+    }
+    
+    .tutor-theme .content-header p {
+        font-size: 14px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    /* Cards del tutor responsive */
+    .tutor-theme .dashboard-cards {
+        grid-template-columns: 1fr;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+    
+    .tutor-theme .dashboard-card {
+        padding: 20px;
+    }
+    
+    /* Estadísticas del tutor */
+    .tutor-theme .stat-number {
+        font-size: 28px;
+    }
+    
+    .tutor-theme .card-content h3 {
+        font-size: 16px;
+    }
+}
+
+/* RESPONSIVE PARA ESTUDIANTE */
+@media (max-width: 991.98px) {
+    /* Layout específico para estudiante */
+    .container-fluid.estudiante-theme {
+        padding: 0;
+    }
+    
+    .estudiante-theme .row {
+        margin: 0;
+        flex-direction: column;
+    }
+    
+    /* Sidebar de estudiante se convierte en top bar */
+    .estudiante-theme .sidebar {
+        position: relative;
+        width: 100% !important;
+        flex: none;
+        order: 1;
+        padding: 15px !important;
+        border-right: none;
+        border-bottom: 2px solid #e0d5c7;
+        box-shadow: 0 2px 10px rgba(139, 119, 101, 0.08);
+    }
+    
+    .estudiante-theme .sidebar .text-center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 15px !important;
+    }
+    
+    .estudiante-theme .sidebar img {
+        width: 40px !important;
+        height: 40px !important;
+    }
+    
+    .estudiante-theme .sidebar h5 {
+        margin: 0 !important;
+        font-size: 16px;
+    }
+    
+    .estudiante-theme .sidebar small {
+        font-size: 12px;
+    }
+    
+    /* Navegación horizontal para estudiante */
+    .estudiante-theme .nav {
+        flex-direction: row !important;
+        overflow-x: auto;
+        gap: 5px;
+        padding: 0 5px 5px 5px;
+    }
+    
+    .estudiante-theme .nav::-webkit-scrollbar {
+        height: 4px;
+    }
+    
+    .estudiante-theme .nav::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    
+    .estudiante-theme .nav::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 2px;
+    }
+    
+    .estudiante-theme .nav-link {
+        flex-shrink: 0;
+        white-space: nowrap;
+        padding: 8px 12px !important;
+        margin: 0 2px !important;
+        border-radius: 8px;
+        text-align: center;
+        min-width: 100px;
+        font-size: 12px;
+    }
+    
+    .estudiante-theme .nav-link i {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 14px;
+    }
+    
+    /* Main content de estudiante */
+    .estudiante-theme .main-content {
+        order: 2;
+        padding: 15px 10px !important;
+        width: 100% !important;
+        flex: 1;
+    }
+    
+    /* Cards y contenido del estudiante */
+    .estudiante-theme .card {
+        margin-bottom: 15px;
+    }
+    
+    .estudiante-theme .card-header {
+        padding: 12px 15px;
+    }
+    
+    .estudiante-theme .card-body {
+        padding: 15px;
+    }
+    
+    /* Tablas en vista de estudiante */
+    .estudiante-theme .table-responsive {
+        margin: 0 -10px;
+        font-size: 13px;
+    }
+    
+    .estudiante-theme .table th,
+    .estudiante-theme .table td {
+        padding: 10px 8px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    /* TUTOR - Responsive extra */
+    .tutor-theme .dashboard-cards {
+        margin: 0 -10px;
+    }
+    
+    .tutor-theme .dashboard-card {
+        margin: 0 10px 15px 10px;
+        padding: 15px;
+    }
+    
+    /* ESTUDIANTE - Responsive extra */
+    .estudiante-theme .sidebar .text-center {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .estudiante-theme .sidebar img {
+        width: 35px !important;
+        height: 35px !important;
+    }
+    
+    .estudiante-theme .sidebar h5 {
+        font-size: 14px;
+        text-align: center;
+    }
+    
+    .estudiante-theme .sidebar small {
+        font-size: 11px;
+    }
+    
+    .estudiante-theme .nav-link {
+        min-width: 90px;
+        font-size: 11px;
+        padding: 6px 10px !important;
+    }
+    
+    .estudiante-theme .nav-link i {
+        font-size: 12px;
+    }
+    
+    .estudiante-theme .main-content {
+        padding: 10px 5px !important;
+    }
+    
+    /* Botones más grandes para touch */
+    .estudiante-theme .btn {
+        min-height: 44px;
+        padding: 10px 15px;
+        font-size: 14px;
+    }
+    
+    .estudiante-theme .btn-sm {
+        min-height: 38px;
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* TUTOR - Ultra responsive */
+    .tutor-theme .content-header h1 {
+        font-size: 20px;
+    }
+    
+    .tutor-theme .dashboard-card {
+        padding: 12px;
+    }
+    
+    .tutor-theme .card-content h3 {
+        font-size: 14px;
+    }
+    
+    .tutor-theme .stat-number {
+        font-size: 24px;
+    }
+    
+    /* ESTUDIANTE - Ultra responsive */
+    .estudiante-theme .sidebar {
+        padding: 10px !important;
+    }
+    
+    .estudiante-theme .sidebar .text-center {
+        margin-bottom: 10px !important;
+    }
+    
+    .estudiante-theme .sidebar h5 {
+        font-size: 13px;
+    }
+    
+    .estudiante-theme .nav-link {
+        min-width: 80px;
+        font-size: 10px;
+        padding: 5px 8px !important;
+    }
+    
+    .estudiante-theme .main-content {
+        padding: 8px 3px !important;
+    }
+    
+    .estudiante-theme .card-header {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+    
+    .estudiante-theme .card-body {
+        padding: 12px;
+    }
+    
+    /* Formularios del estudiante */
+    .estudiante-theme .form-control,
+    .estudiante-theme .form-select {
+        font-size: 16px !important; /* Evitar zoom en iOS */
+        padding: 12px 15px;
+    }
+    
+    .estudiante-theme .btn {
+        font-size: 13px;
+        min-height: 44px;
+    }
+}
+
+/* LANDSCAPE ESPECÍFICO PARA ESTUDIANTES */
+@media (max-width: 768px) and (orientation: landscape) {
+    .estudiante-theme .sidebar .text-center {
+        flex-direction: row;
+        justify-content: flex-start;
+        gap: 10px;
+        margin-bottom: 8px !important;
+    }
+    
+    .estudiante-theme .nav-link {
+        font-size: 11px;
+        min-width: 70px;
+        padding: 4px 8px !important;
+    }
+    
+    .estudiante-theme .nav-link i {
+        font-size: 10px;
+        margin-bottom: 2px;
+    }
+}
+
+/* TOUCH DEVICES - TODOS LOS ROLES */
+@media (hover: none) and (pointer: coarse) {
+    /* Botones más grandes para todos los roles */
+    .tutor-theme .btn,
+    .estudiante-theme .btn,
+    .dashboard-content .btn {
+        min-height: 44px;
+        padding: 12px 20px;
+    }
+    
+    /* Enlaces de navegación más grandes */
+    .tutor-theme .nav-item,
+    .estudiante-theme .nav-link,
+    .sidebar .nav-item {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+    }
+    
+    /* Campos de formulario más grandes */
+    .tutor-theme .form-control,
+    .tutor-theme .form-select,
+    .estudiante-theme .form-control,
+    .estudiante-theme .form-select {
+        min-height: 44px;
+        padding: 12px 16px;
+        font-size: 16px; /* Evitar zoom en iOS */
+    }
+    
+    /* Action buttons para touch en todos los roles */
+    .tutor-theme .action-buttons .btn,
+    .estudiante-theme .action-buttons .btn,
+    .action-buttons .btn {
+        min-height: 40px;
+        min-width: 40px;
+        padding: 10px;
+    }
+    
+    /* Deshabilitar hover effects en touch devices */
+    .tutor-theme .btn:hover,
+    .tutor-theme .card:hover,
+    .tutor-theme .nav-item:hover,
+    .estudiante-theme .btn:hover,
+    .estudiante-theme .card:hover,
+    .estudiante-theme .nav-link:hover {
+        transform: none !important;
+        box-shadow: inherit !important;
+    }
+}
+
 /* ===== FONT AWESOME ICONS FIX ===== */
 /* Esta regla debe ir al final para tener máxima prioridad */
 .fas, .far, .fab, .fal, .fad, .fa,
@@ -3875,6 +4493,638 @@ h1, h2, h3, h4, h5, h6, .card, .modal, .table, .form-control,
     opacity: 1;
 }
 
+/* ===== MEJORAS RESPONSIVE MÓVIL ===== */
+
+/* Viewport meta tag improvements */
+@viewport {
+    width: device-width;
+    zoom: 1.0;
+}
+
+/* Mejoras generales para móvil */
+* {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+    -webkit-touch-callout: none;
+}
+
+/* Ajustes del layout para móvil */
+@media (max-width: 991.98px) {
+    /* Dashboard responsive */
+    .dashboard-container {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+        top: 0;
+        left: 0;
+        order: 2;
+        border-right: none;
+        border-top: 2px solid #e9ecef;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
+    }
+    
+    .main-content {
+        margin-left: 0;
+        order: 1;
+        padding: 20px 15px;
+        min-height: auto;
+    }
+    
+    /* Header responsive */
+    .dashboard-header {
+        position: relative;
+        margin-bottom: 0;
+    }
+    
+    .header-content {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .header-left {
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .header-right {
+        gap: 15px;
+    }
+    
+    .header-title {
+        font-size: 16px;
+    }
+    
+    .header-subtitle {
+        font-size: 12px;
+    }
+    
+    /* Sidebar navigation horizontal en móvil */
+    .sidebar-nav {
+        display: flex;
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 10px 0;
+        gap: 5px;
+    }
+    
+    .sidebar-nav::-webkit-scrollbar {
+        height: 4px;
+    }
+    
+    .sidebar-nav::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    
+    .sidebar-nav::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 2px;
+    }
+    
+    .nav-item {
+        flex-shrink: 0;
+        white-space: nowrap;
+        padding: 8px 15px;
+        margin: 0 2px;
+        border-radius: 8px;
+        border-left: none;
+        border-bottom: 3px solid transparent;
+        text-align: center;
+        min-width: 120px;
+        font-size: 13px;
+    }
+    
+    .nav-item.active {
+        border-bottom-color: #6c8d47;
+        border-left: none;
+    }
+    
+    .nav-item i {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 14px;
+    }
+    
+    .sidebar-footer {
+        order: 3;
+        padding: 15px 20px;
+        text-align: center;
+    }
+    
+    .logout-btn {
+        max-width: 200px;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Container principal */
+    .dashboard-container {
+        margin-top: 0;
+    }
+    
+    /* Cards del dashboard */
+    .dashboard-cards {
+        grid-template-columns: 1fr;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+    
+    .dashboard-card {
+        padding: 20px;
+    }
+    
+    .card-content h3 {
+        font-size: 16px;
+    }
+    
+    .stat-number {
+        font-size: 28px;
+    }
+    
+    /* Content header responsive */
+    .content-header {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: left;
+        margin-bottom: 25px;
+    }
+    
+    .content-header h1 {
+        font-size: 24px;
+        margin-bottom: 8px;
+    }
+    
+    .content-header p {
+        font-size: 14px;
+        margin-bottom: 15px;
+    }
+    
+    .header-actions {
+        justify-content: stretch;
+    }
+    
+    .header-actions .btn {
+        flex: 1;
+        font-size: 14px;
+        padding: 10px 15px;
+    }
+    
+    /* Tablas responsive */
+    .table-card {
+        margin: 0 -15px;
+        border-radius: 0;
+    }
+    
+    .table-header {
+        padding: 15px 20px;
+        flex-direction: column;
+        gap: 15px;
+        text-align: left;
+    }
+    
+    .table-actions {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .table-actions .btn {
+        flex: 1;
+        min-width: 120px;
+        font-size: 13px;
+    }
+    
+    .table-responsive {
+        font-size: 13px;
+        margin: 0 -10px;
+    }
+    
+    .table th,
+    .table td {
+        padding: 12px 10px;
+        font-size: 12px;
+    }
+    
+    .table th {
+        background-color: #f8f9fa !important;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    /* Modales responsive */
+    .modal-dialog {
+        margin: 10px;
+        max-width: calc(100% - 20px);
+    }
+    
+    .modal-header {
+        padding: 15px 20px;
+    }
+    
+    .modal-title {
+        font-size: 16px;
+    }
+    
+    .modal-body {
+        padding: 20px;
+    }
+    
+    .modal-footer {
+        padding: 15px 20px;
+        flex-direction: column-reverse;
+        gap: 10px;
+    }
+    
+    .modal-footer .btn {
+        width: 100%;
+        margin: 0;
+    }
+    
+    /* Formularios responsive */
+    .filters-card {
+        margin: 0 -15px;
+        border-radius: 0;
+        padding: 15px 20px;
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-control,
+    .form-select {
+        font-size: 16px; /* Evita zoom en iOS */
+        padding: 12px 15px;
+    }
+    
+    /* Action buttons responsive */
+    .action-buttons {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: center;
+    }
+    
+    .action-buttons .btn {
+        flex: 1;
+        min-width: 80px;
+        font-size: 11px;
+        padding: 8px 6px;
+    }
+    
+    /* Badges y etiquetas más pequeñas */
+    .badge {
+        font-size: 10px;
+        padding: 4px 8px;
+    }
+    
+    .badge-clase {
+        font-size: 9px;
+        padding: 3px 6px;
+    }
+    
+    /* Stats cards responsive */
+    .stat-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 15px;
+    }
+    
+    .stat-icon {
+        margin-bottom: 10px;
+    }
+    
+    /* Notificaciones responsive */
+    .notification-toast {
+        left: 10px;
+        right: 10px;
+        top: 10px;
+        min-width: auto;
+        max-width: none;
+        font-size: 14px;
+    }
+    
+    /* Texto truncado más agresivo */
+    .text-truncate {
+        max-width: 150px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Header extra responsive */
+    .dashboard-header {
+        padding: 10px 15px;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    
+    .header-left {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        min-width: auto;
+    }
+    
+    .header-logo {
+        width: 35px;
+        height: 35px;
+    }
+    
+    .header-title {
+        font-size: 14px;
+    }
+    
+    .header-subtitle {
+        display: none; /* Ocultar en pantallas muy pequeñas */
+    }
+    
+    .header-right {
+        justify-content: center;
+        gap: 20px;
+    }
+    
+    /* Main content extra responsive */
+    .main-content {
+        padding: 15px 10px;
+    }
+    
+    .content-header h1 {
+        font-size: 20px;
+        text-align: center;
+    }
+    
+    .content-header p {
+        font-size: 13px;
+        text-align: center;
+    }
+    
+    /* Cards extra pequeñas */
+    .dashboard-card {
+        padding: 15px;
+        margin: 0 5px;
+    }
+    
+    .card-content h3 {
+        font-size: 14px;
+    }
+    
+    .card-content p {
+        font-size: 12px;
+    }
+    
+    .stat-number {
+        font-size: 24px;
+    }
+    
+    .stat-label {
+        font-size: 11px;
+    }
+    
+    /* Navegación sidebar ultra responsive */
+    .sidebar-nav {
+        padding: 8px 5px;
+    }
+    
+    .nav-item {
+        min-width: 100px;
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+    
+    .nav-item span {
+        display: block;
+        margin-top: 2px;
+    }
+    
+    /* Tablas ultra responsive */
+    .table-responsive {
+        font-size: 11px;
+        position: relative;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .table-responsive::after {
+        content: "← Desliza para ver más →";
+        position: absolute;
+        bottom: 5px;
+        right: 10px;
+        font-size: 10px;
+        color: #6c757d;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 2px 6px;
+        border-radius: 4px;
+        pointer-events: none;
+        opacity: 0.7;
+    }
+    
+    .table-responsive::-webkit-scrollbar {
+        height: 8px;
+    }
+    
+    .table-responsive::-webkit-scrollbar-track {
+        background: #f1f3f4;
+        border-radius: 4px;
+    }
+    
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: #6c8d47;
+        border-radius: 4px;
+    }
+    
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background: #5a7a3a;
+    }
+    
+    .table th,
+    .table td {
+        padding: 8px 6px;
+        white-space: nowrap;
+        min-width: 80px;
+    }
+    
+    .table th:first-child,
+    .table td:first-child {
+        position: sticky;
+        left: 0;
+        background: white;
+        z-index: 10;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .table th:first-child {
+        background: #f8f9fa !important;
+    }
+    
+    /* Botones extra pequeños */
+    .btn {
+        font-size: 12px;
+        padding: 8px 12px;
+    }
+    
+    .btn-sm {
+        font-size: 10px;
+        padding: 4px 8px;
+    }
+    
+    .action-buttons .btn {
+        font-size: 10px;
+        padding: 6px 4px;
+        min-width: 70px;
+    }
+    
+    /* Modales extra responsive */
+    .modal-dialog {
+        margin: 5px;
+        max-width: calc(100% - 10px);
+    }
+    
+    .modal-body {
+        padding: 15px;
+    }
+    
+    /* Input más grandes para móvil (evitar zoom) */
+    .form-control,
+    .form-select,
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    textarea {
+        font-size: 16px !important;
+        -webkit-appearance: none;
+        appearance: none;
+        border-radius: 8px;
+    }
+    
+    /* Texto truncado muy agresivo */
+    .text-truncate {
+        max-width: 100px;
+    }
+    
+    /* Estudiantes/grupos info responsive */
+    .estudiantes-info,
+    .grupos-asignados {
+        gap: 4px;
+    }
+    
+    .estudiante-tag,
+    .grupo-tag {
+        font-size: 9px;
+        padding: 1px 4px;
+    }
+    
+    .tutor-info {
+        flex-direction: column;
+        text-align: center;
+        gap: 5px;
+    }
+    
+    .tutor-avatar {
+        width: 35px;
+        height: 35px;
+        margin: 0 auto;
+    }
+    
+    /* Badges ultra pequeños */
+    .badge {
+        font-size: 9px;
+        padding: 2px 5px;
+    }
+    
+    .badge-rol {
+        font-size: 8px;
+        padding: 2px 4px;
+    }
+}
+
+/* Mejoras específicas para touch devices */
+@media (hover: none) and (pointer: coarse) {
+    /* Botones más grandes para touch */
+    .btn {
+        min-height: 44px;
+        padding: 12px 20px;
+    }
+    
+    .btn-sm {
+        min-height: 38px;
+        padding: 8px 15px;
+    }
+    
+    /* Enlaces más grandes */
+    .nav-item {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+    }
+    
+    /* Checkboxes y radios más grandes */
+    .form-check-input {
+        width: 20px !important;
+        height: 20px !important;
+    }
+    
+    /* Campos de formulario más grandes */
+    .form-control,
+    .form-select {
+        min-height: 44px;
+        padding: 12px 16px;
+    }
+    
+    /* Action buttons para touch */
+    .action-buttons .btn {
+        min-height: 40px;
+        min-width: 40px;
+        padding: 10px;
+    }
+    
+    /* Hover effects deshabilitados */
+    .btn:hover,
+    .card:hover,
+    .nav-item:hover,
+    .action-buttons .btn:hover {
+        transform: none !important;
+        box-shadow: inherit !important;
+    }
+}
+
+/* Mejoras para landscape en móviles */
+@media (max-width: 768px) and (orientation: landscape) {
+    .dashboard-header {
+        padding: 8px 15px;
+    }
+    
+    .header-title {
+        font-size: 14px;
+    }
+    
+    .sidebar-nav {
+        padding: 5px 0;
+    }
+    
+    .nav-item {
+        padding: 5px 12px;
+        font-size: 12px;
+    }
+    
+    .nav-item i {
+        font-size: 12px;
+        margin-bottom: 2px;
+    }
+    
+    .main-content {
+        padding: 10px;
+    }
+}
+
 /* ===== ESTILOS PARA NOTIFICACIONES ===== */
 
 /* Badge de notificaciones */
@@ -4080,5 +5330,328 @@ h1, h2, h3, h4, h5, h6, .card, .modal, .table, .form-control,
     .notification-icon {
         width: 35px;
         height: 35px;
+    }
+}
+
+/* ===== MOBILE SPECIFIC ENHANCEMENTS BY ROLE ===== */
+
+/* Loading states for mobile */
+.btn.loading {
+    position: relative;
+    color: transparent !important;
+}
+
+.btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Pull-to-refresh visual feedback */
+@media (max-width: 768px) {
+    .main-content {
+        transition: background 0.3s ease;
+    }
+    
+    /* Scroll indicators */
+    .scroll-indicator {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 0.7; }
+        50% { opacity: 0.3; }
+    }
+    
+    /* Enhanced touch targets for mobile */
+    .btn-sm {
+        min-height: 44px !important;
+        min-width: 44px !important;
+        padding: 8px 16px !important;
+    }
+    
+    /* Better spacing for mobile forms */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-control {
+        min-height: 44px;
+        padding: 12px 16px;
+        border-radius: 8px;
+    }
+    
+    /* Mobile-specific card enhancements */
+    .card {
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1rem;
+    }
+    
+    .card-header {
+        border-radius: 12px 12px 0 0 !important;
+        padding: 1rem 1.25rem;
+    }
+    
+    /* Enhanced alert styling for mobile */
+    .alert {
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid;
+    }
+    
+    .alert-success {
+        border-left-color: #28a745;
+    }
+    
+    .alert-danger {
+        border-left-color: #dc3545;
+    }
+    
+    .alert-warning {
+        border-left-color: #ffc107;
+    }
+    
+    .alert-info {
+        border-left-color: #17a2b8;
+    }
+}
+
+/* Administrador mobile specific */
+@media (max-width: 768px) {
+    .admin-dashboard .dashboard-card:active {
+        transform: scale(0.98);
+        transition: transform 0.1s ease;
+    }
+    
+    /* Admin table mobile optimizations */
+    .admin-dashboard .table-responsive {
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .admin-dashboard .table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        font-size: 0.875rem;
+        padding: 12px 8px;
+    }
+    
+    .admin-dashboard .table td {
+        padding: 12px 8px;
+        font-size: 0.875rem;
+    }
+}
+
+/* Tutor mobile specific */
+@media (max-width: 768px) {
+    .tutor-theme .dashboard-card {
+        transition: all 0.2s ease;
+    }
+    
+    .tutor-theme .dashboard-card:active {
+        transform: scale(0.98);
+        box-shadow: 0 4px 12px rgba(108, 141, 71, 0.2);
+    }
+    
+    .tutor-theme .btn-primary {
+        background: linear-gradient(135deg, #6c8d47 0%, #5a7a3a 100%);
+        border: none;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .tutor-theme .btn-primary:hover,
+    .tutor-theme .btn-primary:active {
+        background: linear-gradient(135deg, #5a7a3a 0%, #4a6a2a 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(108, 141, 71, 0.3);
+    }
+    
+    /* Tutor form enhancements */
+    .tutor-theme .form-control:focus {
+        border-color: #6c8d47;
+        box-shadow: 0 0 0 0.2rem rgba(108, 141, 71, 0.25);
+    }
+}
+
+/* Estudiante mobile specific */
+@media (max-width: 768px) {
+    .estudiante-theme .nav-link {
+        transition: all 0.2s ease;
+    }
+    
+    .estudiante-theme .nav-link:active {
+        transform: scale(0.95);
+    }
+    
+    .estudiante-theme .nav-link.active {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        color: white !important;
+        border-radius: 8px;
+        transform: scale(1.02);
+    }
+    
+    /* Estudiante dashboard cards */
+    .estudiante-theme .dashboard-card {
+        transition: all 0.2s ease;
+        border-radius: 12px;
+    }
+    
+    .estudiante-theme .dashboard-card:active {
+        transform: scale(0.98);
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+    }
+    
+    /* Estudiante button styling */
+    .estudiante-theme .btn-primary {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        border: none;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .estudiante-theme .btn-primary:hover,
+    .estudiante-theme .btn-primary:active {
+        background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    }
+    
+    /* Estudiante form enhancements */
+    .estudiante-theme .form-control:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    /* Special styling for estudiante nav scroll */
+    .estudiante-theme .nav {
+        scrollbar-width: thin;
+        scrollbar-color: #007bff transparent;
+    }
+    
+    .estudiante-theme .nav::-webkit-scrollbar {
+        height: 4px;
+    }
+    
+    .estudiante-theme .nav::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    .estudiante-theme .nav::-webkit-scrollbar-thumb {
+        background: #007bff;
+        border-radius: 2px;
+    }
+}
+
+/* Mobile modal enhancements for all roles */
+@media (max-width: 768px) {
+    .modal-dialog {
+        margin: 1rem;
+        max-width: calc(100% - 2rem);
+    }
+    
+    .modal-content {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+    
+    .modal-header {
+        border-radius: 12px 12px 0 0;
+        padding: 1.25rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .modal-body {
+        padding: 1.25rem;
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+    
+    .modal-footer {
+        border-radius: 0 0 12px 12px;
+        padding: 1.25rem;
+        border-top: 1px solid #dee2e6;
+    }
+    
+    /* Make modal buttons more touch-friendly */
+    .modal-footer .btn {
+        min-width: 80px;
+        min-height: 44px;
+        margin: 0 0.25rem;
+    }
+}
+
+/* Enhanced mobile breadcrumbs */
+@media (max-width: 768px) {
+    .breadcrumb {
+        background: transparent;
+        padding: 0.5rem 0;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .breadcrumb-item + .breadcrumb-item::before {
+        content: "›";
+        color: #6c757d;
+        font-weight: bold;
+    }
+    
+    .breadcrumb-item.active {
+        color: #495057;
+        font-weight: 500;
+    }
+}
+
+/* Mobile accessibility improvements */
+@media (max-width: 768px) {
+    /* Larger focus indicators for mobile */
+    *:focus {
+        outline: 3px solid rgba(0, 123, 255, 0.5) !important;
+        outline-offset: 2px !important;
+    }
+    
+    /* Better link styling for touch */
+    a {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+    }
+    
+    a:hover {
+        text-decoration: underline;
+    }
+    
+    /* Improved checkbox and radio button sizing */
+    input[type="checkbox"],
+    input[type="radio"] {
+        width: 20px;
+        height: 20px;
+        margin-right: 8px;
+    }
+    
+    /* Better label association */
+    label {
+        cursor: pointer;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
     }
 }
