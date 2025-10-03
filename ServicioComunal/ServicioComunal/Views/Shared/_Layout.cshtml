@@ -3,7 +3,11 @@
 <html lang="es">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>@ViewData["Title"] - Servicio Comunal</title>
     
     <!-- Google Fonts - Fira Sans -->
@@ -147,6 +151,300 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Mobile optimizations -->
+    <script>
+        // Mobile optimizations for all user roles
+        (function() {
+            // Detect user role for specific optimizations
+            var userRole = '@(Context.Session.GetString("UsuarioRol") ?? "")';
+            var isLogin = @((ViewData["IsLogin"] as bool? == true).ToString().ToLower());
+            
+            // Prevent zoom on input focus for iOS
+            if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                document.addEventListener('DOMContentLoaded', function() {
+                    var inputs = document.querySelectorAll('input[type="text"], input[type="password"], input[type="email"], input[type="number"], textarea, select');
+                    inputs.forEach(function(input) {
+                        input.style.fontSize = '16px';
+                        input.style.webkitAppearance = 'none';
+                        input.style.appearance = 'none';
+                    });
+                });
+            }
+            
+            // Improve touch experience
+            document.addEventListener('touchstart', function() {}, {passive: true});
+            
+            // Handle orientation change with role-specific adjustments
+            window.addEventListener('orientationchange', function() {
+                setTimeout(function() {
+                    window.scrollTo(0, 0);
+                    
+                    // Role-specific orientation handling
+                    if (userRole === 'Estudiante') {
+                        // Recalculate estudiante layout
+                        var sidebar = document.querySelector('.estudiante-theme .sidebar');
+                        if (sidebar && window.innerWidth <= 768) {
+                            sidebar.style.order = '1';
+                        }
+                    }
+                    
+                    // Force redraw for better mobile experience
+                    document.body.style.display = 'none';
+                    document.body.offsetHeight; // Trigger reflow
+                    document.body.style.display = '';
+                }, 100);
+            });
+            
+            // Improve scrolling performance for all layouts
+            document.addEventListener('touchmove', function(e) {
+                if (e.target.closest('.table-responsive, .sidebar-nav, .modal-body, .estudiante-theme .nav')) {
+                    return;
+                }
+            }, {passive: true});
+            
+            // Auto-hide address bar on mobile (all roles)
+            if (window.innerHeight < window.innerWidth && window.innerHeight < 500) {
+                setTimeout(function() {
+                    window.scrollTo(0, 1);
+                }, 0);
+            }
+            
+            // Role-specific mobile optimizations
+            document.addEventListener('DOMContentLoaded', function() {
+                var isMobile = window.innerWidth <= 768;
+                
+                if (isMobile && !isLogin) {
+                    // Administrador optimizations
+                    if (userRole === 'Administrador') {
+                        optimizeAdminMobile();
+                    }
+                    
+                    // Tutor optimizations  
+                    if (userRole === 'Tutor') {
+                        optimizeTutorMobile();
+                    }
+                    
+                    // Estudiante optimizations
+                    if (userRole === 'Estudiante') {
+                        optimizeEstudianteMobile();
+                    }
+                }
+                
+                // Generic mobile optimizations for all roles
+                if (isMobile) {
+                    optimizeGenericMobile();
+                }
+            });
+            
+            // Administrador mobile optimizations
+            function optimizeAdminMobile() {
+                // Add swipe gestures for better navigation
+                var mainContent = document.querySelector('.main-content');
+                if (mainContent) {
+                    addSwipeGestures(mainContent);
+                }
+                
+                // Optimize tables for admin
+                optimizeTablesForMobile();
+            }
+            
+            // Tutor mobile optimizations
+            function optimizeTutorMobile() {
+                // Add tutor-specific mobile enhancements
+                var tutorCards = document.querySelectorAll('.tutor-theme .dashboard-card');
+                tutorCards.forEach(function(card) {
+                    card.addEventListener('touchstart', function() {
+                        this.style.transform = 'scale(0.98)';
+                    }, {passive: true});
+                    
+                    card.addEventListener('touchend', function() {
+                        this.style.transform = '';
+                    }, {passive: true});
+                });
+            }
+            
+            // Estudiante mobile optimizations
+            function optimizeEstudianteMobile() {
+                // Optimize estudiante sidebar navigation
+                var nav = document.querySelector('.estudiante-theme .nav');
+                if (nav && window.innerWidth <= 768) {
+                    // Add scroll indicators
+                    addScrollIndicators(nav);
+                    
+                    // Improve touch scrolling
+                    nav.style.webkitOverflowScrolling = 'touch';
+                    nav.style.scrollBehavior = 'smooth';
+                }
+                
+                // Add pull-to-refresh feel (visual feedback only)
+                var mainContent = document.querySelector('.estudiante-theme .main-content');
+                if (mainContent) {
+                    addPullToRefreshFeedback(mainContent);
+                }
+            }
+            
+            // Generic mobile optimizations for all roles
+            function optimizeGenericMobile() {
+                // Improve modal behavior on mobile
+                var modals = document.querySelectorAll('.modal');
+                modals.forEach(function(modal) {
+                    modal.addEventListener('shown.bs.modal', function() {
+                        // Prevent body scroll when modal is open
+                        document.body.style.overflow = 'hidden';
+                        document.body.style.position = 'fixed';
+                        document.body.style.width = '100%';
+                    });
+                    
+                    modal.addEventListener('hidden.bs.modal', function() {
+                        // Restore body scroll when modal is closed
+                        document.body.style.overflow = '';
+                        document.body.style.position = '';
+                        document.body.style.width = '';
+                    });
+                });
+                
+                // Add loading states for better perceived performance
+                var buttons = document.querySelectorAll('.btn[type="submit"]');
+                buttons.forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        if (this.form && this.form.checkValidity()) {
+                            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+                            this.disabled = true;
+                        }
+                    });
+                });
+            }
+            
+            // Helper function: Add swipe gestures
+            function addSwipeGestures(element) {
+                var startX = 0, startY = 0;
+                
+                element.addEventListener('touchstart', function(e) {
+                    startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                }, {passive: true});
+                
+                element.addEventListener('touchend', function(e) {
+                    if (!startX || !startY) return;
+                    
+                    var endX = e.changedTouches[0].clientX;
+                    var endY = e.changedTouches[0].clientY;
+                    
+                    var diffX = startX - endX;
+                    var diffY = startY - endY;
+                    
+                    // Horizontal swipe detected
+                    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+                        // Can add navigation logic here
+                        console.log('Swipe detected:', diffX > 0 ? 'left' : 'right');
+                    }
+                    
+                    startX = 0;
+                    startY = 0;
+                }, {passive: true});
+            }
+            
+            // Helper function: Add scroll indicators
+            function addScrollIndicators(nav) {
+                var indicator = document.createElement('div');
+                indicator.className = 'scroll-indicator';
+                indicator.innerHTML = '← Desliza para más opciones →';
+                indicator.style.cssText = `
+                    position: absolute;
+                    bottom: -20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    font-size: 10px;
+                    color: #6c757d;
+                    opacity: 0.7;
+                    pointer-events: none;
+                `;
+                
+                nav.parentElement.style.position = 'relative';
+                nav.parentElement.appendChild(indicator);
+                
+                // Hide indicator when scrolled to end
+                nav.addEventListener('scroll', function() {
+                    var isAtEnd = this.scrollLeft >= (this.scrollWidth - this.clientWidth - 10);
+                    indicator.style.opacity = isAtEnd ? '0' : '0.7';
+                });
+            }
+            
+            // Helper function: Add pull-to-refresh feedback
+            function addPullToRefreshFeedback(mainContent) {
+                var startY = 0;
+                
+                mainContent.addEventListener('touchstart', function(e) {
+                    startY = e.touches[0].clientY;
+                }, {passive: true});
+                
+                mainContent.addEventListener('touchmove', function(e) {
+                    var currentY = e.touches[0].clientY;
+                    var diff = currentY - startY;
+                    
+                    // If pulling down at the top
+                    if (diff > 0 && this.scrollTop === 0) {
+                        var opacity = Math.min(diff / 100, 0.3);
+                        this.style.background = `linear-gradient(135deg, rgba(108, 141, 71, ${opacity}) 0%, rgba(90, 122, 58, ${opacity * 0.8}) 100%)`;
+                    }
+                }, {passive: true});
+                
+                mainContent.addEventListener('touchend', function() {
+                    this.style.background = '';
+                }, {passive: true});
+            }
+            
+            // Helper function: Optimize tables for mobile
+            function optimizeTablesForMobile() {
+                var tables = document.querySelectorAll('.table-responsive');
+                tables.forEach(function(tableContainer) {
+                    // Add touch scroll momentum
+                    tableContainer.style.webkitOverflowScrolling = 'touch';
+                    
+                    // Add shadow gradient for scroll indication
+                    var leftShadow = document.createElement('div');
+                    leftShadow.style.cssText = `
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 10px;
+                        height: 100%;
+                        background: linear-gradient(to right, rgba(0,0,0,0.1), transparent);
+                        pointer-events: none;
+                        opacity: 0;
+                        z-index: 10;
+                    `;
+                    
+                    var rightShadow = document.createElement('div');
+                    rightShadow.style.cssText = `
+                        position: absolute;
+                        top: 0;
+                        right: 0;
+                        width: 10px;
+                        height: 100%;
+                        background: linear-gradient(to left, rgba(0,0,0,0.1), transparent);
+                        pointer-events: none;
+                        opacity: 1;
+                        z-index: 10;
+                    `;
+                    
+                    tableContainer.style.position = 'relative';
+                    tableContainer.appendChild(leftShadow);
+                    tableContainer.appendChild(rightShadow);
+                    
+                    // Update shadows on scroll
+                    tableContainer.addEventListener('scroll', function() {
+                        var scrollLeft = this.scrollLeft;
+                        var maxScroll = this.scrollWidth - this.clientWidth;
+                        
+                        leftShadow.style.opacity = scrollLeft > 0 ? '1' : '0';
+                        rightShadow.style.opacity = scrollLeft < maxScroll - 5 ? '1' : '0';
+                    });
+                });
+            }
+        })();
+    </script>
     
     <!-- Fix para modal backdrop que queda visible -->
     <script>
