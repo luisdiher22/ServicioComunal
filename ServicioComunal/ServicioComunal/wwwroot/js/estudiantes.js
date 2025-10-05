@@ -143,8 +143,53 @@ function verEstudiante(identificacion) {
 }
 
 function mostrarDetallesEstudiante(estudiante) {
-    // TODO: Implementar modal de detalles o navegación a página de detalles
-    alert(`Detalles del estudiante:\nCédula: ${estudiante.identificacion}\nNombre: ${estudiante.nombre} ${estudiante.apellidos}\nClase: ${estudiante.clase}`);
+    // Llenar los campos del modal con los datos del estudiante
+    document.getElementById('detalleCedula').textContent = estudiante.identificacion;
+    document.getElementById('detalleNombre').textContent = estudiante.nombre;
+    document.getElementById('detalleApellidos').textContent = estudiante.apellidos;
+    document.getElementById('detalleClase').textContent = estudiante.clase;
+    
+    // Estado del grupo
+    const detalleGrupo = document.getElementById('detallesGrupo');
+    const estadoGrupo = document.getElementById('detalleEstadoGrupo');
+    const infoGrupo = document.getElementById('infoGrupo');
+    
+    if (estudiante.gruposEstudiantes && estudiante.gruposEstudiantes.length > 0) {
+        estadoGrupo.innerHTML = '<span class="badge bg-success"><i class="fas fa-check-circle"></i> Con Grupo</span>';
+        
+        // Mostrar información del grupo
+        const grupo = estudiante.gruposEstudiantes[0].grupo;
+        infoGrupo.innerHTML = `
+            <div class="grupo-info-item"><strong>Nombre del Grupo:</strong> ${grupo.nombre}</div>
+            <div class="grupo-info-item"><strong>Descripción:</strong> ${grupo.descripcion || 'Sin descripción'}</div>
+            <div class="grupo-info-item"><strong>Miembros:</strong> ${grupo.gruposEstudiantes ? grupo.gruposEstudiantes.length : 'N/A'}</div>
+            <div class="grupo-info-item"><strong>Estado:</strong> ${grupo.activo ? 'Activo' : 'Inactivo'}</div>
+        `;
+        detalleGrupo.style.display = 'block';
+    } else {
+        estadoGrupo.innerHTML = '<span class="badge bg-warning"><i class="fas fa-exclamation-triangle"></i> Sin Grupo</span>';
+        detalleGrupo.style.display = 'none';
+    }
+    
+    // Guardar ID del estudiante actual para la función de editar
+    window.estudianteActual = estudiante.identificacion;
+    
+    // Mostrar el modal
+    const modal = new bootstrap.Modal(document.getElementById('modalDetallesEstudiante'));
+    modal.show();
+}
+
+function editarEstudianteDesdeDetalles() {
+    // Cerrar el modal de detalles
+    const modalDetalles = bootstrap.Modal.getInstance(document.getElementById('modalDetallesEstudiante'));
+    if (modalDetalles) {
+        modalDetalles.hide();
+    }
+    
+    // Usar la identificación guardada globalmente
+    if (window.estudianteActual) {
+        editarEstudiante(window.estudianteActual);
+    }
 }
 
 function editarEstudiante(identificacion) {

@@ -176,13 +176,73 @@ function verTutor(identificacion) {
 }
 
 function mostrarDetallesTutor(tutor) {
-    // TODO: Implementar modal de detalles o navegación a página de detalles
-    let detalles = `Detalles del tutor:\n`;
-    detalles += `Cédula: ${tutor.identificacion}\n`;
-    detalles += `Nombre: ${tutor.nombre} ${tutor.apellidos}\n`;
-    detalles += `Rol: ${tutor.rol}\n`;
-    detalles += `Grupos asignados: ${tutor.gruposAsignados || 0}`;
-    alert(detalles);
+    // Llenar los campos del modal con los datos del docente
+    document.getElementById('detalleDocenteCedula').textContent = tutor.identificacion;
+    document.getElementById('detalleDocenteNombre').textContent = tutor.nombre;
+    document.getElementById('detalleDocenteApellidos').textContent = tutor.apellidos;
+    document.getElementById('detalleDocenteRol').textContent = tutor.rol;
+    
+    // Información de grupos
+    const gruposAsignados = tutor.gruposProfesores ? tutor.gruposProfesores.length : 0;
+    document.getElementById('detalleGruposAsignados').textContent = gruposAsignados;
+    
+    // Lista de grupos si tiene alguno asignado
+    const detallesGrupos = document.getElementById('detallesGruposDocente');
+    const listaGrupos = document.getElementById('listaGruposDocente');
+    
+    if (tutor.gruposProfesores && tutor.gruposProfesores.length > 0) {
+        let gruposHtml = '';
+        tutor.gruposProfesores.forEach((gp, index) => {
+            if (gp.grupo) {
+                const miembros = gp.grupo.gruposEstudiantes ? gp.grupo.gruposEstudiantes.length : 0;
+                gruposHtml += `
+                    <div class="grupo-info-item">
+                        <strong>${index + 1}. ${gp.grupo.nombre}</strong><br>
+                        <small>Descripción: ${gp.grupo.descripcion || 'Sin descripción'}</small><br>
+                        <small>Miembros: ${miembros} estudiantes</small><br>
+                        <small>Estado: ${gp.grupo.activo ? 'Activo' : 'Inactivo'}</small>
+                    </div>
+                `;
+            }
+        });
+        listaGrupos.innerHTML = gruposHtml;
+        detallesGrupos.style.display = 'block';
+    } else {
+        detallesGrupos.style.display = 'none';
+    }
+    
+    // Guardar ID del docente actual para las funciones de editar y asignar grupos
+    window.docenteActual = tutor.identificacion;
+    
+    // Mostrar el modal
+    const modal = new bootstrap.Modal(document.getElementById('modalDetallesDocente'));
+    modal.show();
+}
+
+function editarDocenteDesdeDetalles() {
+    // Cerrar el modal de detalles
+    const modalDetalles = bootstrap.Modal.getInstance(document.getElementById('modalDetallesDocente'));
+    if (modalDetalles) {
+        modalDetalles.hide();
+    }
+    
+    // Usar la identificación guardada globalmente
+    if (window.docenteActual) {
+        editarTutor(window.docenteActual);
+    }
+}
+
+function asignarGruposDesdeDetalles() {
+    // Cerrar el modal de detalles
+    const modalDetalles = bootstrap.Modal.getInstance(document.getElementById('modalDetallesDocente'));
+    if (modalDetalles) {
+        modalDetalles.hide();
+    }
+    
+    // Usar la identificación guardada globalmente
+    if (window.docenteActual) {
+        asignarGrupos(window.docenteActual);
+    }
 }
 
 function editarTutor(identificacion) {

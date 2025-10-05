@@ -5655,3 +5655,51 @@ h1, h2, h3, h4, h5, h6, .card, .modal, .table, .form-control,
         margin-bottom: 0.5rem;
     }
 }
+
+/* Estilos para modales de detalles */
+.detail-group {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.detail-label {
+    display: block;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.detail-label i {
+    margin-right: 0.5rem;
+    width: 1.2rem;
+    text-align: center;
+}
+
+.detail-value {
+    font-size: 1.1rem;
+    color: var(--text-color);
+    margin: 0;
+    padding: 0.5rem 0;
+    font-weight: 500;
+}
+
+/* Los modales de detalles usan el estilo predeterminado del tema */
+
+#infoGrupo {
+    padding: 1rem;
+    background: rgba(108, 141, 71, 0.1);
+    border-radius: 6px;
+    border-left: 4px solid var(--secondary-color);
+}
+
+.grupo-info-item {
+    margin-bottom: 0.5rem;
+}
+
+.grupo-info-item strong {
+    color: var(--secondary-color);
+}

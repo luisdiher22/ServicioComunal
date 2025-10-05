@@ -282,18 +282,24 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="nombre" class="form-label">Nombre *</label>
-                                <input type="text" class="form-control" id="nombre" name="nombre" required>
+                                <input type="text" class="form-control" id="nombre" name="nombre" required
+                                       pattern="[A-Za-zÁáÉéÍíÓóÚúÑñÜü\s]+" 
+                                       oninput="this.value = this.value.replace(/[^A-Za-zÁáÉéÍíÓóÚúÑñÜü\s]/g, '')"
+                                       title="Solo se permiten letras y espacios">
                                 <div class="invalid-feedback">
-                                    Por favor ingrese el nombre.
+                                    Por favor ingrese el nombre (solo letras y espacios).
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="apellidos" class="form-label">Apellidos *</label>
-                                <input type="text" class="form-control" id="apellidos" name="apellidos" required>
+                                <input type="text" class="form-control" id="apellidos" name="apellidos" required
+                                       pattern="[A-Za-zÁáÉéÍíÓóÚúÑñÜü\s]+" 
+                                       oninput="this.value = this.value.replace(/[^A-Za-zÁáÉéÍíÓóÚúÑñÜü\s]/g, '')"
+                                       title="Solo se permiten letras y espacios">
                                 <div class="invalid-feedback">
-                                    Por favor ingrese los apellidos.
+                                    Por favor ingrese los apellidos (solo letras y espacios).
                                 </div>
                             </div>
                         </div>
@@ -458,6 +464,91 @@
                 <button type="button" class="btn btn-success" id="btnImportar" onclick="importarProfesores()" disabled>
                     <i class="fas fa-upload"></i>
                     Importar Excel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Ver Detalles del Docente -->
+<div class="modal fade" id="modalDetallesDocente" tabindex="-1" aria-labelledby="modalDetallesDocenteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalDetallesDocenteLabel">
+                    <i class="fas fa-user-tie"></i>
+                    Detalles del Docente
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="detail-group">
+                            <label class="detail-label">
+                                <i class="fas fa-id-card"></i>
+                                Número de Cédula:
+                            </label>
+                            <p class="detail-value" id="detalleDocenteCedula">-</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-group">
+                            <label class="detail-label">
+                                <i class="fas fa-user-tag"></i>
+                                Rol:
+                            </label>
+                            <p class="detail-value" id="detalleDocenteRol">-</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="detail-group">
+                            <label class="detail-label">
+                                <i class="fas fa-user"></i>
+                                Nombre:
+                            </label>
+                            <p class="detail-value" id="detalleDocenteNombre">-</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-group">
+                            <label class="detail-label">
+                                <i class="fas fa-user-tag"></i>
+                                Apellidos:
+                            </label>
+                            <p class="detail-value" id="detalleDocenteApellidos">-</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="detail-group">
+                            <label class="detail-label">
+                                <i class="fas fa-users"></i>
+                                Grupos Asignados:
+                            </label>
+                            <p class="detail-value" id="detalleGruposAsignados">-</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" id="detallesGruposDocente" style="display: none;">
+                    <div class="col-md-12">
+                        <div class="detail-group">
+                            <label class="detail-label">
+                                <i class="fas fa-list"></i>
+                                Lista de Grupos:
+                            </label>
+                            <div class="detail-value" id="listaGruposDocente">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    Cerrar
                 </button>
             </div>
         </div>

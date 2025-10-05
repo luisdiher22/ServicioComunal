@@ -109,6 +109,15 @@ namespace ServicioComunal.Controllers
                     return Json(new { success = false, message = "Ya existe un estudiante con esa cédula" });
                 }
 
+                // Validar si ya existe un profesor con esa identificación
+                var existeProfesor = await _context.Profesores
+                    .AnyAsync(p => p.Identificacion == estudiante.Identificacion);
+
+                if (existeProfesor)
+                {
+                    return Json(new { success = false, message = "Ya existe un docente registrado con esa cédula" });
+                }
+
                 // Validar datos
                 if (string.IsNullOrWhiteSpace(estudiante.Nombre) || 
                     string.IsNullOrWhiteSpace(estudiante.Apellidos) ||
@@ -611,6 +620,15 @@ namespace ServicioComunal.Controllers
                     return Json(new { success = false, message = "Ya existe un docente con esa cédula" });
                 }
 
+                // Verificar si ya existe un estudiante con esa identificación
+                var existeEstudiante = await _context.Estudiantes
+                    .AnyAsync(e => e.Identificacion == profesor.Identificacion);
+
+                if (existeEstudiante)
+                {
+                    return Json(new { success = false, message = "Ya existe un estudiante registrado con esa cédula" });
+                }
+
                 // Verificar campos obligatorios
                 if (string.IsNullOrWhiteSpace(profesor.Nombre) || 
                     string.IsNullOrWhiteSpace(profesor.Apellidos) ||
@@ -709,9 +727,13 @@ namespace ServicioComunal.Controllers
                                     return Json(new { success = false, message = "El archivo debe contener al menos una fila de datos además del encabezado." });
                                 }
 
-                                // Obtener profesores y usuarios existentes para evitar consultas repetidas
+                                // Obtener profesores, estudiantes y usuarios existentes para evitar consultas repetidas
                                 var profesoresExistentesDb = await _context.Profesores
                                     .Select(p => p.Identificacion)
+                                    .ToListAsync();
+                                
+                                var estudiantesExistentesDb = await _context.Estudiantes
+                                    .Select(e => e.Identificacion)
                                     .ToListAsync();
                                 
                                 var usuariosExistentesDb = await _context.Usuarios
@@ -749,6 +771,13 @@ namespace ServicioComunal.Controllers
                                         {
                                             profesoresExistentes++;
                                             advertencias.Add($"Profesor {nombre} {apellidos} (ID: {cedula}) ya existe");
+                                            continue;
+                                        }
+
+                                        // Verificar si ya existe un estudiante con esa identificación
+                                        if (estudiantesExistentesDb.Contains(cedula))
+                                        {
+                                            errores.Add($"No se puede crear profesor {nombre} {apellidos} (ID: {cedula}): ya existe un estudiante con esa cédula");
                                             continue;
                                         }
 
@@ -876,9 +905,13 @@ namespace ServicioComunal.Controllers
                             return Json(new { success = false, message = validacionResult.Mensaje, errores = validacionResult.Errores });
                         }
 
-                        // Obtener estudiantes y usuarios existentes para evitar consultas repetidas
+                        // Obtener estudiantes, profesores y usuarios existentes para evitar consultas repetidas
                         var estudiantesExistentesDb = await _context.Estudiantes
                             .Select(e => e.Identificacion)
+                            .ToListAsync();
+                        
+                        var profesoresExistentesDb = await _context.Profesores
+                            .Select(p => p.Identificacion)
                             .ToListAsync();
                         
                         var usuariosExistentesDb = await _context.Usuarios
@@ -898,6 +931,13 @@ namespace ServicioComunal.Controllers
                                 {
                                     estudiantesExistentes++;
                                     advertencias.Add($"Estudiante {estudianteDto.Nombre} {estudianteDto.Apellidos} (ID: {estudianteDto.Identificacion}) ya existe");
+                                    continue;
+                                }
+
+                                // Verificar si ya existe un profesor con esa identificación
+                                if (profesoresExistentesDb.Contains(estudianteDto.Identificacion))
+                                {
+                                    errores.Add($"No se puede crear estudiante {estudianteDto.Nombre} {estudianteDto.Apellidos} (ID: {estudianteDto.Identificacion}): ya existe un docente con esa cédula");
                                     continue;
                                 }
 
@@ -1565,6 +1605,15 @@ namespace ServicioComunal.Controllers
                 if (existeTutor)
                 {
                     return Json(new { success = false, message = "Ya existe un tutor con esa cédula" });
+                }
+
+                // Verificar si ya existe un estudiante con esa identificación
+                var existeEstudiante = await _context.Estudiantes
+                    .AnyAsync(e => e.Identificacion == tutor.Identificacion);
+
+                if (existeEstudiante)
+                {
+                    return Json(new { success = false, message = "Ya existe un estudiante registrado con esa cédula" });
                 }
 
                 if (string.IsNullOrWhiteSpace(tutor.Nombre) || 
