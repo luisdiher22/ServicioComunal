@@ -133,8 +133,8 @@ namespace ServicioComunal.Controllers
                 // Si no existe usuario, crearlo automáticamente
                 if (!existeUsuario)
                 {
-                    // Generar nombre de usuario en formato primer_nombre.primer_apellido
-                    string nombreUsuario = GenerarNombreUsuario(estudiante.Nombre, estudiante.Apellidos);
+                    // Generar nombre de usuario único consultando la base de datos
+                    string nombreUsuario = await GenerarNombreUsuarioUnicoAsync(estudiante.Nombre, estudiante.Apellidos);
                     
                     var usuario = new ServicioComunal.Models.Usuario
                     {
@@ -1631,8 +1631,8 @@ namespace ServicioComunal.Controllers
                 var rolesConAcceso = new[] { "Tutor", "Administrador" };
                 if (!existeUsuario && rolesConAcceso.Contains(tutor.Rol))
                 {
-                    // Generar nombre de usuario en formato primer_nombre.primer_apellido
-                    string nombreUsuario = GenerarNombreUsuario(tutor.Nombre, tutor.Apellidos);
+                    // Generar nombre de usuario único consultando la base de datos
+                    string nombreUsuario = await GenerarNombreUsuarioUnicoAsync(tutor.Nombre, tutor.Apellidos);
                     
                     var usuario = new ServicioComunal.Models.Usuario
                     {
@@ -3825,6 +3825,52 @@ namespace ServicioComunal.Controllers
                 .Replace("á", "a").Replace("é", "e").Replace("í", "i").Replace("ó", "o").Replace("ú", "u")
                 .Replace("ñ", "n")
                 .Replace("ü", "u");
+        }
+
+        // Método para generar nombres de usuario únicos consultando la base de datos
+        private async Task<string> GenerarNombreUsuarioUnicoAsync(string nombre, string apellidos)
+        {
+            try
+            {
+                // Generar nombre base
+                var nombreBase = GenerarNombreUsuario(nombre, apellidos).ToLower();
+                
+                // Verificar si el nombre base ya existe en la base de datos
+                var existeNombre = await _context.Usuarios
+                    .AnyAsync(u => u.NombreUsuario == nombreBase);
+                
+                if (!existeNombre)
+                {
+                    return nombreBase;
+                }
+
+                // Si existe, agregar números hasta encontrar uno único
+                int contador = 1;
+                string nombreConNumero;
+                do
+                {
+                    nombreConNumero = $"{nombreBase}{contador}";
+                    var existe = await _context.Usuarios
+                        .AnyAsync(u => u.NombreUsuario == nombreConNumero);
+                    
+                    if (!existe)
+                    {
+                        return nombreConNumero;
+                    }
+                    
+                    contador++;
+                }
+                while (contador < 1000); // Prevenir bucle infinito
+
+                // Si después de 1000 intentos no encuentra uno único, usar timestamp
+                return $"{nombreBase}{DateTime.Now.Ticks}";
+            }
+            catch
+            {
+                // En caso de error, usar timestamp para garantizar unicidad
+                var nombreBase = GenerarNombreUsuario(nombre, apellidos).ToLower();
+                return $"{nombreBase}{DateTime.Now.Ticks}";
+            }
         }
 
         // MÉTODO TEMPORAL DE DIAGNÓSTICO - ELIMINAR DESPUÉS
