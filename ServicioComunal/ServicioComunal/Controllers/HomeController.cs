@@ -565,6 +565,180 @@ namespace ServicioComunal.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ExportarGruposExcel()
+        {
+            try
+            {
+                // Configurar licencia de EPPlus (modo no comercial)
+                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+                var grupos = await _context.Grupos
+                    .Include(g => g.GruposEstudiantes)
+                        .ThenInclude(ge => ge.Estudiante)
+                    .Include(g => g.GruposProfesores)
+                        .ThenInclude(gp => gp.Profesor)
+                    .Include(g => g.Lider)
+                    .OrderBy(g => g.Numero)
+                    .ToListAsync();
+
+                using (var package = new ExcelPackage())
+                {
+                    // Hoja principal de datos
+                    var worksheet = package.Workbook.Worksheets.Add("Grupos");
+
+                    // Encabezados
+                    worksheet.Cells[1, 1].Value = "Número de Grupo";
+                    worksheet.Cells[1, 2].Value = "Integrantes";
+                    worksheet.Cells[1, 3].Value = "Tutor";
+                    worksheet.Cells[1, 4].Value = "Estado";
+
+                    // Estilo para encabezados
+                    using (var range = worksheet.Cells[1, 1, 1, 4])
+                    {
+                        range.Style.Font.Bold = true;
+                        range.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                        range.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thick);
+                    }
+
+                    // Datos
+                    int row = 2;
+                    foreach (var grupo in grupos)
+                    {
+                        var estudiantes = grupo.GruposEstudiantes.ToList();
+                        var tutor = grupo.GruposProfesores.FirstOrDefault()?.Profesor;
+
+                        worksheet.Cells[row, 1].Value = grupo.Numero;
+
+                        // Construir lista de integrantes
+                        var integrantesTexto = "";
+                        if (estudiantes.Any())
+                        {
+                            var integrantesList = new List<string>();
+                            foreach (var ge in estudiantes)
+                            {
+                                var esLider = ge.EstudianteIdentificacion == grupo.LiderIdentificacion;
+                                var nombreCompleto = $"{ge.Estudiante.Nombre} {ge.Estudiante.Apellidos} - {ge.EstudianteIdentificacion}";
+                                if (esLider)
+                                {
+                                    nombreCompleto += " (líder)";
+                                }
+                                integrantesList.Add(nombreCompleto);
+                            }
+                            integrantesTexto = string.Join("\n", integrantesList);
+                        }
+                        else
+                        {
+                            integrantesTexto = "Sin estudiantes";
+                        }
+
+                        worksheet.Cells[row, 2].Value = integrantesTexto;
+                        worksheet.Cells[row, 2].Style.WrapText = true;
+
+                        // Tutor
+                        var tutorTexto = tutor != null ? $"{tutor.Nombre} {tutor.Apellidos}" : "Sin asignar";
+                        worksheet.Cells[row, 3].Value = tutorTexto;
+
+                        // Estado
+                        string estado = "Vacío";
+                        if (estudiantes.Count >= 3)
+                        {
+                            estado = "Completo";
+                        }
+                        else if (estudiantes.Any())
+                        {
+                            estado = "Parcialmente Completo";
+                        }
+                        worksheet.Cells[row, 4].Value = estado;
+
+                        // Estilo condicional para el estado
+                        if (estado == "Completo")
+                        {
+                            worksheet.Cells[row, 4].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                            worksheet.Cells[row, 4].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGreen);
+                        }
+                        else if (estado == "Parcialmente Completo")
+                        {
+                            worksheet.Cells[row, 4].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                            worksheet.Cells[row, 4].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightYellow);
+                        }
+                        else
+                        {
+                            worksheet.Cells[row, 4].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                            worksheet.Cells[row, 4].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightCoral);
+                        }
+
+                        row++;
+                    }
+
+                    // Ajustar ancho de columnas
+                    worksheet.Column(1).Width = 15;
+                    worksheet.Column(2).Width = 50; // Más ancho para los integrantes
+                    worksheet.Column(3).Width = 25;
+                    worksheet.Column(4).Width = 20;
+
+                    // Agregar bordes a toda la tabla
+                    using (var range = worksheet.Cells[1, 1, row - 1, 4])
+                    {
+                        range.Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                        range.Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                        range.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                        range.Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                    }
+
+                    // Hoja de estadísticas
+                    var statsWorksheet = package.Workbook.Worksheets.Add("Estadísticas");
+                    
+                    // Título
+                    statsWorksheet.Cells[1, 1].Value = "Reporte de Grupos - Servicio Comunal";
+                    statsWorksheet.Cells[1, 1, 1, 2].Merge = true;
+                    statsWorksheet.Cells[1, 1].Style.Font.Bold = true;
+                    statsWorksheet.Cells[1, 1].Style.Font.Size = 16;
+
+                    // Fecha de generación
+                    statsWorksheet.Cells[2, 1].Value = "Fecha de generación:";
+                    statsWorksheet.Cells[2, 2].Value = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
+
+                    // Estadísticas generales
+                    statsWorksheet.Cells[4, 1].Value = "ESTADÍSTICAS GENERALES";
+                    statsWorksheet.Cells[4, 1].Style.Font.Bold = true;
+                    
+                    var totalGrupos = grupos.Count;
+                    var gruposVacios = grupos.Count(g => !g.GruposEstudiantes.Any());
+                    var gruposParciales = grupos.Count(g => g.GruposEstudiantes.Any() && g.GruposEstudiantes.Count < 3);
+                    var gruposCompletos = grupos.Count(g => g.GruposEstudiantes.Count >= 3);
+                    
+                    statsWorksheet.Cells[5, 1].Value = "Total de grupos:";
+                    statsWorksheet.Cells[5, 2].Value = totalGrupos;
+                    
+                    statsWorksheet.Cells[6, 1].Value = "Grupos vacíos:";
+                    statsWorksheet.Cells[6, 2].Value = gruposVacios;
+                    
+                    statsWorksheet.Cells[7, 1].Value = "Grupos parcialmente completos:";
+                    statsWorksheet.Cells[7, 2].Value = gruposParciales;
+                    
+                    statsWorksheet.Cells[8, 1].Value = "Grupos completos:";
+                    statsWorksheet.Cells[8, 2].Value = gruposCompletos;
+
+                    // Ajustar columnas de la hoja de estadísticas
+                    statsWorksheet.Cells[statsWorksheet.Dimension.Address].AutoFitColumns();
+
+                    // Generar el archivo
+                    var fileName = $"Grupos_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+                    var fileBytes = package.GetAsByteArray();
+
+                    return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+                }
+            }
+            catch (Exception ex)
+            {
+                // En caso de error, redirigir con mensaje
+                TempData["Error"] = $"Error al exportar: {ex.Message}";
+                return RedirectToAction("GestionGrupos");
+            }
+        }
+
         public async Task<IActionResult> GestionGrupos()
         {
             try
@@ -1568,10 +1742,12 @@ namespace ServicioComunal.Controllers
         [HttpDelete]
         public async Task<IActionResult> EliminarGrupo(int id)
         {
+            using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
                 var grupo = await _context.Grupos
                     .Include(g => g.GruposEstudiantes)
+                    .Include(g => g.GruposProfesores)
                     .FirstOrDefaultAsync(g => g.Numero == id);
 
                 if (grupo == null)
@@ -1579,15 +1755,71 @@ namespace ServicioComunal.Controllers
                     return Json(new { success = false, message = "Grupo no encontrado" });
                 }
 
-                // Eliminar relaciones primero
-                _context.GruposEstudiantes.RemoveRange(grupo.GruposEstudiantes);
-                _context.Grupos.Remove(grupo);
-                await _context.SaveChangesAsync();
+                // 1. Manejar entregas y sus notificaciones asociadas
+                var entregas = await _context.Entregas
+                    .Where(e => e.GrupoNumero == id)
+                    .ToListAsync();
+                
+                if (entregas.Any())
+                {
+                    // Primero desafiliar notificaciones de las entregas
+                    var entregaIds = entregas.Select(e => e.Identificacion).ToList();
+                    var notificacionesEntregas = await _context.Notificaciones
+                        .Where(n => n.EntregaId.HasValue && entregaIds.Contains(n.EntregaId.Value))
+                        .ToListAsync();
+                    
+                    foreach (var notificacion in notificacionesEntregas)
+                    {
+                        notificacion.EntregaId = null; // Desafiliar notificación de la entrega
+                    }
+                    
+                    // Luego eliminar las entregas
+                    _context.Entregas.RemoveRange(entregas);
+                }
 
-                return Json(new { success = true, message = "Grupo eliminado exitosamente" });
+                // 2. Eliminar asignaciones de tutores (eliminar relación, no el tutor)
+                if (grupo.GruposProfesores.Any())
+                {
+                    _context.GruposProfesores.RemoveRange(grupo.GruposProfesores);
+                }
+
+                // 3. Eliminar relaciones con estudiantes (eliminar relación, no los estudiantes)
+                if (grupo.GruposEstudiantes.Any())
+                {
+                    _context.GruposEstudiantes.RemoveRange(grupo.GruposEstudiantes);
+                }
+
+                // 4. Desafiliar solicitudes del grupo (cambiar GrupoNumero a null sin eliminar las solicitudes)
+                var solicitudes = await _context.Solicitudes
+                    .Where(s => s.GrupoNumero == id)
+                    .ToListAsync();
+                
+                foreach (var solicitud in solicitudes)
+                {
+                    solicitud.GrupoNumero = null; // Desafiliar solicitud del grupo
+                }
+
+                // 5. Desafiliar notificaciones asociadas al grupo
+                var notificacionesGrupo = await _context.Notificaciones
+                    .Where(n => n.GrupoId == id)
+                    .ToListAsync();
+                
+                foreach (var notificacion in notificacionesGrupo)
+                {
+                    notificacion.GrupoId = null; // Desafiliar notificación del grupo
+                }
+
+                // 6. Finalmente eliminar el grupo
+                _context.Grupos.Remove(grupo);
+                
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Json(new { success = true, message = "Grupo eliminado exitosamente. Las entregas y solicitudes asociadas se han desafiliado del grupo." });
             }
             catch (Exception)
             {
+                await transaction.RollbackAsync();
                 return Json(new { success = false, message = "Error al eliminar el grupo" });
             }
         }
@@ -2393,7 +2625,7 @@ namespace ServicioComunal.Controllers
                 var gruposDisponibles = await _context.Grupos
                     .Include(g => g.GruposEstudiantes)
                     .Include(g => g.GruposProfesores)
-                    .Where(g => g.GruposEstudiantes.Any() && !g.GruposProfesores.Any())
+                    .Where(g => !g.GruposProfesores.Any()) // Solo excluir grupos que YA tienen tutor
                     .Select(g => new {
                         numero = g.Numero,
                         estudiantes = g.GruposEstudiantes.Count()

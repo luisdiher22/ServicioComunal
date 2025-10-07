@@ -52,11 +52,19 @@
                     <i class="fas fa-lock"></i>
                     Contraseña Actual
                 </label>
-                <input type="password" 
-                       name="contraseñaActual" 
-                       class="form-control" 
-                       placeholder="Ingresa tu contraseña actual (tu cédula)" 
-                       required>
+                <div class="input-group">
+                    <input type="password" 
+                           name="contraseñaActual" 
+                           id="contraseñaActual"
+                           class="form-control" 
+                           placeholder="Ingresa tu contraseña actual (tu cédula)" 
+                           required>
+                    <div class="input-group-append">
+                        <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('contraseñaActual', 'togglePasswordActual')">
+                            <i class="fas fa-eye" id="togglePasswordActual"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Nueva Contraseña -->
@@ -65,12 +73,19 @@
                     <i class="fas fa-key"></i>
                     Nueva Contraseña
                 </label>
-                <input type="password" 
-                       name="nuevaContraseña" 
-                       class="form-control" 
-                       placeholder="Mínimo 8 caracteres con al menos 1 número" 
-                       required
-                       id="nuevaContraseña">
+                <div class="input-group">
+                    <input type="password" 
+                           name="nuevaContraseña" 
+                           class="form-control" 
+                           placeholder="Mínimo 8 caracteres con al menos 1 número" 
+                           required
+                           id="nuevaContraseña">
+                    <div class="input-group-append">
+                        <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('nuevaContraseña', 'togglePasswordNueva')">
+                            <i class="fas fa-eye" id="togglePasswordNueva"></i>
+                        </button>
+                    </div>
+                </div>
                 <small class="form-text text-muted">
                     <i class="fas fa-info-circle"></i>
                     Debe tener al menos 8 caracteres y contener al menos un número
@@ -83,12 +98,19 @@
                     <i class="fas fa-key"></i>
                     Confirmar Nueva Contraseña
                 </label>
-                <input type="password" 
-                       name="confirmarContraseña" 
-                       class="form-control" 
-                       placeholder="Confirma tu nueva contraseña" 
-                       required
-                       id="confirmarContraseña">
+                <div class="input-group">
+                    <input type="password" 
+                           name="confirmarContraseña" 
+                           class="form-control" 
+                           placeholder="Confirma tu nueva contraseña" 
+                           required
+                           id="confirmarContraseña">
+                    <div class="input-group-append">
+                        <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('confirmarContraseña', 'togglePasswordConfirmar')">
+                            <i class="fas fa-eye" id="togglePasswordConfirmar"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Botón de cambiar contraseña -->

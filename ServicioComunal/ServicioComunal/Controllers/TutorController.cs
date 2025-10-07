@@ -332,6 +332,81 @@ namespace ServicioComunal.Controllers
             }
         }
 
+        [HttpPost]
+        public async Task<IActionResult> RevertirRetroalimentacion([FromBody] RevertirRetroalimentacionRequest request)
+        {
+            try
+            {
+                var tutorId = HttpContext.Session.GetInt32("UsuarioId");
+                if (tutorId == null)
+                {
+                    return Json(new { success = false, message = "Usuario no autenticado" });
+                }
+
+                var entrega = await _context.Entregas
+                    .Include(e => e.Grupo)
+                    .ThenInclude(g => g.GruposEstudiantes)
+                    .ThenInclude(ge => ge.Estudiante)
+                    .Include(e => e.Grupo)
+                    .ThenInclude(g => g.GruposProfesores)
+                    .FirstOrDefaultAsync(e => e.Identificacion == request.EntregaId);
+
+                if (entrega == null)
+                {
+                    return Json(new { success = false, message = "Entrega no encontrada" });
+                }
+
+                // Verificar que el tutor tiene acceso a esta entrega
+                var tieneAcceso = entrega.Grupo?.GruposProfesores?.Any(gp => gp.ProfesorIdentificacion == tutorId) ?? false;
+                if (!tieneAcceso)
+                {
+                    return Json(new { success = false, message = "No tiene permisos para modificar esta entrega" });
+                }
+
+                // Solo permitir revertir entregas con "CAMBIOS SOLICITADOS" o "APROBADO"
+                if (string.IsNullOrEmpty(entrega.Retroalimentacion) || 
+                    (!entrega.Retroalimentacion.StartsWith("CAMBIOS SOLICITADOS:") && 
+                     !entrega.Retroalimentacion.StartsWith("APROBADO:")))
+                {
+                    return Json(new { success = false, message = "Solo se pueden revertir entregas con cambios solicitados o aprobadas" });
+                }
+
+                // Determinar el tipo de reversión para la notificación
+                bool eraAprobada = entrega.Retroalimentacion.StartsWith("APROBADO:");
+                string mensajeNotificacion = eraAprobada 
+                    ? $"La aprobación de la entrega '{entrega.Nombre}' ha sido revertida y está nuevamente pendiente de revisión."
+                    : $"Los cambios solicitados para la entrega '{entrega.Nombre}' han sido revertidos y está nuevamente pendiente de revisión.";
+
+                // Revertir a estado pendiente
+                entrega.Retroalimentacion = string.Empty;
+                entrega.FechaRetroalimentacion = null;
+                await _context.SaveChangesAsync();
+
+                // Notificar a los estudiantes sobre la reversión
+                if (entrega.Grupo?.GruposEstudiantes != null)
+                {
+                    foreach (var grupoEstudiante in entrega.Grupo.GruposEstudiantes)
+                    {
+                        await _notificacionService.CrearNotificacionAsync(
+                            grupoEstudiante.EstudianteIdentificacion,
+                            mensajeNotificacion,
+                            TipoNotificacion.EntregaRevisada,
+                            entrega.Identificacion,
+                            entrega.GrupoNumero,
+                            tutorId.Value
+                        );
+                    }
+                }
+
+                return Json(new { success = true, message = "Retroalimentación revertida exitosamente" });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en RevertirRetroalimentacion: {ex.Message}");
+                return Json(new { success = false, message = "Error al revertir la retroalimentación" });
+            }
+        }
+
         // API para descargar archivo
         public async Task<IActionResult> DescargarArchivo(int entregaId)
         {
@@ -582,5 +657,11 @@ namespace ServicioComunal.Controllers
         
         [JsonPropertyName("nuevaContraseña")]
         public string NuevaContraseña { get; set; } = string.Empty;
+    }
+
+    public class RevertirRetroalimentacionRequest
+    {
+        [JsonPropertyName("entregaId")]
+        public int EntregaId { get; set; }
     }
 }

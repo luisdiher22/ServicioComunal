@@ -1100,6 +1100,47 @@ function confirmarLimpiezaGrupos() {
     });
 }
 
+// Función para exportar grupos a Excel
+function exportarGrupos() {
+    // Mostrar notificación de procesamiento
+    const notificacionProceso = document.createElement('div');
+    notificacionProceso.className = 'alert alert-info alert-dismissible fade show notification-toast';
+    notificacionProceso.id = 'exportNotificationGrupos';
+    notificacionProceso.innerHTML = `
+        <i class="fas fa-spinner fa-spin"></i>
+        Generando archivo Excel... Por favor espere.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(notificacionProceso);
+    
+    // Crear un enlace temporal para la descarga
+    const link = document.createElement('a');
+    link.href = '/Home/ExportarGruposExcel';
+    link.download = '';
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    
+    // Simular click en el enlace
+    link.click();
+    
+    // Limpiar el enlace temporal
+    document.body.removeChild(link);
+    
+    // Remover notificación de procesamiento después de 3 segundos
+    setTimeout(() => {
+        const notification = document.getElementById('exportNotificationGrupos');
+        if (notification && notification.parentNode) {
+            notification.remove();
+            // Mostrar notificación de éxito
+            if (typeof mostrarNotificacion === 'function') {
+                mostrarNotificacion('Archivo Excel de grupos generado exitosamente. La descarga debería iniciar automáticamente.', 'success');
+            } else {
+                mostrarExito('Archivo Excel de grupos generado exitosamente');
+            }
+        }
+    }, 3000);
+}
+
 // Hacer funciones disponibles globalmente
 window.verDetallesAvanzados = verDetallesAvanzados;
 window.eliminarEstudianteDeGrupo = eliminarEstudianteDeGrupo;
@@ -1107,6 +1148,7 @@ window.cambiarLiderGrupo = cambiarLiderGrupo;
 window.limpiarYReiniciarGrupos = limpiarYReiniciarGrupos;
 window.confirmarLimpiezaGrupos = confirmarLimpiezaGrupos;
 window.cerrarModalGestionEstudiantes = cerrarModalGestionEstudiantes;
+window.exportarGrupos = exportarGrupos;
 
 console.log('Funciones avanzadas registradas globalmente:', {
     verDetallesAvanzados: typeof window.verDetallesAvanzados,

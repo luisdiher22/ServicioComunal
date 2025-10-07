@@ -114,7 +114,7 @@
             <div class="table-header">
                 <h3>Lista de Grupos</h3>
                 <div class="table-actions">
-                    <button type="button" class="btn btn-outline-primary btn-sm">
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="exportarGrupos()">
                         <i class="fas fa-download"></i>
                         Exportar
                     </button>
@@ -171,7 +171,7 @@
                                                 @foreach (var ge in estudiantes.Take(3))
                                                 {
                                                     var esLider = ge.EstudianteIdentificacion == grupo.LiderIdentificacion;
-                                                    <span class="estudiante-tag @(esLider ? "lider" : "")">
+                                                    <span class="estudiante-tag @(esLider ? "lider" : "")" data-cedula="@ge.EstudianteIdentificacion">
                                                         @if (esLider) { <i class="fas fa-crown text-warning"></i> }
                                                         @ge.Estudiante.Nombre @ge.Estudiante.Apellidos
                                                     </span>
@@ -209,18 +209,18 @@
                                             Vacío
                                         </span>
                                     }
-                                    else if (tutor == null)
-                                    {
-                                        <span class="badge badge-warning">
-                                            <i class="fas fa-exclamation-triangle"></i>
-                                            Pendiente Tutor
-                                        </span>
-                                    }
-                                    else
+                                    else if (estudiantes.Count >= 3)
                                     {
                                         <span class="badge badge-success">
                                             <i class="fas fa-check-circle"></i>
                                             Completo
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-warning">
+                                            <i class="fas fa-clock"></i>
+                                            Parcialmente Completo
                                         </span>
                                     }
                                 </td>

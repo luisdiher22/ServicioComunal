@@ -226,6 +226,9 @@
             <button class="btn btn-warning btn-lg" id="btnSolicitarCambios">
                 <i class="fas fa-edit"></i> Solicitar Cambios
             </button>
+            <button class="btn btn-secondary btn-lg" id="btnRevertir" style="display: none;">
+                <i class="fas fa-undo"></i> Revertir Revisión
+            </button>
         </div>
     </div>
 </div>
@@ -646,6 +649,7 @@ function mostrarDetalle(entregaId) {
     
     document.getElementById('btnAprobar').onclick = () => aprobarEntrega(entregaId);
     document.getElementById('btnSolicitarCambios').onclick = () => solicitarCambios(entregaId);
+    document.getElementById('btnRevertir').onclick = () => revertirRetroalimentacion(entregaId, esAprobado);
     
     // Deshabilitar botones si ya está revisado
     const tieneRetroalimentacion = entregable.retroalimentacion;
@@ -657,6 +661,20 @@ function mostrarDetalle(entregaId) {
     
     document.getElementById('btnAprobar').disabled = !esListoParaRevision;
     document.getElementById('btnSolicitarCambios').disabled = !esListoParaRevision;
+    
+    // Mostrar botón de revertir si tiene cambios solicitados o está aprobada
+    const btnRevertir = document.getElementById('btnRevertir');
+    if (tieneCambiosSolicitados || esAprobado) {
+        btnRevertir.style.display = 'inline-block';
+        // Cambiar el texto del botón según el estado
+        if (esAprobado) {
+            btnRevertir.innerHTML = '<i class="fas fa-undo"></i> Revertir Aprobación';
+        } else {
+            btnRevertir.innerHTML = '<i class="fas fa-undo"></i> Revertir Cambios';
+        }
+    } else {
+        btnRevertir.style.display = 'none';
+    }
 
     if (esAprobado) {
         document.getElementById('detalleSubtitulo').textContent = 'Entregable aprobado';
@@ -739,6 +757,39 @@ function solicitarCambios(entregaId) {
             location.reload();
         } else {
             alert('Error al solicitar cambios: ' + (data.message || 'Error desconocido'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al procesar la solicitud: ' + error.message);
+    });
+}
+
+function revertirRetroalimentacion(entregaId, esAprobada = false) {
+    const mensaje = esAprobada 
+        ? '¿Estás seguro de que quieres revertir esta APROBACIÓN? El estudiante ya fue notificado de la aprobación y volverá a estado pendiente.'
+        : '¿Estás seguro de que quieres revertir estos cambios solicitados? La entrega volverá a estado pendiente.';
+    
+    if (!confirm(mensaje)) {
+        return;
+    }
+    
+    fetch('@Url.Action("RevertirRetroalimentacion", "Tutor")', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            entregaId: entregaId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Revisión revertida exitosamente');
+            location.reload();
+        } else {
+            alert('Error al revertir la revisión: ' + (data.message || 'Error desconocido'));
         }
     })
     .catch(error => {
