@@ -5853,10 +5853,70 @@ h1, h2, h3, h4, h5, h6, .card, .modal, .table, .form-control,
     font-size: 13px;
 }
 
+/* Botón de notificaciones móvil */
+.mobile-notifications-btn {
+    margin-left: auto;
+    position: relative;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobile-notifications-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+.mobile-notifications-btn i {
+    font-size: 18px;
+    color: white;
+}
+
+.mobile-notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #dc3545;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+}
+
 /* Navegación del sidebar móvil */
 .mobile-sidebar-nav {
     flex: 1;
     padding: 20px 0;
+}
+
+/* Override específico para móvil cuando hay temas aplicados al body */
+.mobile-sidebar .mobile-nav-item,
+.mobile-sidebar .mobile-nav-item span {
+    color: #000000 !important;
+}
+
+.mobile-sidebar .mobile-nav-item:hover,
+.mobile-sidebar .mobile-nav-item:hover span {
+    color: #000000 !important;
+}
+
+.mobile-sidebar .mobile-nav-item.active,
+.mobile-sidebar .mobile-nav-item.active span {
+    color: #000000 !important;
 }
 
 .mobile-nav-item {

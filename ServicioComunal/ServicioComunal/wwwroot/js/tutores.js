@@ -183,7 +183,7 @@ function mostrarDetallesTutor(tutor) {
     document.getElementById('detalleDocenteRol').textContent = tutor.rol;
     
     // Información de grupos
-    const gruposAsignados = tutor.gruposProfesores ? tutor.gruposProfesores.length : 0;
+    const gruposAsignados = tutor.gruposAsignados || 0;
     document.getElementById('detalleGruposAsignados').textContent = gruposAsignados;
     
     // Lista de grupos si tiene alguno asignado
@@ -357,6 +357,13 @@ function asignarGrupos(identificacion) {
             if (disponibles.success && asignados.success) {
                 cargarGruposModal(disponibles.grupos, asignados.grupos);
                 const modal = new bootstrap.Modal(document.getElementById('modalAsignarGrupos'));
+                
+                // Agregar listener para recargar la página cuando se cierre el modal
+                const modalElement = document.getElementById('modalAsignarGrupos');
+                modalElement.addEventListener('hidden.bs.modal', function() {
+                    location.reload();
+                }, { once: true });
+                
                 modal.show();
             } else {
                 throw new Error('Error al cargar los grupos: ' + 
@@ -432,8 +439,8 @@ function asignarGrupoATutor(grupoNumero) {
     .then(data => {
         console.log('Resultado asignación:', data);
         if (data.success) {
-            // Recargar los grupos en el modal
-            asignarGrupos(tutorEnEdicion);
+            // Recargar solo el contenido del modal, no crear uno nuevo
+            recargarContenidoModalGrupos();
             mostrarExito('Grupo asignado al tutor');
         } else {
             mostrarError(data.message || 'Error al asignar el grupo al tutor');
@@ -468,8 +475,8 @@ function quitarGrupoDeTutor(grupoNumero) {
     .then(data => {
         console.log('Resultado remoción:', data);
         if (data.success) {
-            // Recargar los grupos en el modal
-            asignarGrupos(tutorEnEdicion);
+            // Recargar solo el contenido del modal, no crear uno nuevo
+            recargarContenidoModalGrupos();
             mostrarExito('Grupo quitado del tutor');
         } else {
             mostrarError(data.message || 'Error al quitar el grupo del tutor');
@@ -864,7 +871,13 @@ function importarProfesores() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            mostrarExito(`Importación exitosa: ${data.procesados} docentes procesados, ${data.nuevos} nuevos, ${data.errores} errores`);
+            Swal.fire({
+                icon: 'success',
+                title: '¡Importación Exitosa!',
+                text: `Importación exitosa: ${data.procesados} docentes procesados, ${data.nuevos} nuevos, ${data.errores} errores`,
+                timer: 5000,
+                showConfirmButton: true
+            });
             
             // Cerrar modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalImportar'));
@@ -875,12 +888,22 @@ function importarProfesores() {
                 location.reload();
             }, 2000);
         } else {
-            mostrarError(data.message || 'Error durante la importación');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error en la Importación',
+                text: data.message || 'Error durante la importación',
+                showConfirmButton: true
+            });
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        mostrarError('Error al comunicarse con el servidor');
+        Swal.fire({
+            icon: 'error',
+            title: 'Error de Conexión',
+            text: 'Error al comunicarse con el servidor',
+            showConfirmButton: true
+        });
     })
     .finally(() => {
         // Restaurar botón
@@ -1018,4 +1041,32 @@ function exportarDocentes() {
             mostrarNotificacion('Archivo Excel de docentes generado exitosamente. La descarga debería iniciar automáticamente.', 'success');
         }
     }, 3000);
+}
+
+// Función para recargar solo el contenido del modal de grupos sin crear uno nuevo
+function recargarContenidoModalGrupos() {
+    // Solo cargar el contenido si el modal ya está visible
+    const modalElement = document.getElementById('modalAsignarGrupos');
+    if (modalElement && modalElement.classList.contains('show')) {
+        Promise.all([
+            fetch('/Home/ObtenerGruposDisponibles'),
+            fetch(`/Home/ObtenerGruposAsignadosATutor?tutorId=${tutorEnEdicion}`)
+        ])
+        .then(responses => {
+            responses.forEach((response, index) => {
+                if (!response.ok) {
+                    throw new Error(`Error en consulta ${index}: ${response.status}`);
+                }
+            });
+            return Promise.all(responses.map(r => r.json()));
+        })
+        .then(([disponibles, asignados]) => {
+            if (disponibles.success && asignados.success) {
+                cargarGruposModal(disponibles.grupos, asignados.grupos);
+            }
+        })
+        .catch(error => {
+            console.error('Error al recargar contenido del modal:', error);
+        });
+    }
 }

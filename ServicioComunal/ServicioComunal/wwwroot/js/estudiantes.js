@@ -709,9 +709,6 @@ function importarEstudiantes() {
 }
 
 function descargarPlantillaEstudiantes() {
-    // Mostrar notificación de procesamiento
-    mostrarNotificacion('Generando plantilla...', 'info');
-    
     // Crear un enlace temporal para la descarga
     const link = document.createElement('a');
     link.href = '/Home/DescargarPlantillaEstudiantes';
@@ -724,11 +721,6 @@ function descargarPlantillaEstudiantes() {
     
     // Limpiar el enlace temporal
     document.body.removeChild(link);
-    
-    // Mostrar notificación de éxito
-    setTimeout(() => {
-        mostrarExito('Plantilla descargada exitosamente');
-    }, 500);
 }
 
 // Inicializar eventos para importación

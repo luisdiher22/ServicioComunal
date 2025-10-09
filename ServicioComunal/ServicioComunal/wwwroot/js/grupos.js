@@ -1039,66 +1039,7 @@ function cambiarLiderGrupo(grupoNumero, nuevoLiderId, nombreNuevoLider) {
     });
 }
 
-function limpiarYReiniciarGrupos() {
-    $('#modalLimpiarGrupos').modal('show');
-}
 
-function confirmarLimpiezaGrupos() {
-    if (!confirm('¿Estás COMPLETAMENTE SEGURO de que quieres eliminar todos los grupos y solicitudes existentes y crear nuevos grupos con líderes? Esta acción NO se puede deshacer.')) {
-        return;
-    }
-
-    if (!confirm('Esta es tu última oportunidad para cancelar. ¿Proceder con la limpieza completa?')) {
-        return;
-    }
-
-    // Cerrar modal
-    $('#modalLimpiarGrupos').modal('hide');
-
-    // Mostrar indicador de carga
-    const loadingHtml = `
-        <div class="alert alert-warning">
-            <div class="d-flex align-items-center">
-                <div class="spinner-border spinner-border-sm me-3" role="status"></div>
-                <span>Procesando limpieza y recreación de grupos... Esto puede tardar unos momentos.</span>
-            </div>
-        </div>
-    `;
-    
-    // Mostrar en la página
-    const mainContent = document.querySelector('.dashboard-content');
-    mainContent.insertAdjacentHTML('afterbegin', loadingHtml);
-
-    fetch('/Home/LimpiarYReiniciarGrupos', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        // Remover indicador de carga
-        const loadingAlert = document.querySelector('.alert-warning');
-        if (loadingAlert) loadingAlert.remove();
-
-        if (data.success) {
-            mostrarExito('✅ ' + data.message + ' La página se recargará automáticamente.');
-            // Recargar página después de 3 segundos
-            setTimeout(() => {
-                location.reload();
-            }, 3000);
-        } else {
-            mostrarError('❌ Error: ' + data.message);
-        }
-    })
-    .catch(error => {
-        // Remover indicador de carga
-        const loadingAlert = document.querySelector('.alert-warning');
-        if (loadingAlert) loadingAlert.remove();
-        
-        mostrarError('❌ Error de conexión: ' + error.message);
-    });
-}
 
 // Función para exportar grupos a Excel
 function exportarGrupos() {
@@ -1145,8 +1086,6 @@ function exportarGrupos() {
 window.verDetallesAvanzados = verDetallesAvanzados;
 window.eliminarEstudianteDeGrupo = eliminarEstudianteDeGrupo;
 window.cambiarLiderGrupo = cambiarLiderGrupo;
-window.limpiarYReiniciarGrupos = limpiarYReiniciarGrupos;
-window.confirmarLimpiezaGrupos = confirmarLimpiezaGrupos;
 window.cerrarModalGestionEstudiantes = cerrarModalGestionEstudiantes;
 window.exportarGrupos = exportarGrupos;
 
@@ -1154,6 +1093,5 @@ console.log('Funciones avanzadas registradas globalmente:', {
     verDetallesAvanzados: typeof window.verDetallesAvanzados,
     eliminarEstudianteDeGrupo: typeof window.eliminarEstudianteDeGrupo,
     cambiarLiderGrupo: typeof window.cambiarLiderGrupo,
-    limpiarYReiniciarGrupos: typeof window.limpiarYReiniciarGrupos,
     cerrarModalGestionEstudiantes: typeof window.cerrarModalGestionEstudiantes
 });
