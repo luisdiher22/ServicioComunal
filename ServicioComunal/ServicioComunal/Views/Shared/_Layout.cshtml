@@ -34,6 +34,116 @@
     }
     else
     {
+        <!-- Botón hamburguesa para móvil -->
+        <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Abrir menú de navegación">
+            <div class="hamburger-icon">
+                <span></span>
+            </div>
+        </button>
+
+        <!-- Overlay para cerrar el menú móvil -->
+        <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+
+        <!-- Sidebar móvil -->
+        <aside class="mobile-sidebar" id="mobileSidebar">
+            <div class="mobile-sidebar-header">
+                <img src="~/images/logo.png" alt="Logo" onerror="this.style.display='none';">
+                <div class="user-info">
+                    <h5>@(Context.Session.GetString("UsuarioNombreCompleto") ?? "Usuario")</h5>
+                    <small>@(Context.Session.GetString("UsuarioRol") ?? "Administrador")</small>
+                </div>
+            </div>
+            <nav class="mobile-sidebar-nav">
+                @if (Context.Session.GetString("UsuarioRol") == "Tutor")
+                {
+                    <a href="@Url.Action("Dashboard", "Tutor")" class="mobile-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Tutor" && ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")">
+                        <i class="fas fa-home"></i>
+                        <span>Inicio</span>
+                    </a>
+                    <a href="@Url.Action("MisGrupos", "Tutor")" class="mobile-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Tutor" && ViewContext.RouteData.Values["action"]?.ToString() == "MisGrupos" ? "active" : "")">
+                        <i class="fas fa-users"></i>
+                        <span>Mis Grupos</span>
+                    </a>
+                    <a href="@Url.Action("Revisiones", "Tutor")" class="mobile-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Tutor" && ViewContext.RouteData.Values["action"]?.ToString() == "Revisiones" ? "active" : "")">
+                        <i class="fas fa-clipboard-check"></i>
+                        <span>Revisiones</span>
+                    </a>
+                    <a href="@Url.Action("Progreso", "Tutor")" class="mobile-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Tutor" && ViewContext.RouteData.Values["action"]?.ToString() == "Progreso" ? "active" : "")">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Progreso</span>
+                    </a>
+                    <a href="@Url.Action("MiPerfil", "Tutor")" class="mobile-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Tutor" && ViewContext.RouteData.Values["action"]?.ToString() == "MiPerfil" ? "active" : "")">
+                        <i class="fas fa-user"></i>
+                        <span>Mi Perfil</span>
+                    </a>
+                }
+                else if (Context.Session.GetString("UsuarioRol") == "Estudiante")
+                {
+                    <a href="@Url.Action("Dashboard", "Estudiante")" class="mobile-nav-item @((ViewContext.RouteData.Values["controller"]?.ToString() == "Estudiante" || ViewContext.RouteData.Values["controller"]?.ToString() == "Anexo") && ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")">
+                        <i class="fas fa-home"></i>
+                        <span>Mi Dashboard</span>
+                    </a>
+                    <a href="@Url.Action("MiGrupo", "Estudiante")" class="mobile-nav-item @((ViewContext.RouteData.Values["controller"]?.ToString() == "Estudiante" || ViewContext.RouteData.Values["controller"]?.ToString() == "Anexo") && ViewContext.RouteData.Values["action"]?.ToString() == "MiGrupo" ? "active" : "")">
+                        <i class="fas fa-users"></i>
+                        <span>Mi Grupo</span>
+                    </a>
+                    <a href="@Url.Action("MisEntregas", "Estudiante")" class="mobile-nav-item @((ViewContext.RouteData.Values["controller"]?.ToString() == "Estudiante") && (ViewContext.RouteData.Values["action"]?.ToString() == "MisEntregas" || ViewContext.RouteData.Values["action"]?.ToString() == "DetalleEntrega") ? "active" : "")">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Mis Entregas</span>
+                    </a>
+                    <a href="@Url.Action("MisSolicitudes", "Estudiante")" class="mobile-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Estudiante" && ViewContext.RouteData.Values["action"]?.ToString() == "MisSolicitudes" ? "active" : "")">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>Mis Solicitudes</span>
+                    </a>
+                    <a href="@Url.Action("MiPerfil", "Estudiante")" class="mobile-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Estudiante" && ViewContext.RouteData.Values["action"]?.ToString() == "MiPerfil" ? "active" : "")">
+                        <i class="fas fa-user"></i>
+                        <span>Mi Perfil</span>
+                    </a>
+                }
+                else
+                {
+                    <a href="@Url.Action("Dashboard", "Home")" class="mobile-nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")">
+                        <i class="fas fa-home"></i>
+                        <span>Inicio</span>
+                    </a>
+                    <a href="@Url.Action("Estudiantes", "Home")" class="mobile-nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Estudiantes" ? "active" : "")">
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>Estudiantes</span>
+                    </a>
+                    <a href="@Url.Action("GestionGrupos", "Home")" class="mobile-nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "GestionGrupos" ? "active" : "")">
+                        <i class="fas fa-users"></i>
+                        <span>Gestión Grupos</span>
+                    </a>
+                    <a href="@Url.Action("AdministrarDocentes", "Home")" class="mobile-nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "AdministrarDocentes" ? "active" : "")">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                        <span>Administrar Docentes</span>
+                    </a>
+                    <a href="@Url.Action("Usuarios", "Home")" class="mobile-nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Usuarios" ? "active" : "")">
+                        <i class="fas fa-users-cog"></i>
+                        <span>Usuarios</span>
+                    </a>
+                    <a href="@Url.Action("Formularios", "Home")" class="mobile-nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Formularios" ? "active" : "")">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Formularios</span>
+                    </a>
+                    <a href="@Url.Action("Entregas", "Home")" class="mobile-nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Entregas" ? "active" : "")">
+                        <i class="fas fa-tasks"></i>
+                        <span>Entregas</span>
+                    </a>
+                    <a href="@Url.Action("Configuracion", "Home")" class="mobile-nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Configuracion" ? "active" : "")">
+                        <i class="fas fa-cog"></i>
+                        <span>Configuración</span>
+                    </a>
+                }
+            </nav>
+            <div class="mobile-sidebar-footer">
+                <a href="@Url.Action("Logout", "Auth")" class="mobile-logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Cerrar Sesión</span>
+                </a>
+            </div>
+        </aside>
+
         <!-- Header -->
         <header class="@((Context.Session.GetString("UsuarioRol") == "Tutor") ? "dashboard-header tutor-theme" : "dashboard-header")">
             <div class="header-content">
@@ -509,8 +619,16 @@
         let notificacionesModal;
         let conteoActual = 0;
 
+        // Variables globales para menú móvil
+        let mobileMenuToggle;
+        let mobileSidebar;
+        let mobileMenuOverlay;
+
         // Inicializar cuando se carga la página
         document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar menú móvil
+            initializeMobileMenu();
+            
             // Inicializar notificaciones si no están deshabilitadas
             @if (ViewData["DisableNotifications"] as bool? != true)
             {
@@ -529,6 +647,441 @@
                 </text>
             }
         });
+
+        // Funciones para el menú móvil
+        function initializeMobileMenu() {
+            mobileMenuToggle = document.getElementById('mobileMenuToggle');
+            mobileSidebar = document.getElementById('mobileSidebar');
+            mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+
+            if (mobileMenuToggle && mobileSidebar && mobileMenuOverlay) {
+                // Event listeners
+                mobileMenuToggle.addEventListener('click', toggleMobileMenu);
+                mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+                
+                // Cerrar menú al hacer click en un link
+                const mobileNavItems = document.querySelectorAll('.mobile-nav-item');
+                mobileNavItems.forEach(item => {
+                    item.addEventListener('click', closeMobileMenu);
+                });
+
+                // Cerrar menú con tecla Escape
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && mobileSidebar.classList.contains('active')) {
+                        closeMobileMenu();
+                    }
+                });
+
+                // Manejar cambios de orientación
+                window.addEventListener('orientationchange', function() {
+                    setTimeout(closeMobileMenu, 100);
+                });
+
+                // Cerrar menú cuando se redimensiona la ventana a desktop
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 991) {
+                        closeMobileMenu();
+                    }
+                });
+
+                // Prevenir scroll del body cuando el menú está abierto
+                function preventBodyScroll(prevent) {
+                    if (prevent) {
+                        document.body.style.overflow = 'hidden';
+                        document.body.style.position = 'fixed';
+                        document.body.style.width = '100%';
+                    } else {
+                        document.body.style.overflow = '';
+                        document.body.style.position = '';
+                        document.body.style.width = '';
+                    }
+                }
+
+                // Agregar función de prevención de scroll
+                mobileSidebar.addEventListener('transitionstart', function() {
+                    if (this.classList.contains('active')) {
+                        preventBodyScroll(true);
+                    }
+                });
+
+                mobileSidebar.addEventListener('transitionend', function() {
+                    if (!this.classList.contains('active')) {
+                        preventBodyScroll(false);
+                    }
+                });
+            }
+        }
+
+        function toggleMobileMenu() {
+            const isActive = mobileSidebar.classList.contains('active');
+            
+            if (isActive) {
+                closeMobileMenu();
+            } else {
+                openMobileMenu();
+            }
+        }
+
+        function openMobileMenu() {
+            mobileMenuToggle.classList.add('active');
+            mobileSidebar.classList.add('active');
+            mobileMenuOverlay.classList.add('active');
+            mobileMenuOverlay.style.display = 'block';
+            
+            // Accesibilidad
+            mobileMenuToggle.setAttribute('aria-expanded', 'true');
+            mobileSidebar.setAttribute('aria-hidden', 'false');
+            
+            // Focus en el primer elemento del menú
+            setTimeout(() => {
+                const firstNavItem = mobileSidebar.querySelector('.mobile-nav-item');
+                if (firstNavItem) {
+                    firstNavItem.focus();
+                }
+            }, 300);
+        }
+
+        function closeMobileMenu() {
+            mobileMenuToggle.classList.remove('active');
+            mobileSidebar.classList.remove('active');
+            mobileMenuOverlay.classList.remove('active');
+            
+            // Accesibilidad
+            mobileMenuToggle.setAttribute('aria-expanded', 'false');
+            mobileSidebar.setAttribute('aria-hidden', 'true');
+            
+            setTimeout(() => {
+                mobileMenuOverlay.style.display = 'none';
+            }, 300);
+        }
+
+        // Función para mejorar la navegación con teclado en móvil
+        function handleMobileKeyNavigation(e) {
+            if (window.innerWidth <= 991 && mobileSidebar.classList.contains('active')) {
+                const navItems = Array.from(document.querySelectorAll('.mobile-nav-item'));
+                const currentIndex = navItems.indexOf(document.activeElement);
+                
+                switch(e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        const nextIndex = (currentIndex + 1) % navItems.length;
+                        navItems[nextIndex].focus();
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        const prevIndex = currentIndex > 0 ? currentIndex - 1 : navItems.length - 1;
+                        navItems[prevIndex].focus();
+                        break;
+                    case 'Home':
+                        e.preventDefault();
+                        navItems[0].focus();
+                        break;
+                    case 'End':
+                        e.preventDefault();
+                        navItems[navItems.length - 1].focus();
+                        break;
+                }
+            }
+        }
+
+        document.addEventListener('keydown', handleMobileKeyNavigation);
+
+        // Mejoras adicionales para dispositivos touch
+        function initializeTouchEnhancements() {
+            // Detectar si es un dispositivo touch
+            const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            
+            if (isTouchDevice) {
+                document.body.classList.add('touch-device');
+                
+                // Mejorar feedback visual para botones
+                const buttons = document.querySelectorAll('.btn, .nav-item, .mobile-nav-item, .dashboard-card, .card');
+                buttons.forEach(button => {
+                    button.addEventListener('touchstart', function() {
+                        this.classList.add('touch-active');
+                    }, { passive: true });
+                    
+                    button.addEventListener('touchend', function() {
+                        setTimeout(() => {
+                            this.classList.remove('touch-active');
+                        }, 150);
+                    }, { passive: true });
+                    
+                    button.addEventListener('touchcancel', function() {
+                        this.classList.remove('touch-active');
+                    }, { passive: true });
+                });
+                
+                // Mejorar scroll momentum en elementos específicos
+                const scrollElements = document.querySelectorAll('.table-responsive, .mobile-sidebar, .modal-body');
+                scrollElements.forEach(element => {
+                    element.style.webkitOverflowScrolling = 'touch';
+                    element.style.scrollBehavior = 'smooth';
+                });
+                
+                // Prevenir zoom en formularios para iOS
+                if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                    const viewportMeta = document.querySelector('meta[name="viewport"]');
+                    if (viewportMeta) {
+                        viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+                    }
+                    
+                    // Ajustar font-size de inputs para prevenir zoom
+                    const inputs = document.querySelectorAll('input, textarea, select');
+                    inputs.forEach(input => {
+                        if (window.getComputedStyle(input).fontSize < '16px') {
+                            input.style.fontSize = '16px';
+                        }
+                    });
+                }
+                
+                // Añadir swipe gestures para navegación
+                addSwipeGestures();
+            }
+        }
+
+        function addSwipeGestures() {
+            let startX = 0;
+            let startY = 0;
+            let startTime = 0;
+            
+            document.addEventListener('touchstart', function(e) {
+                const touch = e.touches[0];
+                startX = touch.clientX;
+                startY = touch.clientY;
+                startTime = Date.now();
+            }, { passive: true });
+            
+            document.addEventListener('touchend', function(e) {
+                if (!startX || !startY) return;
+                
+                const touch = e.changedTouches[0];
+                const endX = touch.clientX;
+                const endY = touch.clientY;
+                const endTime = Date.now();
+                
+                const diffX = startX - endX;
+                const diffY = startY - endY;
+                const diffTime = endTime - startTime;
+                
+                // Solo procesar swipes rápidos
+                if (diffTime > 500) return;
+                
+                // Determinar dirección del swipe
+                if (Math.abs(diffX) > Math.abs(diffY)) {
+                    // Swipe horizontal
+                    if (Math.abs(diffX) > 50) {
+                        if (diffX > 0) {
+                            // Swipe hacia la izquierda
+                            handleSwipeLeft();
+                        } else {
+                            // Swipe hacia la derecha
+                            handleSwipeRight();
+                        }
+                    }
+                }
+                
+                startX = 0;
+                startY = 0;
+                startTime = 0;
+            }, { passive: true });
+        }
+        
+        function handleSwipeLeft() {
+            // Cerrar menú móvil si está abierto
+            if (mobileSidebar && mobileSidebar.classList.contains('active')) {
+                closeMobileMenu();
+            }
+        }
+        
+        function handleSwipeRight() {
+            // Abrir menú móvil si está cerrado y estamos en móvil
+            if (window.innerWidth <= 991 && mobileSidebar && !mobileSidebar.classList.contains('active')) {
+                // Solo abrir si el swipe empieza desde el borde izquierdo
+                if (startX < 50) {
+                    openMobileMenu();
+                }
+            }
+        }
+
+        // Mejorar rendimiento de scroll
+        function optimizeScrollPerformance() {
+            let ticking = false;
+            
+            function updateScrollState() {
+                // Actualizar indicadores de scroll en tablas
+                const tableContainers = document.querySelectorAll('.table-responsive');
+                tableContainers.forEach(container => {
+                    const scrollLeft = container.scrollLeft;
+                    const maxScroll = container.scrollWidth - container.clientWidth;
+                    
+                    // Actualizar sombras de scroll
+                    const leftShadow = container.querySelector('.scroll-shadow-left');
+                    const rightShadow = container.querySelector('.scroll-shadow-right');
+                    
+                    if (leftShadow) {
+                        leftShadow.style.opacity = scrollLeft > 0 ? '1' : '0';
+                    }
+                    if (rightShadow) {
+                        rightShadow.style.opacity = scrollLeft < maxScroll - 5 ? '1' : '0';
+                    }
+                });
+                
+                ticking = false;
+            }
+            
+            function requestTick() {
+                if (!ticking) {
+                    requestAnimationFrame(updateScrollState);
+                    ticking = true;
+                }
+            }
+            
+            // Escuchar eventos de scroll
+            document.addEventListener('scroll', requestTick, { passive: true });
+            
+            // Escuchar scroll en elementos específicos
+            const scrollableElements = document.querySelectorAll('.table-responsive, .mobile-sidebar');
+            scrollableElements.forEach(element => {
+                element.addEventListener('scroll', requestTick, { passive: true });
+            });
+        }
+
+        // Mejorar la experiencia de modales en móvil
+        function enhanceMobileModals() {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                modal.addEventListener('shown.bs.modal', function() {
+                    // Enfocar el primer elemento interactivo
+                    const firstInput = this.querySelector('input, select, textarea, button');
+                    if (firstInput && window.innerWidth <= 768) {
+                        setTimeout(() => firstInput.focus(), 100);
+                    }
+                    
+                    // Prevenir scroll del body
+                    document.body.style.overflow = 'hidden';
+                    document.body.style.position = 'fixed';
+                    document.body.style.width = '100%';
+                });
+                
+                modal.addEventListener('hidden.bs.modal', function() {
+                    // Restaurar scroll del body
+                    document.body.style.overflow = '';
+                    document.body.style.position = '';
+                    document.body.style.width = '';
+                });
+            });
+        }
+
+        // Mejorar feedback de carga para formularios
+        function enhanceFormFeedback() {
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    const submitButton = this.querySelector('button[type="submit"], input[type="submit"]');
+                    if (submitButton && this.checkValidity()) {
+                        submitButton.classList.add('loading');
+                        submitButton.disabled = true;
+                        
+                        // Restaurar estado después de 5 segundos (fallback)
+                        setTimeout(() => {
+                            submitButton.classList.remove('loading');
+                            submitButton.disabled = false;
+                        }, 5000);
+                    }
+                });
+            });
+        }
+
+        // Mejorar indicadores de conectividad
+        function addConnectivityIndicators() {
+            function updateOnlineStatus() {
+                const isOnline = navigator.onLine;
+                if (!isOnline) {
+                    showOfflineIndicator();
+                } else {
+                    hideOfflineIndicator();
+                }
+            }
+            
+            function showOfflineIndicator() {
+                let indicator = document.getElementById('offline-indicator');
+                if (!indicator) {
+                    indicator = document.createElement('div');
+                    indicator.id = 'offline-indicator';
+                    indicator.innerHTML = '<i class="fas fa-wifi-slash"></i> Sin conexión';
+                    indicator.style.cssText = `
+                        position: fixed;
+                        top: 10px;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        background: #dc3545;
+                        color: white;
+                        padding: 8px 16px;
+                        border-radius: 20px;
+                        font-size: 12px;
+                        z-index: 9999;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                    `;
+                    document.body.appendChild(indicator);
+                }
+            }
+            
+            function hideOfflineIndicator() {
+                const indicator = document.getElementById('offline-indicator');
+                if (indicator) {
+                    indicator.remove();
+                }
+            }
+            
+            window.addEventListener('online', updateOnlineStatus);
+            window.addEventListener('offline', updateOnlineStatus);
+            updateOnlineStatus();
+        }
+
+        // Inicializar todas las mejoras cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTouchEnhancements();
+            optimizeScrollPerformance();
+            enhanceMobileModals();
+            enhanceFormFeedback();
+            addConnectivityIndicators();
+        });
+
+        // Manejar cambios de orientación
+        window.addEventListener('orientationchange', function() {
+            setTimeout(() => {
+                // Recalcular layout
+                window.scrollTo(0, 0);
+                
+                // Cerrar menú móvil si está abierto
+                if (mobileSidebar && mobileSidebar.classList.contains('active')) {
+                    closeMobileMenu();
+                }
+                
+                // Forzar repaint para mejor rendimiento
+                document.body.style.display = 'none';
+                document.body.offsetHeight;
+                document.body.style.display = '';
+            }, 100);
+        });
+
+        // Optimizar rendimiento en dispositivos de baja potencia
+        if (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) {
+            // Reducir animaciones en dispositivos lentos
+            document.documentElement.style.setProperty('--animation-duration', '0.1s');
+            
+            // Deshabilitar algunas animaciones complejas
+            const style = document.createElement('style');
+            style.textContent = `
+                .dashboard-card:hover,
+                .btn:hover,
+                .nav-item:hover {
+                    transform: none !important;
+                }
+            `;
+            document.head.appendChild(style);
+        }
 
         // Función para toggle del modal de notificaciones
         function toggleNotifications() {
