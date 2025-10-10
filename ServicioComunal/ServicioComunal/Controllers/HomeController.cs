@@ -3225,7 +3225,7 @@ namespace ServicioComunal.Controllers
                         FechaLimite = entregaDto.FechaLimite,
                         GrupoNumero = grupo.Numero,
                         ProfesorIdentificacion = null, // Sin profesor asignado
-                        FormularioIdentificacion = null, // Ya no se usan formularios
+                        FormularioIdentificacion = entregaDto.FormularioIdentificacion, // Usar formulario seleccionado
                         TipoAnexo = entregaDto.TipoAnexo ?? 0, // Asignar el tipo de anexo si se especificó
                         ArchivoRuta = "", // Se llenará cuando se adjunte archivo
                         Retroalimentacion = "", // Se llenará por el tutor
@@ -3916,7 +3916,7 @@ namespace ServicioComunal.Controllers
             try
             {
                 var usuarios = await _context.Usuarios
-                    .OrderBy(u => u.Rol)
+                    .OrderBy(u => u.Rol == "Administrador" ? 1 : u.Rol == "Tutor" ? 2 : 3)
                     .ThenBy(u => u.NombreUsuario)
                     .ToListAsync();
 
@@ -4448,6 +4448,29 @@ namespace ServicioComunal.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ObtenerFormulariosDisponibles()
+        {
+            try
+            {
+                var formularios = await _context.Formularios
+                    .Select(f => new { 
+                        id = f.Identificacion, 
+                        nombre = f.Nombre, 
+                        descripcion = f.Descripcion 
+                    })
+                    .ToListAsync();
+
+                return Json(new { success = true, formularios = formularios });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al obtener formularios: " + ex.Message });
+            }
+        }
+
+
+
         // Editar entrega
         [HttpPost]
         public async Task<IActionResult> EditarEntregaAdmin([FromBody] EditarEntregaAdminRequest request)
@@ -4549,7 +4572,7 @@ namespace ServicioComunal.Controllers
             {
                 var usuariosSinCambio = await _context.Usuarios
                     .Where(u => u.RequiereCambioContraseña == true)
-                    .OrderBy(u => u.Rol)
+                    .OrderBy(u => u.Rol == "Administrador" ? 1 : u.Rol == "Tutor" ? 2 : 3)
                     .ThenBy(u => u.NombreUsuario)
                     .ToListAsync();
 
@@ -4606,7 +4629,7 @@ namespace ServicioComunal.Controllers
         public async Task<IActionResult> VerUsuarios()
         {
             var usuarios = await _context.Usuarios
-                .OrderBy(u => u.Rol)
+                .OrderBy(u => u.Rol == "Administrador" ? 1 : u.Rol == "Tutor" ? 2 : 3)
                 .ThenBy(u => u.NombreUsuario)
                 .ToListAsync();
             

@@ -181,17 +181,17 @@
         
         // Validaciones básicas
         if (nuevaContraseña !== confirmarContraseña) {
-            alert('Las contraseñas no coinciden');
+            mostrarError('Las contraseñas no coinciden');
             return;
         }
         
         if (nuevaContraseña.length < 8) {
-            alert('La nueva contraseña debe tener al menos 8 caracteres');
+            mostrarError('La nueva contraseña debe tener al menos 8 caracteres');
             return;
         }
         
         if (!/\d/.test(nuevaContraseña)) {
-            alert('La nueva contraseña debe contener al menos un número');
+            mostrarError('La nueva contraseña debe contener al menos un número');
             return;
         }
         
@@ -210,15 +210,15 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Contraseña cambiada exitosamente');
+                mostrarExito('Contraseña cambiada exitosamente');
                 document.getElementById('formCambiarContraseña').reset();
             } else {
-                alert('Error: ' + data.message);
+                mostrarError('Error: ' + data.message);
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error al cambiar la contraseña');
+            mostrarError('Error al cambiar la contraseña');
         });
     }
 </script>

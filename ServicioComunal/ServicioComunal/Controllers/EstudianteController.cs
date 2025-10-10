@@ -1368,6 +1368,42 @@ namespace ServicioComunal.Controllers
             }
         }
 
+        public async Task<IActionResult> DescargarFormularioTemplate(int id)
+        {
+            try
+            {
+                var formulario = await _context.Formularios.FindAsync(id);
+                if (formulario == null)
+                {
+                    return NotFound("Formulario no encontrado");
+                }
+
+                var rutaCompleta = Path.Combine(_webHostEnvironment.WebRootPath, formulario.ArchivoRuta.TrimStart('/'));
+                if (!System.IO.File.Exists(rutaCompleta))
+                {
+                    return NotFound("Archivo de formulario no encontrado");
+                }
+
+                var bytes = await System.IO.File.ReadAllBytesAsync(rutaCompleta);
+                var extension = Path.GetExtension(formulario.ArchivoRuta);
+                var nombreArchivo = $"{formulario.Nombre.Replace(" ", "_")}{extension}";
+
+                var tipoContenido = extension.ToLower() switch
+                {
+                    ".pdf" => "application/pdf",
+                    ".doc" => "application/msword",
+                    ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    _ => "application/octet-stream"
+                };
+
+                return File(bytes, tipoContenido, nombreArchivo);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error al descargar el formulario: {ex.Message}");
+            }
+        }
+
         private string GetTemplatePath(int tipoAnexo)
         {
             var templatesPath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "formularios");

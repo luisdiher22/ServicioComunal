@@ -975,37 +975,50 @@ function verDetallesAvanzados(grupoNumero) {
 
 function eliminarEstudianteDeGrupo(grupoNumero, estudianteId, nombreEstudiante, esLider) {
     let mensaje = `¿Estás seguro de que quieres eliminar a "${nombreEstudiante}" del Grupo ${grupoNumero}?`;
+    let icono = 'warning';
     
     if (esLider) {
-        mensaje += '\n\n⚠️ ATENCIÓN: Este estudiante es el líder del grupo. Si lo eliminas, el liderazgo se asignará automáticamente a otro miembro (si los hay).';
+        mensaje += '<br><br><strong>⚠️ ATENCIÓN:</strong> Este estudiante es el líder del grupo. Si lo eliminas, el liderazgo se asignará automáticamente a otro miembro (si los hay).';
+        icono = 'error';
     }
     
-    if (!confirm(mensaje)) {
-        return;
-    }
-
-    fetch('/Home/EliminarEstudianteDeGrupo', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            grupoNumero: grupoNumero,
-            estudianteId: estudianteId
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            mostrarExito(data.message);
-            // Recargar detalles del grupo
-            verDetallesAvanzados(grupoNumero);
-        } else {
-            mostrarError('Error: ' + data.message);
+    Swal.fire({
+        title: 'Confirmar eliminación',
+        html: mensaje,
+        icon: icono,
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (!result.isConfirmed) {
+            return;
         }
-    })
-    .catch(error => {
-        mostrarError('Error de conexión: ' + error.message);
+
+        fetch('/Home/EliminarEstudianteDeGrupo', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                grupoNumero: grupoNumero,
+                estudianteId: estudianteId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                mostrarExito(data.message);
+                // Recargar detalles del grupo
+                verDetallesAvanzados(grupoNumero);
+            } else {
+                mostrarError('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            mostrarError('Error de conexión: ' + error.message);
+        });
     });
 }
 

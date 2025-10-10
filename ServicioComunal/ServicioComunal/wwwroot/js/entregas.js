@@ -1,6 +1,34 @@
 // Variables globales
 let esEdicion = false;
 
+// Función para cargar formularios disponibles
+async function cargarFormularios() {
+    try {
+        const response = await fetch('/Home/ObtenerFormulariosDisponibles');
+        const data = await response.json();
+        
+        if (data.success) {
+            const select = document.getElementById('entregaAnexo');
+            // Limpiar opciones existentes excepto la primera
+            while (select.children.length > 1) {
+                select.removeChild(select.lastChild);
+            }
+            
+            // Agregar formularios disponibles
+            data.formularios.forEach(formulario => {
+                const option = document.createElement('option');
+                option.value = formulario.id;
+                option.textContent = `${formulario.nombre} - ${formulario.descripcion}`;
+                select.appendChild(option);
+            });
+        } else {
+            console.error('Error al cargar formularios:', data.message);
+        }
+    } catch (error) {
+        console.error('Error al cargar formularios:', error);
+    }
+}
+
 // Función para mostrar/ocultar secciones según el tipo de recurso seleccionado
 function mostrarSeccionTipoRecurso() {
     const tipoSeleccionado = document.querySelector('input[name="tipoRecurso"]:checked');
@@ -90,7 +118,7 @@ async function guardarEntrega() {
 
         // Validaciones
         if (!entrega.nombre || !entrega.descripcion || !entrega.fechaLimite) {
-            mostrarAlerta('Todos los campos marcados con * son obligatorios', 'warning');
+            mostrarAdvertencia('Todos los campos marcados con * son obligatorios');
             return;
         }
 
@@ -106,18 +134,24 @@ async function guardarEntrega() {
             const result = await response.json();
 
             if (result.success) {
-                mostrarAlerta(result.message, 'success');
                 const modal = bootstrap.Modal.getInstance(document.getElementById('modalEntrega'));
                 modal.hide();
-                setTimeout(() => {
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: result.message,
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
                     window.location.reload();
-                }, 1000);
+                });
             } else {
-                mostrarAlerta(result.message, 'danger');
+                mostrarError(result.message);
             }
         } catch (error) {
             console.error('Error:', error);
-            mostrarAlerta('Error al actualizar la entrega', 'danger');
+            mostrarError('Error al actualizar la entrega');
         }
     } else {
         // Modo creación - crear entrega para todos los grupos o grupo específico
@@ -127,7 +161,7 @@ async function guardarEntrega() {
         
         // Validar grupo específico si se seleccionó esa opción
         if (!enviarATodos && !grupoEspecifico) {
-            mostrarAlerta('Debes seleccionar un grupo específico', 'warning');
+            mostrarAdvertencia('Debes seleccionar un grupo específico');
             return;
         }
         
@@ -135,15 +169,15 @@ async function guardarEntrega() {
             nombre: formData.get('nombre'),
             descripcion: formData.get('descripcion'),
             fechaLimite: formData.get('fechaLimite'),
-            formularioIdentificacion: null, // Ya no se usan formularios
-            tipoAnexo: formData.get('tipoAnexo') ? parseInt(formData.get('tipoAnexo')) : null,
+            formularioIdentificacion: formData.get('tipoAnexo') ? parseInt(formData.get('tipoAnexo')) : null,
+            tipoAnexo: null, // No usar TipoAnexo para formularios
             enviarATodosLosGrupos: enviarATodos,
             grupoEspecifico: grupoEspecifico
         };
 
         // Validaciones
         if (!entregaDto.nombre || !entregaDto.descripcion || !entregaDto.fechaLimite) {
-            mostrarAlerta('Todos los campos marcados con * son obligatorios', 'warning');
+            mostrarAdvertencia('Todos los campos marcados con * son obligatorios');
             return;
         }
 
@@ -159,18 +193,24 @@ async function guardarEntrega() {
             const result = await response.json();
 
             if (result.success) {
-                mostrarAlerta(result.message, 'success');
                 const modal = bootstrap.Modal.getInstance(document.getElementById('modalEntrega'));
                 modal.hide();
-                setTimeout(() => {
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: result.message,
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
                     window.location.reload();
-                }, 1000);
+                });
             } else {
-                mostrarAlerta(result.message, 'danger');
+                mostrarError(result.message);
             }
         } catch (error) {
             console.error('Error:', error);
-            mostrarAlerta('Error al crear la entrega', 'danger');
+            mostrarError('Error al crear la entrega');
         }
     }
 }
@@ -245,11 +285,11 @@ async function verEntrega(id) {
             const modal = new bootstrap.Modal(document.getElementById('modalVerEntrega'));
             modal.show();
         } else {
-            mostrarAlerta(result.message, 'danger');
+            mostrarError(result.message);
         }
     } catch (error) {
         console.error('Error:', error);
-        mostrarAlerta('Error al cargar los detalles de la entrega', 'danger');
+        mostrarError('Error al cargar los detalles de la entrega');
     }
 }
 
@@ -297,11 +337,11 @@ async function editarEntrega(id) {
             
         } else {
             console.error('Error del servidor:', result.message);
-            mostrarAlerta(result.message, 'danger');
+            mostrarError(result.message);
         }
     } catch (error) {
         console.error('Error completo:', error);
-        mostrarAlerta('Error al cargar la entrega: ' + error.message, 'danger');
+        mostrarError('Error al cargar la entrega: ' + error.message);
     }
 }
 
@@ -364,13 +404,24 @@ function llenarFormularioEdicion(entrega) {
         
     } catch (error) {
         console.error('Error al llenar formulario:', error);
-        mostrarAlerta('Error al cargar los datos en el formulario: ' + error.message, 'danger');
+        mostrarError('Error al cargar los datos en el formulario: ' + error.message);
     }
 }
 
 // Función para eliminar entrega
 async function eliminarEntrega(id) {
-    if (!confirm('¿Está seguro de que desea eliminar esta entrega?')) {
+    const result = await Swal.fire({
+        title: '¿Eliminar entrega?',
+        text: "Esta acción no se puede deshacer",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (!result.isConfirmed) {
         return;
     }
 
@@ -379,19 +430,24 @@ async function eliminarEntrega(id) {
             method: 'DELETE'
         });
 
-        const result = await response.json();
+        const responseResult = await response.json();
 
-        if (result.success) {
-            mostrarAlerta(result.message, 'success');
-            setTimeout(() => {
+        if (responseResult.success) {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Eliminado!',
+                text: responseResult.message,
+                showConfirmButton: false,
+                timer: 1500
+            }).then(() => {
                 window.location.reload();
-            }, 1000);
+            });
         } else {
-            mostrarAlerta(result.message, 'danger');
+            mostrarError(responseResult.message);
         }
     } catch (error) {
         console.error('Error:', error);
-        mostrarAlerta('Error al eliminar la entrega', 'danger');
+        mostrarError('Error al eliminar la entrega');
     }
 }
 
@@ -439,7 +495,38 @@ function limpiarFiltros() {
     filtrarEntregas();
 }
 
-// Función para mostrar alertas
+// Funciones de helper para SweetAlert
+function mostrarExito(mensaje) {
+    Swal.fire({
+        icon: 'success',
+        title: '¡Éxito!',
+        text: mensaje,
+        showConfirmButton: false,
+        timer: 1500
+    });
+}
+
+function mostrarError(mensaje) {
+    Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: mensaje,
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#d33'
+    });
+}
+
+function mostrarAdvertencia(mensaje) {
+    Swal.fire({
+        icon: 'warning',
+        title: 'Atención',
+        text: mensaje,
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#f39c12'
+    });
+}
+
+// Función para mostrar alertas (mantenida para compatibilidad)
 function mostrarAlerta(mensaje, tipo) {
     // Crear el elemento de alerta
     const alerta = document.createElement('div');
@@ -469,6 +556,9 @@ function mostrarAlerta(mensaje, tipo) {
 // Event listeners
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM cargado, configurando event listeners');
+    
+    // Cargar formularios disponibles
+    cargarFormularios();
     
     // Event listener para limpiar formulario al abrir modal
     document.getElementById('modalEntrega').addEventListener('show.bs.modal', function () {

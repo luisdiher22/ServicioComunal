@@ -12,7 +12,6 @@
         <h1>Revisiones</h1>
         @if (ViewBag.GrupoFiltrado != null)
         {
-            <p>Entregables del <strong>Grupo @ViewBag.GrupoFiltrado</strong></p>
             <div class="alert alert-info d-flex align-items-center">
                 <i class="fas fa-filter me-2"></i>
                 Mostrando solo entregas del Grupo @ViewBag.GrupoFiltrado
@@ -701,100 +700,249 @@ function descargarArchivo(entregaId) {
 function aprobarEntrega(entregaId) {
     const comentarios = document.getElementById('comentariosTextarea').value;
     
-    if (!comentarios.trim()) {
-        if (!confirm('¿Deseas aprobar sin comentarios?')) {
-            return;
-        }
-    }
+    // Función para proceder con la aprobación
+    const procederConAprobacion = () => {
+        // Mostrar confirmación final
+        Swal.fire({
+            title: '¿Aprobar entregable?',
+            text: '¿Estás seguro de que quieres aprobar este entregable?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, aprobar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Mostrar loading
+                Swal.fire({
+                    title: 'Aprobando...',
+                    text: 'Procesando la aprobación del entregable',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                fetch('@Url.Action("AprobarEntrega", "Tutor")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        entregaId: entregaId,
+                        comentarios: comentarios || 'Aprobado'
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: '¡Aprobado!',
+                            text: 'El entregable ha sido aprobado correctamente',
+                            icon: 'success',
+                            confirmButtonText: 'Entendido',
+                            confirmButtonColor: '#28a745'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Error al aprobar el entregable: ' + (data.message || 'Error desconocido'),
+                            icon: 'error',
+                            confirmButtonText: 'Entendido',
+                            confirmButtonColor: '#dc3545'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Error de conexión',
+                        text: 'Error al procesar la solicitud: ' + error.message,
+                        icon: 'error',
+                        confirmButtonText: 'Entendido',
+                        confirmButtonColor: '#dc3545'
+                    });
+                });
+            }
+        });
+    };
     
-    fetch('@Url.Action("AprobarEntrega", "Tutor")', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            entregaId: entregaId,
-            comentarios: comentarios || 'Aprobado'
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Entregable aprobado correctamente');
-            location.reload();
-        } else {
-            alert('Error al aprobar el entregable: ' + (data.message || 'Error desconocido'));
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error al procesar la solicitud: ' + error.message);
-    });
+    // Si no hay comentarios, preguntar si desea aprobar sin ellos
+    if (!comentarios.trim()) {
+        Swal.fire({
+            title: 'Sin comentarios',
+            text: '¿Deseas aprobar este entregable sin agregar comentarios?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, aprobar sin comentarios',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#ffc107',
+            cancelButtonColor: '#6c757d'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                procederConAprobacion();
+            }
+        });
+    } else {
+        procederConAprobacion();
+    }
 }
 
 function solicitarCambios(entregaId) {
     const comentarios = document.getElementById('comentariosTextarea').value;
     
     if (!comentarios.trim()) {
-        alert('Debes escribir comentarios explicando los cambios requeridos');
+        Swal.fire({
+            title: 'Comentarios requeridos',
+            text: 'Debes escribir comentarios explicando los cambios requeridos',
+            icon: 'warning',
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#ffc107'
+        });
         return;
     }
     
-    fetch('@Url.Action("SolicitarCambios", "Tutor")', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            entregaId: entregaId,
-            comentarios: comentarios
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Cambios solicitados correctamente');
-            location.reload();
-        } else {
-            alert('Error al solicitar cambios: ' + (data.message || 'Error desconocido'));
+    Swal.fire({
+        title: '¿Solicitar cambios?',
+        text: '¿Estás seguro de que quieres solicitar cambios en este entregable?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, solicitar cambios',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#ffc107',
+        cancelButtonColor: '#6c757d'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Mostrar loading
+            Swal.fire({
+                title: 'Solicitando cambios...',
+                text: 'Procesando la solicitud de cambios',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            fetch('@Url.Action("SolicitarCambios", "Tutor")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    entregaId: entregaId,
+                    comentarios: comentarios
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: '¡Cambios solicitados!',
+                        text: 'Se han solicitado cambios correctamente. El estudiante será notificado.',
+                        icon: 'success',
+                        confirmButtonText: 'Entendido',
+                        confirmButtonColor: '#28a745'
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al solicitar cambios: ' + (data.message || 'Error desconocido'),
+                        icon: 'error',
+                        confirmButtonText: 'Entendido',
+                        confirmButtonColor: '#dc3545'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error de conexión',
+                    text: 'Error al procesar la solicitud: ' + error.message,
+                    icon: 'error',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#dc3545'
+                });
+            });
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error al procesar la solicitud: ' + error.message);
     });
 }
 
 function revertirRetroalimentacion(entregaId, esAprobada = false) {
+    const titulo = esAprobada ? 'Revertir Aprobación' : 'Revertir Cambios';
     const mensaje = esAprobada 
         ? '¿Estás seguro de que quieres revertir esta APROBACIÓN? El estudiante ya fue notificado de la aprobación y volverá a estado pendiente.'
         : '¿Estás seguro de que quieres revertir estos cambios solicitados? La entrega volverá a estado pendiente.';
+    const iconColor = esAprobada ? '#dc3545' : '#ffc107';
     
-    if (!confirm(mensaje)) {
-        return;
-    }
-    
-    fetch('@Url.Action("RevertirRetroalimentacion", "Tutor")', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            entregaId: entregaId
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Revisión revertida exitosamente');
-            location.reload();
-        } else {
-            alert('Error al revertir la revisión: ' + (data.message || 'Error desconocido'));
+    Swal.fire({
+        title: titulo,
+        text: mensaje,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: esAprobada ? 'Sí, revertir aprobación' : 'Sí, revertir cambios',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: iconColor,
+        cancelButtonColor: '#6c757d',
+        dangerMode: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Mostrar loading
+            Swal.fire({
+                title: 'Revirtiendo...',
+                text: 'Procesando la reversión de la retroalimentación',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            fetch('@Url.Action("RevertirRetroalimentacion", "Tutor")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    entregaId: entregaId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: '¡Revertido!',
+                        text: 'La revisión ha sido revertida exitosamente. El entregable vuelve a estado pendiente.',
+                        icon: 'success',
+                        confirmButtonText: 'Entendido',
+                        confirmButtonColor: '#28a745'
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al revertir la revisión: ' + (data.message || 'Error desconocido'),
+                        icon: 'error',
+                        confirmButtonText: 'Entendido',
+                        confirmButtonColor: '#dc3545'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error de conexión',
+                    text: 'Error al procesar la solicitud: ' + error.message,
+                    icon: 'error',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#dc3545'
+                });
+            });
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error al procesar la solicitud: ' + error.message);
     });
 }
 
@@ -813,4 +961,6 @@ function cambiarGrupo() {
 }
 </script>
 
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="~/js/tutor.js"></script>

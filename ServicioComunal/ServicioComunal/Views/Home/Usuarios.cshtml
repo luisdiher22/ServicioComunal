@@ -108,7 +108,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var usuario in Model.OrderBy(u => u.Rol).ThenBy(u => u.NombreUsuario))
+                        @foreach (var usuario in Model)
                         {
                             <tr class="usuario-row" data-rol="@usuario.Rol" data-estado="@(usuario.Activo ? "activo" : "inactivo")" data-requiere-cambio="@usuario.RequiereCambioContraseña">
                                 <td>
@@ -310,17 +310,17 @@
 
             // Validaciones
             if (!nuevaContraseña || nuevaContraseña.length < 8) {
-                alert('La contraseña debe tener al menos 8 caracteres.');
+                mostrarError('La contraseña debe tener al menos 8 caracteres.');
                 return;
             }
 
             if (!/\d/.test(nuevaContraseña)) {
-                alert('La contraseña debe contener al menos un número.');
+                mostrarError('La contraseña debe contener al menos un número.');
                 return;
             }
 
             if (nuevaContraseña !== confirmarContraseña) {
-                alert('Las contraseñas no coinciden.');
+                mostrarError('Las contraseñas no coinciden.');
                 return;
             }
 
@@ -340,14 +340,27 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Contraseña cambiada exitosamente.');
-                    location.reload();
+                    // Cerrar el modal primero
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('modalCambiarContraseña'));
+                    if (modal) {
+                        modal.hide();
+                    }
+                    
+                    // Mostrar SweetAlert y recargar al confirmar
+                    Swal.fire({
+                        title: '¡Éxito!',
+                        text: 'Contraseña cambiada exitosamente.',
+                        icon: 'success',
+                        confirmButtonText: 'Aceptar'
+                    }).then(() => {
+                        location.reload();
+                    });
                 } else {
-                    alert('Error al cambiar contraseña: ' + data.message);
+                    mostrarError('Error al cambiar contraseña: ' + data.message);
                 }
             })
             .catch(error => {
-                alert('Error de conexión: ' + error.message);
+                mostrarError('Error de conexión: ' + error.message);
             });
         }
 
@@ -370,7 +383,7 @@
                         alert(data.message);
                         location.reload();
                     } else {
-                        alert('Error al restablecer contraseña: ' + data.message);
+                        mostrarError('Error al restablecer contraseña: ' + data.message);
                     }
                 });
             }

@@ -86,7 +86,7 @@
                                         <div class="btn-group btn-group-sm">
                                             @if (!string.IsNullOrEmpty(formulario.ArchivoRuta))
                                             {
-                                                <a href="/@formulario.ArchivoRuta" class="btn btn-outline-primary" target="_blank">
+                                                <a href="@Url.Action("DescargarFormulario", "Home", new { id = formulario.Identificacion })" class="btn btn-outline-primary">
                                                     <i class="fas fa-download"></i>
                                                     Descargar
                                                 </a>
@@ -267,10 +267,23 @@ function mostrarAnexos(anexos) {
 async function subirFormulario(e) {
     e.preventDefault();
     
+    const archivo = document.getElementById('archivoFormulario').files[0];
+    
+    // Validar tipo de archivo
+    if (archivo) {
+        const tiposPermitidos = ['.pdf', '.doc', '.docx', '.txt'];
+        const extension = archivo.name.toLowerCase().substring(archivo.name.lastIndexOf('.'));
+        
+        if (!tiposPermitidos.includes(extension)) {
+            mostrarError('Error: Solo se permiten archivos PDF, DOC, DOCX o TXT');
+            return;
+        }
+    }
+    
     const formData = new FormData();
     formData.append('nombre', document.getElementById('nombreFormulario').value);
     formData.append('descripcion', document.getElementById('descripcionFormulario').value);
-    formData.append('archivo', document.getElementById('archivoFormulario').files[0]);
+    formData.append('archivo', archivo);
     
     try {
         const response = await fetch('/Home/CrearFormularioConArchivo', {
@@ -281,11 +294,18 @@ async function subirFormulario(e) {
         const data = await response.json();
         
         if (data.success) {
-            alert('Formulario subido exitosamente');
             bootstrap.Modal.getInstance(document.getElementById('modalSubirFormulario')).hide();
-            location.reload(); // Recargar para mostrar el nuevo formulario
+            
+            Swal.fire({
+                title: '¡Éxito!',
+                text: 'Formulario subido exitosamente',
+                icon: 'success',
+                confirmButtonText: 'Aceptar'
+            }).then(() => {
+                location.reload(); // Recargar para mostrar el nuevo formulario
+            });
         } else {
-            alert('Error: ' + data.message);
+            mostrarError('Error: ' + data.message);
         }
     } catch (error) {
         alert('Error al subir formulario: ' + error.message);
@@ -293,7 +313,18 @@ async function subirFormulario(e) {
 }
 
 async function eliminarFormulario(formularioId) {
-    if (!confirm('¿Estás seguro de que deseas eliminar este formulario?')) {
+    const result = await Swal.fire({
+        title: '¿Estás seguro?',
+        text: '¿Deseas eliminar este formulario? Esta acción no se puede deshacer.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (!result.isConfirmed) {
         return;
     }
     
@@ -305,13 +336,19 @@ async function eliminarFormulario(formularioId) {
         const data = await response.json();
         
         if (data.success) {
-            alert('Formulario eliminado exitosamente');
-            location.reload();
+            Swal.fire({
+                title: '¡Eliminado!',
+                text: 'Formulario eliminado exitosamente',
+                icon: 'success',
+                confirmButtonText: 'Aceptar'
+            }).then(() => {
+                location.reload();
+            });
         } else {
-            alert('Error: ' + data.message);
+            mostrarError('Error: ' + data.message);
         }
     } catch (error) {
-        alert('Error al eliminar formulario: ' + error.message);
+        mostrarError('Error al eliminar formulario: ' + error.message);
     }
 }
 </script>

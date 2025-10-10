@@ -2937,11 +2937,26 @@ body.tutor-theme {
     min-height: 100vh;
 }
 
+/* Eliminar gap entre columnas para estudiante */
+.estudiante-theme .row {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.estudiante-theme .row > [class*="col-"] {
+    padding-left: 0;
+    padding-right: 0;
+}
+
 /* Sidebar específico de estudiante */
 .estudiante-theme .sidebar {
     background-color: #ffffff;
     border-right: 1px solid #e0d5c7;
     box-shadow: 2px 0 10px rgba(139, 119, 101, 0.08);
+    padding-left: 15px; /* Restaurar padding interno del sidebar */
+    padding-right: 15px;
+    padding-top: 15px;
+    padding-bottom: 15px;
 }
 
 .estudiante-theme .nav-link {
@@ -2973,6 +2988,7 @@ body.tutor-theme {
 .estudiante-theme .main-content {
     background: transparent;
     padding: 20px;
+    margin-left: -15px; /* Mover contenido hacia la izquierda para eliminar gap */
 }
 
 /* Cards específicas para estudiante */

@@ -10,7 +10,7 @@
 <div class="container-fluid estudiante-theme">
     <div class="row">
         <!-- Sidebar -->
-        <div class="col-md-3 sidebar p-3">
+        <div class="col-md-2 sidebar">
             <div class="text-center mb-4">
                 <img src="~/images/logo-liceo.svg" alt="Logo" style="width: 60px; height: 60px;">
                 <h5 class="mt-2">@estudiante?.Nombre @estudiante?.Apellidos</h5>
@@ -34,14 +34,15 @@
                     <i class="fas fa-user"></i> Mi Perfil
                 </a>
                 <hr>
-                <a class="nav-link text-danger" href="@Url.Action("Logout", "Auth")">
-                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                <a class="logout-btn" href="@Url.Action("Logout", "Auth")">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Cerrar Sesión</span>
                 </a>
             </nav>
         </div>
 
         <!-- Contenido principal -->
-        <div class="col-md-9 main-content p-4">
+        <div class="col-md-10 main-content">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2>Mi Grupo</h2>
                 <div class="text-muted">
@@ -210,7 +211,7 @@
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="card bg-info text-white">
+                    <div class="card bg-primary text-white">
                         <div class="card-body text-center">
                             <i class="fas fa-crown fa-2x mb-2"></i>
                             <h4>@(lider != null ? "Sí" : "No")</h4>
@@ -419,5 +420,3 @@ function cambiarLider() {
     });
 }
 </script>
-
-```
