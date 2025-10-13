@@ -758,31 +758,38 @@ function limpiarValidacion() {
 function actualizarEstadisticas() {
     // Contar filas visibles
     const rows = document.querySelectorAll('#tablaTutores tbody tr:not(#noResultsRow)');
-    let total = 0;
+    let totalTutores = 0;
     let conGrupos = 0;
     let disponibles = 0;
     let totalGruposAsignados = 0;
     
     rows.forEach(row => {
         if (row.style.display !== 'none') {
-            total++;
-            const grupos = row.cells[2].textContent;
-            const cantidadGrupos = parseInt(grupos.match(/\d+/)[0]) || 0;
+            // Verificar si es un Tutor (no Administrador)
+            const badge = row.querySelector('.badge-rol');
+            const esTutor = badge && (badge.textContent.includes('Tutor') || badge.classList.contains('tutor'));
             
-            totalGruposAsignados += cantidadGrupos;
-            
-            if (cantidadGrupos > 0) {
-                conGrupos++;
-            } else {
-                disponibles++;
+            if (esTutor) {
+                totalTutores++;
+                const grupos = row.cells[2].textContent;
+                const match = grupos.match(/\d+/);
+                const cantidadGrupos = match ? parseInt(match[0]) : 0;
+                
+                totalGruposAsignados += cantidadGrupos;
+                
+                if (cantidadGrupos > 0) {
+                    conGrupos++;
+                } else {
+                    disponibles++;
+                }
             }
         }
     });
     
-    document.getElementById('totalTutores').textContent = total;
+    document.getElementById('totalTutores').textContent = totalTutores;
     document.getElementById('conGrupos').textContent = conGrupos;
     document.getElementById('disponibles').textContent = disponibles;
-    document.getElementById('promedio').textContent = total > 0 ? (totalGruposAsignados / total).toFixed(1) : 0;
+    document.getElementById('promedio').textContent = totalTutores > 0 ? (totalGruposAsignados / totalTutores).toFixed(1) : 0;
 }
 
 function mostrarExito(mensaje) {
@@ -983,6 +990,10 @@ function cambiarRol(identificacion, nuevoRol) {
                 select.dataset.rolOriginal = nuevoRol;
                 console.log(`Select actualizado, rol original ahora es: ${nuevoRol}`);
             }
+            
+            // Actualizar las estadísticas de las tarjetas
+            actualizarEstadisticas();
+            console.log('Estadísticas actualizadas');
         } else {
             console.error('Error del servidor:', data.message);
             mostrarError(data.message || 'Error al cambiar el rol');

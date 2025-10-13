@@ -650,7 +650,12 @@ document.getElementById('btnConfirmarEliminar').addEventListener('click', functi
                 'Content-Type': 'application/json',
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error en la respuesta del servidor');
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 // Remover la fila de la tabla
@@ -659,7 +664,12 @@ document.getElementById('btnConfirmarEliminar').addEventListener('click', functi
                     row.remove();
                 }
                 
-                // Actualizar estadísticas
+                // Actualizar el contador de grupos decrementándolo
+                const totalGruposElement = document.getElementById('totalGrupos');
+                const currentTotal = parseInt(totalGruposElement.textContent) || 0;
+                totalGruposElement.textContent = Math.max(0, currentTotal - 1);
+                
+                // Actualizar estadísticas completas
                 actualizarEstadisticas();
                 
                 // Cerrar modal
@@ -673,7 +683,7 @@ document.getElementById('btnConfirmarEliminar').addEventListener('click', functi
         })
         .catch(error => {
             console.error('Error:', error);
-            mostrarError('Error al comunicarse con el servidor');
+            mostrarError('Error al comunicarse con el servidor: ' + error.message);
         })
         .finally(() => {
             grupoAEliminar = null;
@@ -788,7 +798,8 @@ function actualizarEstadisticas() {
             const estudiantes = row.cells[1].textContent;
             const tutor = row.cells[2].textContent;
             
-            const cantidadEstudiantes = parseInt(estudiantes.match(/\d+/)[0]) || 0;
+            const match = estudiantes.match(/\d+/);
+            const cantidadEstudiantes = match ? parseInt(match[0]) : 0;
             const tieneTutor = !tutor.includes('Sin asignar');
             
             if (cantidadEstudiantes > 0) {
@@ -1023,32 +1034,80 @@ function eliminarEstudianteDeGrupo(grupoNumero, estudianteId, nombreEstudiante, 
 }
 
 function cambiarLiderGrupo(grupoNumero, nuevoLiderId, nombreNuevoLider) {
-    if (!confirm(`¿Estás seguro de que quieres hacer a "${nombreNuevoLider}" el nuevo líder del Grupo ${grupoNumero}?`)) {
-        return;
-    }
-
-    fetch('/Home/CambiarLiderGrupo', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            grupoNumero: grupoNumero,
-            nuevoLiderId: nuevoLiderId
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            mostrarExito(data.message);
-            // Recargar detalles del grupo
-            verDetallesAvanzados(grupoNumero);
-        } else {
-            mostrarError('Error: ' + data.message);
+    Swal.fire({
+        title: '👑 Cambiar Líder del Grupo',
+        html: `
+            <div class="text-start">
+                <p><strong>¿Estás seguro de que quieres hacer a "${nombreNuevoLider}" el nuevo líder del Grupo ${grupoNumero}?</strong></p>
+                <hr>
+                <div class="alert alert-info mb-0">
+                    <i class="fas fa-info-circle"></i> El líder actual dejará de serlo y "${nombreNuevoLider}" asumirá el liderazgo del grupo.
+                </div>
+            </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#ffc107',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="fas fa-crown"></i> Sí, cambiar líder',
+        cancelButtonText: '<i class="fas fa-times"></i> Cancelar'
+    }).then((result) => {
+        if (!result.isConfirmed) {
+            return;
         }
-    })
-    .catch(error => {
-        mostrarError('Error de conexión: ' + error.message);
+
+        // Mostrar spinner mientras se procesa
+        Swal.fire({
+            title: 'Cambiando líder...',
+            html: 'Por favor espera',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        fetch('/Home/CambiarLiderGrupo', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                grupoNumero: grupoNumero,
+                nuevoLiderId: nuevoLiderId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    title: '¡Éxito!',
+                    text: data.message,
+                    icon: 'success',
+                    confirmButtonText: 'Aceptar',
+                    confirmButtonColor: '#28a745'
+                });
+                // Recargar detalles del grupo
+                verDetallesAvanzados(grupoNumero);
+            } else {
+                Swal.fire({
+                    title: 'Error',
+                    text: data.message,
+                    icon: 'error',
+                    confirmButtonText: 'Aceptar',
+                    confirmButtonColor: '#dc3545'
+                });
+            }
+        })
+        .catch(error => {
+            Swal.fire({
+                title: 'Error de conexión',
+                text: 'No se pudo conectar con el servidor: ' + error.message,
+                icon: 'error',
+                confirmButtonText: 'Aceptar',
+                confirmButtonColor: '#dc3545'
+            });
+        });
     });
 }
 

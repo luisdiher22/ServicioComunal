@@ -59,7 +59,7 @@
                     <select class="form-select" id="filtroRol" onchange="filtrarUsuarios()">
                         <option value="">Todos los roles</option>
                         <option value="Administrador">Administrador</option>
-                        <option value="Profesor">Profesor</option>
+                        <option value="Tutor">Tutor</option>
                         <option value="Estudiante">Estudiante</option>
                     </select>
                 </div>
@@ -68,7 +68,6 @@
                     <select class="form-select" id="filtroEstado" onchange="filtrarUsuarios()">
                         <option value="">Todos los estados</option>
                         <option value="activo">Activos</option>
-                        <option value="inactivo">Inactivos</option>
                         <option value="requiere-cambio">Requiere cambio contraseña</option>
                     </select>
                 </div>
@@ -367,7 +366,39 @@
 
 
         function restablecerContraseña(usuarioId, nombreUsuario) {
-            if (confirm(`¿Restablecer la contraseña de ${nombreUsuario} a su cédula?\n\nEsto marcará que debe cambiar la contraseña en el próximo login.`)) {
+            Swal.fire({
+                title: '🔑 Restablecer Contraseña',
+                html: `
+                    <div class="text-start">
+                        <p><strong>¿Restablecer la contraseña de "${nombreUsuario}" a su cédula?</strong></p>
+                        <hr>
+                        <div class="alert alert-warning mb-0">
+                            <i class="fas fa-exclamation-triangle"></i> El usuario deberá cambiar la contraseña en el próximo inicio de sesión.
+                        </div>
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ffc107',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="fas fa-key"></i> Sí, restablecer',
+                cancelButtonText: '<i class="fas fa-times"></i> Cancelar'
+            }).then((result) => {
+                if (!result.isConfirmed) {
+                    return;
+                }
+
+                // Mostrar spinner mientras se procesa
+                Swal.fire({
+                    title: 'Restableciendo contraseña...',
+                    html: 'Por favor espera',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
                 fetch('@Url.Action("RestablecerContraseña", "Home")', {
                     method: 'POST',
                     headers: {
@@ -380,13 +411,35 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        alert(data.message);
-                        location.reload();
+                        Swal.fire({
+                            title: '¡Éxito!',
+                            text: data.message,
+                            icon: 'success',
+                            confirmButtonText: 'Aceptar',
+                            confirmButtonColor: '#28a745'
+                        }).then(() => {
+                            location.reload();
+                        });
                     } else {
-                        mostrarError('Error al restablecer contraseña: ' + data.message);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Error al restablecer contraseña: ' + data.message,
+                            icon: 'error',
+                            confirmButtonText: 'Aceptar',
+                            confirmButtonColor: '#dc3545'
+                        });
                     }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        title: 'Error de conexión',
+                        text: 'No se pudo conectar con el servidor: ' + error.message,
+                        icon: 'error',
+                        confirmButtonText: 'Aceptar',
+                        confirmButtonColor: '#dc3545'
+                    });
                 });
-            }
+            });
         }
 
         function abrirModalCambiarContraseña(usuarioId, nombreUsuario) {

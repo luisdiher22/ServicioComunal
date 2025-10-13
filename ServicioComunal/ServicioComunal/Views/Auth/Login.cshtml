@@ -105,17 +105,8 @@
         const loginBtn = document.getElementById('loginBtn');
         const inputs = form.querySelectorAll('.form-control');
         
-        // Validación en tiempo real
+        // Efectos de focus mejorados
         inputs.forEach(input => {
-            input.addEventListener('input', function() {
-                if (this.value.trim().length > 0 && this.checkValidity()) {
-                    this.classList.add('valid');
-                } else {
-                    this.classList.remove('valid');
-                }
-            });
-            
-            // Efectos de focus mejorados
             input.addEventListener('focus', function() {
                 this.parentElement.querySelector('.form-label').style.color = '#6c8d47';
                 this.style.backgroundColor = 'rgba(255, 255, 255, 0.98)';

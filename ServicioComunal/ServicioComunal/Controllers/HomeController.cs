@@ -934,6 +934,19 @@ namespace ServicioComunal.Controllers
                                             continue;
                                         }
 
+                                        // Validar que nombre y apellidos no contengan números
+                                        if (System.Text.RegularExpressions.Regex.IsMatch(nombre, @"\d"))
+                                        {
+                                            errores.Add($"Fila {row}: El nombre '{nombre}' no puede contener números");
+                                            continue;
+                                        }
+
+                                        if (System.Text.RegularExpressions.Regex.IsMatch(apellidos, @"\d"))
+                                        {
+                                            errores.Add($"Fila {row}: Los apellidos '{apellidos}' no pueden contener números");
+                                            continue;
+                                        }
+
                                         if (!int.TryParse(cedulaTexto, out int cedula))
                                         {
                                             errores.Add($"Fila {row}: Cédula inválida ({cedulaTexto})");
@@ -1817,10 +1830,12 @@ namespace ServicioComunal.Controllers
 
                 return Json(new { success = true, message = "Grupo eliminado exitosamente. Las entregas y solicitudes asociadas se han desafiliado del grupo." });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                return Json(new { success = false, message = "Error al eliminar el grupo" });
+                Console.WriteLine($"❌ Error al eliminar grupo: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                return Json(new { success = false, message = "Error al eliminar el grupo: " + ex.Message });
             }
         }
 
@@ -2488,7 +2503,7 @@ namespace ServicioComunal.Controllers
 
                 if (!grupo.GruposEstudiantes.Any())
                 {
-                    return Json(new { success = false, message = "No se puede asignar tutor a un grupo sin estudiantes" });
+                    return Json(new { success = false, message = "No se puede asignar un tutor a un grupo sin estudiantes" });
                 }
 
                 // Verificar si ya existe una asignación
@@ -2546,7 +2561,7 @@ namespace ServicioComunal.Controllers
 
                 if (!grupo.GruposEstudiantes.Any())
                 {
-                    return Json(new { success = false, message = "No se puede asignar tutor a un grupo sin estudiantes" });
+                    return Json(new { success = false, message = "No se puede asignar un tutor a un grupo sin estudiantes" });
                 }
 
                 // Verificar si ya existe la asignación
