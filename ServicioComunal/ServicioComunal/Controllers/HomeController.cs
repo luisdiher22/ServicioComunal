@@ -2853,6 +2853,15 @@ namespace ServicioComunal.Controllers
                     return Json(new { success = false, message = "Nombre y descripción son requeridos" });
                 }
 
+                // Validar que no exista un formulario con el mismo nombre
+                var formularioExistente = await _context.Formularios
+                    .FirstOrDefaultAsync(f => f.Nombre.ToLower() == formulario.Nombre.ToLower());
+                
+                if (formularioExistente != null)
+                {
+                    return Json(new { success = false, message = "Ya existe un formulario con ese nombre" });
+                }
+
                 formulario.FechaIngreso = DateTime.Now;
                 if (formulario.ArchivoRuta == null)
                     formulario.ArchivoRuta = "";
@@ -2889,6 +2898,15 @@ namespace ServicioComunal.Controllers
                 if (string.IsNullOrWhiteSpace(nombre) || string.IsNullOrWhiteSpace(descripcion))
                 {
                     return Json(new { success = false, message = "Nombre y descripción son requeridos" });
+                }
+
+                // Validar que no exista un formulario con el mismo nombre
+                var formularioExistente = await _context.Formularios
+                    .FirstOrDefaultAsync(f => f.Nombre.ToLower() == nombre.ToLower());
+                
+                if (formularioExistente != null)
+                {
+                    return Json(new { success = false, message = "Ya existe un formulario con ese nombre" });
                 }
 
                 string archivoRuta = "";
@@ -3176,6 +3194,13 @@ namespace ServicioComunal.Controllers
                     string.IsNullOrWhiteSpace(entregaDto.Descripcion))
                 {
                     return Json(new { success = false, message = "Nombre y descripción son requeridos" });
+                }
+
+                // Validar que la fecha límite sea al menos el día siguiente
+                var manana = DateTime.Now.Date.AddDays(1);
+                if (entregaDto.FechaLimite.Date < manana)
+                {
+                    return Json(new { success = false, message = "La fecha de entrega debe ser al menos para el día de mañana" });
                 }
 
                 // Verificar que el tipo de anexo es válido si se especificó uno
@@ -4364,6 +4389,13 @@ namespace ServicioComunal.Controllers
         {
             try
             {
+                // Validar que la fecha límite sea al menos el día siguiente
+                var manana = DateTime.Now.Date.AddDays(1);
+                if (request.FechaLimite.Date < manana)
+                {
+                    return Json(new { success = false, message = "La fecha de entrega debe ser al menos para el día de mañana" });
+                }
+
                 var entrega = new Entrega
                 {
                     Nombre = request.Nombre,

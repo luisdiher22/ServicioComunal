@@ -111,7 +111,7 @@ async function guardarEntrega() {
             descripcion: formData.get('descripcion'),
             fechaLimite: formData.get('fechaLimite'),
             grupoNumero: parseInt(formData.get('grupoNumero')) || 0,
-            formularioIdentificacion: formData.get('formularioIdentificacion') ? parseInt(formData.get('formularioIdentificacion')) : null,
+            formularioIdentificacion: formData.get('tipoAnexo') ? parseInt(formData.get('tipoAnexo')) : null,
             archivoRuta: "", // El administrador no maneja archivos
             retroalimentacion: "" // El administrador no da retroalimentación inicial
         };
@@ -379,6 +379,12 @@ function llenarFormularioEdicion(entrega) {
         elementoFechaLimite.value = fechaLocal.toISOString().slice(0, 16);
         
         elementoGrupo.value = entrega.grupoNumero;
+        
+        // Cargar formulario si existe
+        const elementoAnexo = document.getElementById('entregaAnexo');
+        if (elementoAnexo && entrega.formularioIdentificacion) {
+            elementoAnexo.value = entrega.formularioIdentificacion;
+        }
         
         // Configurar elementos del modal
         const modalLabel = document.getElementById('modalEntregaLabel');
