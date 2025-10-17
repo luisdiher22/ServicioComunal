@@ -10,20 +10,7 @@
 <div class="dashboard-content tutor-theme">
     <div class="content-header">
         <h1>Revisiones</h1>
-        @if (ViewBag.GrupoFiltrado != null)
-        {
-            <div class="alert alert-info d-flex align-items-center">
-                <i class="fas fa-filter me-2"></i>
-                Mostrando solo entregas del Grupo @ViewBag.GrupoFiltrado
-                <a href="@Url.Action("Revisiones", "Tutor")" class="btn btn-sm btn-outline-secondary ms-auto">
-                    <i class="fas fa-times"></i> Ver todos los grupos
-                </a>
-            </div>
-        }
-        else
-        {
-            <p>Entregables por revisar de tus grupos asignados</p>
-        }
+        <p>Entregables por revisar de tus grupos asignados</p>
     </div>
 
     <!-- Filtro de grupos fuera del grid -->
@@ -200,6 +187,10 @@
                     <div class="info-item">
                         <label>Fecha de envío:</label>
                         <span id="detalleFecha">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Fecha límite:</label>
+                        <span id="detalleFechaLimite">-</span>
                     </div>
                 </div>
                 <div class="archivo-section">
@@ -623,6 +614,8 @@ function mostrarDetalle(entregaId) {
     document.getElementById('detalleGrupo').textContent = `Grupo ${entregable.grupo.numero}`;
     document.getElementById('detalleFecha').textContent = entregable.fechaEntrega ? 
         new Date(entregable.fechaEntrega).toLocaleDateString('es-ES') : 'No entregado';
+    document.getElementById('detalleFechaLimite').textContent = entregable.fechaLimite ? 
+        new Date(entregable.fechaLimite).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Sin fecha límite';
     
     // Configurar comentarios existentes
     const comentariosTextarea = document.getElementById('comentariosTextarea');

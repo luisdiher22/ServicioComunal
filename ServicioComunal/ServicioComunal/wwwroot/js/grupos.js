@@ -2,12 +2,8 @@
 let grupoAEliminar = null;
 let grupoEnEdicion = null;
 
-// Debug function
-console.log('grupos.js cargado correctamente');
-
 // Inicialización
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM cargado, inicializando eventos');
     inicializarEventos();
     inicializarFiltros();
 });
@@ -42,50 +38,83 @@ function inicializarEventos() {
 }
 
 function inicializarFiltros() {
+    // Verificar que los elementos existen
+    const searchInput = document.getElementById('searchInput');
+    const filterEstado = document.getElementById('filterEstado');
+    const filterTamaño = document.getElementById('filterTamaño');
+    
+    if (!searchInput || !filterEstado || !filterTamaño) {
+        console.error('Error: No se encontraron los elementos de filtro');
+        return;
+    }
+    
     // Búsqueda en tiempo real
-    document.getElementById('searchInput').addEventListener('input', function() {
+    searchInput.addEventListener('input', function() {
         filtrarTabla();
     });
 
     // Filtros por select
-    document.getElementById('filterEstado').addEventListener('change', function() {
+    filterEstado.addEventListener('change', function() {
         filtrarTabla();
     });
 
-    document.getElementById('filterTamaño').addEventListener('change', function() {
+    filterTamaño.addEventListener('change', function() {
         filtrarTabla();
     });
 }
 
 function filtrarTabla() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const estadoFilter = document.getElementById('filterEstado').value;
-    const tamañoFilter = document.getElementById('filterTamaño').value;
+    const searchInput = document.getElementById('searchInput');
+    const filterEstado = document.getElementById('filterEstado');
+    const filterTamaño = document.getElementById('filterTamaño');
+    
+    if (!searchInput || !filterEstado || !filterTamaño) {
+        console.error('Error: Elementos de filtro no encontrados');
+        return;
+    }
+    
+    const searchTerm = searchInput.value.toLowerCase();
+    const estadoFilter = filterEstado.value;
+    const tamañoFilter = filterTamaño.value;
     
     const tbody = document.querySelector('#tablaGrupos tbody');
-    const rows = tbody.querySelectorAll('tr');
+    if (!tbody) {
+        console.error('Error: No se encontró la tabla de grupos');
+        return;
+    }
+    
+    const rows = tbody.querySelectorAll('tr:not(#noResultsRow)');
     
     let visibleRows = 0;
     
     rows.forEach(row => {
-        const numero = row.cells[0].textContent.toLowerCase();
-        const estudiantes = row.cells[1].textContent;
-        const tutor = row.cells[2].textContent;
-        const estado = row.cells[3].textContent;
+        // Verificar que la fila tiene las celdas necesarias
+        if (row.cells.length < 5) {
+            return;
+        }
         
-        const cantidadEstudiantes = parseInt(estudiantes.match(/\d+/)[0]) || 0;
-        const tieneTutor = !tutor.includes('Sin asignar');
+        // Columnas correctas:
+        // 0: Número, 1: Líder, 2: Estudiantes, 3: Tutor Asignado, 4: Estado
+        const numero = row.cells[0].textContent.toLowerCase();
+        const estudiantes = row.cells[2].textContent; // Columna de estudiantes
+        const tutor = row.cells[3].textContent.toLowerCase(); // Columna de tutor
+        
+        const cantidadEstudiantes = parseInt(estudiantes.match(/\d+/)?.[0] || '0') || 0;
+        const tieneTutor = !tutor.includes('sin asignar');
         const tieneEstudiantes = cantidadEstudiantes > 0;
         
         let mostrar = true;
         
         // Filtro de búsqueda
-        if (searchTerm && !numero.includes(searchTerm)) {
-            mostrar = false;
+        if (searchTerm) {
+            // Buscar en el número de grupo (coincidencia parcial)
+            if (!numero.includes(searchTerm)) {
+                mostrar = false;
+            }
         }
         
         // Filtro de estado
-        if (estadoFilter) {
+        if (mostrar && estadoFilter) {
             switch (estadoFilter) {
                 case 'con-estudiantes':
                     if (!tieneEstudiantes) mostrar = false;
@@ -103,7 +132,7 @@ function filtrarTabla() {
         }
         
         // Filtro de tamaño
-        if (tamañoFilter) {
+        if (mostrar && tamañoFilter) {
             switch (tamañoFilter) {
                 case 'pequeno':
                     if (cantidadEstudiantes < 1 || cantidadEstudiantes > 2) mostrar = false;
@@ -120,9 +149,6 @@ function filtrarTabla() {
         row.style.display = mostrar ? '' : 'none';
         if (mostrar) visibleRows++;
     });
-    
-    // Mostrar mensaje si no hay resultados
-    mostrarMensajeNoResultados(visibleRows === 0);
 }
 
 function mostrarMensajeNoResultados(mostrar) {
@@ -501,31 +527,24 @@ function configurarEventListenersGestion() {
 
 // Función dedicada para cerrar el modal de gestión de estudiantes
 function cerrarModalGestionEstudiantes() {
-    console.log('Intentando cerrar modal...');
-    
     const modalId = 'modalGestionarEstudiantes';
     const modalElement = document.getElementById(modalId);
     
     if (!modalElement) {
-        console.log('Modal no encontrado');
         return;
     }
     
     // Método 1: jQuery (si está disponible)
     if (typeof $ !== 'undefined') {
-        console.log('Cerrando con jQuery...');
         $(`#${modalId}`).modal('hide');
     }
     
     // Método 2: Bootstrap 5 nativo
     try {
-        console.log('Cerrando con Bootstrap 5...');
         const modal = bootstrap.Modal.getInstance(modalElement);
         if (modal) {
-            console.log('Instancia encontrada, cerrando...');
             modal.hide();
         } else {
-            console.log('Creando nueva instancia...');
             const newModal = new bootstrap.Modal(modalElement);
             newModal.hide();
         }
@@ -535,7 +554,6 @@ function cerrarModalGestionEstudiantes() {
     
     // Método 3: Fallback manual
     setTimeout(() => {
-        console.log('Aplicando fallback manual...');
         modalElement.classList.remove('show');
         modalElement.style.display = 'none';
         modalElement.setAttribute('aria-hidden', 'true');
@@ -554,7 +572,6 @@ function cerrarModalGestionEstudiantes() {
 
 // Guardar asignaciones en la base de datos
 async function guardarAsignaciones() {
-    console.log('guardarAsignaciones iniciado');
     try {
         const btnGuardar = document.getElementById('guardarAsignaciones');
         const textoOriginal = btnGuardar.innerHTML;
@@ -569,8 +586,6 @@ async function guardarAsignaciones() {
             estudiantesIds: estudiantesGrupoData.map(e => e.identificacion)
         };
 
-        console.log('Enviando asignaciones:', asignaciones);
-
         // Enviar al servidor
         const response = await fetch('/Home/ActualizarAsignacionesGrupo', {
             method: 'POST',
@@ -581,10 +596,8 @@ async function guardarAsignaciones() {
         });
 
         const data = await response.json();
-        console.log('Respuesta del servidor:', data);
         
         if (data.success) {
-            console.log('Guardado exitoso, cerrando modal...');
             mostrarExito('Asignaciones guardadas correctamente');
             
             // Restaurar botón inmediatamente
@@ -599,7 +612,6 @@ async function guardarAsignaciones() {
             
             // Recargar tabla después de un pequeño delay
             setTimeout(() => {
-                console.log('Recargando página...');
                 location.reload();
             }, 2000);
         } else {
@@ -851,8 +863,6 @@ function mostrarNotificacion(mensaje, tipo) {
 // ===== NUEVAS FUNCIONES PARA GESTIÓN AVANZADA =====
 
 function verDetallesAvanzados(grupoNumero) {
-    console.log('verDetallesAvanzados llamado para grupo:', grupoNumero);
-    
     // Limpiar contenido y mostrar spinner
     const contenidoDiv = document.getElementById('contenidoGestionAvanzada');
     contenidoDiv.innerHTML = '<div class="d-flex justify-content-center"><div class="spinner-border" role="status"></div></div>';
@@ -863,11 +873,9 @@ function verDetallesAvanzados(grupoNumero) {
     
     fetch(`/Home/ObtenerDetallesGrupoCompleto?grupoNumero=${grupoNumero}`)
         .then(response => {
-            console.log('Respuesta recibida:', response);
             return response.json();
         })
         .then(data => {
-            console.log('Datos recibidos:', data);
             if (!data.success) {
                 contenidoDiv.innerHTML = `
                     <div class="alert alert-danger">
@@ -1146,7 +1154,7 @@ function exportarGrupos() {
             notification.remove();
             // Mostrar notificación de éxito
             if (typeof mostrarNotificacion === 'function') {
-                mostrarNotificacion('Archivo Excel de grupos generado exitosamente. La descarga debería iniciar automáticamente.', 'success');
+                mostrarNotificacion('Archivo Excel de grupos generado exitosamente. La descarga está lista para iniciar.', 'success');
             } else {
                 mostrarExito('Archivo Excel de grupos generado exitosamente');
             }
@@ -1160,10 +1168,3 @@ window.eliminarEstudianteDeGrupo = eliminarEstudianteDeGrupo;
 window.cambiarLiderGrupo = cambiarLiderGrupo;
 window.cerrarModalGestionEstudiantes = cerrarModalGestionEstudiantes;
 window.exportarGrupos = exportarGrupos;
-
-console.log('Funciones avanzadas registradas globalmente:', {
-    verDetallesAvanzados: typeof window.verDetallesAvanzados,
-    eliminarEstudianteDeGrupo: typeof window.eliminarEstudianteDeGrupo,
-    cambiarLiderGrupo: typeof window.cambiarLiderGrupo,
-    cerrarModalGestionEstudiantes: typeof window.cerrarModalGestionEstudiantes
-});

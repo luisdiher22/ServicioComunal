@@ -35,6 +35,23 @@
                 Lista completa de formularios del sistema y formularios adicionales subidos por profesores
             </p>
 
+            <!-- Barra de búsqueda -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" class="form-control" id="buscarFormulario" 
+                               placeholder="Buscar por nombre de formulario..." 
+                               onkeyup="filtrarFormularios()">
+                        <button class="btn btn-outline-secondary" type="button" onclick="limpiarBusqueda()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div class="table-responsive">
                 <table class="table table-striped">
                     <thead>
@@ -91,6 +108,12 @@
                                                     Descargar
                                                 </a>
                                             }
+                                            <button class="btn btn-outline-warning btn-editar-formulario" 
+                                                    data-id="@formulario.Identificacion"
+                                                    data-nombre="@formulario.Nombre"
+                                                    data-descripcion="@formulario.Descripcion">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
                                             <button class="btn btn-outline-danger" onclick="eliminarFormulario(@formulario.Identificacion)">
                                                 <i class="fas fa-trash"></i>
                                             </button>
@@ -162,6 +185,48 @@
     </div>
 </div>
 
+<!-- Modal para editar formulario -->
+<div class="modal fade" id="modalEditarFormulario" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit"></i>
+                    Editar Formulario
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEditarFormulario">
+                    <input type="hidden" id="editarFormularioId">
+                    
+                    <div class="mb-3">
+                        <label for="editarNombreFormulario" class="form-label">Nombre <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="editarNombreFormulario" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editarDescripcionFormulario" class="form-label">Descripción <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="editarDescripcionFormulario" rows="3" required></textarea>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <small>Solo se puede editar el nombre y la descripción. El archivo no se puede modificar para mantener la integridad de las entregas existentes.</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" form="formEditarFormulario" class="btn btn-warning">
+                    <i class="fas fa-save"></i>
+                    Guardar Cambios
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     .table th {
         border-top: none;
@@ -189,6 +254,20 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Configurar formulario de subir
     document.getElementById('formSubirFormulario').addEventListener('submit', subirFormulario);
+    
+    // Configurar formulario de editar
+    document.getElementById('formEditarFormulario').addEventListener('submit', editarFormulario);
+    
+    // Configurar botones de editar con event delegation
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.btn-editar-formulario')) {
+            const btn = e.target.closest('.btn-editar-formulario');
+            const id = btn.getAttribute('data-id');
+            const nombre = btn.getAttribute('data-nombre');
+            const descripcion = btn.getAttribute('data-descripcion');
+            abrirModalEditar(id, nombre, descripcion);
+        }
+    });
 });
 
 async function cargarAnexos() {
@@ -350,5 +429,80 @@ async function eliminarFormulario(formularioId) {
     } catch (error) {
         mostrarError('Error al eliminar formulario: ' + error.message);
     }
+}
+
+function abrirModalEditar(id, nombre, descripcion) {
+    document.getElementById('editarFormularioId').value = id;
+    document.getElementById('editarNombreFormulario').value = nombre;
+    document.getElementById('editarDescripcionFormulario').value = descripcion;
+    const modal = new bootstrap.Modal(document.getElementById('modalEditarFormulario'));
+    modal.show();
+}
+
+async function editarFormulario(e) {
+    e.preventDefault();
+    
+    const formularioId = document.getElementById('editarFormularioId').value;
+    const nombre = document.getElementById('editarNombreFormulario').value.trim();
+    const descripcion = document.getElementById('editarDescripcionFormulario').value.trim();
+    
+    if (!nombre) {
+        mostrarError('El nombre del formulario es requerido');
+        return;
+    }
+    
+    try {
+        const formData = new FormData();
+        formData.append('identificacion', formularioId);
+        formData.append('nombre', nombre);
+        formData.append('descripcion', descripcion);
+        
+        const response = await fetch('/Home/EditarFormulario', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalEditarFormulario'));
+            modal.hide();
+            
+            Swal.fire({
+                title: '¡Éxito!',
+                text: 'Formulario actualizado exitosamente',
+                icon: 'success',
+                confirmButtonText: 'Aceptar'
+            }).then(() => {
+                location.reload();
+            });
+        } else {
+            mostrarError('Error: ' + data.message);
+        }
+    } catch (error) {
+        mostrarError('Error al editar formulario: ' + error.message);
+    }
+}
+
+function filtrarFormularios() {
+    const searchTerm = document.getElementById('buscarFormulario').value.toLowerCase();
+    const rows = document.querySelectorAll('#tablaFormularios tr');
+    
+    rows.forEach(row => {
+        // Verificar que la fila tenga suficientes celdas (evitar problemas con filas vacías)
+        if (row.cells && row.cells.length > 1) {
+            const nombre = row.cells[1].textContent.toLowerCase(); // Columna de Nombre
+            if (nombre.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    });
+}
+
+function limpiarBusqueda() {
+    document.getElementById('buscarFormulario').value = '';
+    filtrarFormularios();
 }
 </script>

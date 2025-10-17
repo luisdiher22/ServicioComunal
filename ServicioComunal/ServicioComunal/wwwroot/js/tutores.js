@@ -126,8 +126,8 @@ function filtrarTabla() {
         if (mostrar) visibleRows++;
     });
     
-    // Mostrar mensaje si no hay resultados
-    mostrarMensajeNoResultados(visibleRows === 0);
+    // No mostrar mensaje si no hay resultados (comentado para que funcione como en usuarios)
+    // mostrarMensajeNoResultados(visibleRows === 0);
 }
 
 function mostrarMensajeNoResultados(mostrar) {
@@ -761,7 +761,6 @@ function actualizarEstadisticas() {
     let totalTutores = 0;
     let conGrupos = 0;
     let disponibles = 0;
-    let totalGruposAsignados = 0;
     
     rows.forEach(row => {
         if (row.style.display !== 'none') {
@@ -775,8 +774,6 @@ function actualizarEstadisticas() {
                 const match = grupos.match(/\d+/);
                 const cantidadGrupos = match ? parseInt(match[0]) : 0;
                 
-                totalGruposAsignados += cantidadGrupos;
-                
                 if (cantidadGrupos > 0) {
                     conGrupos++;
                 } else {
@@ -789,7 +786,6 @@ function actualizarEstadisticas() {
     document.getElementById('totalTutores').textContent = totalTutores;
     document.getElementById('conGrupos').textContent = conGrupos;
     document.getElementById('disponibles').textContent = disponibles;
-    document.getElementById('promedio').textContent = totalTutores > 0 ? (totalGruposAsignados / totalTutores).toFixed(1) : 0;
 }
 
 function mostrarExito(mensaje) {
@@ -926,25 +922,47 @@ function importarProfesores() {
 function cambiarRol(identificacion, nuevoRol) {
     console.log(`Cambiando rol para identificacion: ${identificacion} a: ${nuevoRol}`);
     
-    // Confirmar cambio
+    // Configurar mensaje según el rol
     let mensaje = `¿Estás seguro de cambiar el rol del docente a ${nuevoRol}?`;
+    let htmlMensaje = '';
     if (nuevoRol === 'Administrador') {
-        mensaje += '\n\nEl docente tendrá acceso completo a las funciones administrativas.';
+        htmlMensaje = '<p>El docente tendrá acceso completo a las funciones administrativas.</p>';
     }
 
-    if (!confirm(mensaje)) {
-        console.log('Cambio de rol cancelado por el usuario');
-        // Restaurar valor anterior del select
-        const select = document.querySelector(`select[data-profesor-id="${identificacion}"]`);
-        if (select) {
-            select.value = select.dataset.rolOriginal || 'Profesor';
+    // Usar SweetAlert2 para confirmar
+    Swal.fire({
+        title: 'Cambiar rol',
+        html: mensaje + htmlMensaje,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, cambiar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (!result.isConfirmed) {
+            console.log('Cambio de rol cancelado por el usuario');
+            // Restaurar valor anterior del select
+            const select = document.querySelector(`select[data-profesor-id="${identificacion}"]`);
+            if (select) {
+                select.value = select.dataset.rolOriginal || 'Profesor';
+            }
+            return;
         }
-        return;
-    }
 
-    console.log('Enviando solicitud de cambio de rol...');
+        console.log('Enviando solicitud de cambio de rol...');
 
-    fetch('/Home/CambiarRolProfesor', {
+        // Mostrar indicador de carga
+        Swal.fire({
+            title: 'Procesando...',
+            text: 'Cambiando rol del docente',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        fetch('/Home/CambiarRolProfesor', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -961,7 +979,14 @@ function cambiarRol(identificacion, nuevoRol) {
     .then(data => {
         console.log('Datos de respuesta:', data);
         if (data.success) {
-            mostrarExito('Rol actualizado exitosamente');
+            // Cerrar loading y mostrar éxito
+            Swal.fire({
+                icon: 'success',
+                title: '¡Rol actualizado!',
+                text: 'El rol del docente ha sido cambiado exitosamente',
+                showConfirmButton: false,
+                timer: 1500
+            });
             
             // Actualizar la interfaz
             const badge = document.querySelector(`tr[data-tutor-id="${identificacion}"] .badge-rol`);
@@ -996,7 +1021,11 @@ function cambiarRol(identificacion, nuevoRol) {
             console.log('Estadísticas actualizadas');
         } else {
             console.error('Error del servidor:', data.message);
-            mostrarError(data.message || 'Error al cambiar el rol');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message || 'Error al cambiar el rol'
+            });
             
             // Restaurar valor anterior del select
             const select = document.querySelector(`select[data-profesor-id="${identificacion}"]`);
@@ -1007,13 +1036,18 @@ function cambiarRol(identificacion, nuevoRol) {
     })
     .catch(error => {
         console.error('Error:', error);
-        mostrarError('Error al comunicarse con el servidor');
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error al comunicarse con el servidor'
+        });
         
         // Restaurar valor anterior del select
         const select = document.querySelector(`select[data-profesor-id="${identificacion}"]`);
         if (select) {
             select.value = select.dataset.rolOriginal || 'Profesor';
         }
+    });
     });
 }
 
@@ -1049,7 +1083,7 @@ function exportarDocentes() {
         if (notification && notification.parentNode) {
             notification.remove();
             // Mostrar notificación de éxito
-            mostrarNotificacion('Archivo Excel de docentes generado exitosamente. La descarga debería iniciar automáticamente.', 'success');
+            mostrarNotificacion('Archivo Excel de docentes generado exitosamente. La descarga está lista para iniciar.', 'success');
         }
     }, 3000);
 }

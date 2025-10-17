@@ -1236,6 +1236,17 @@ namespace ServicioComunal.Controllers
                             !string.IsNullOrWhiteSpace(cedulaTexto) &&
                             int.TryParse(cedulaTexto, out int cedula))
                         {
+                            // Validar que nombre y apellidos no contengan números
+                            if (System.Text.RegularExpressions.Regex.IsMatch(nombre, @"\d"))
+                            {
+                                continue; // Saltar este estudiante
+                            }
+
+                            if (System.Text.RegularExpressions.Regex.IsMatch(apellidos, @"\d"))
+                            {
+                                continue; // Saltar este estudiante
+                            }
+
                             estudiantes.Add(new EstudianteImportDto
                             {
                                 Identificacion = cedula,
@@ -1272,11 +1283,22 @@ namespace ServicioComunal.Controllers
                         !string.IsNullOrWhiteSpace(campos[3]) &&
                         int.TryParse(campos[3].Trim(), out int cedula))
                     {
+                        var nombre = campos[1].Trim();
+                        var apellidos = campos[0].Trim();
+
+                        // Validar que nombre y apellidos no contengan números
+                        if (System.Text.RegularExpressions.Regex.IsMatch(nombre, @"\d") ||
+                            System.Text.RegularExpressions.Regex.IsMatch(apellidos, @"\d"))
+                        {
+                            fila++;
+                            continue; // Saltar este estudiante
+                        }
+
                         estudiantes.Add(new EstudianteImportDto
                         {
                             Identificacion = cedula,
-                            Nombre = campos[1].Trim(),
-                            Apellidos = campos[0].Trim(),
+                            Nombre = nombre,
+                            Apellidos = apellidos,
                             Clase = campos[2].Trim(),
                             FilaOrigen = fila
                         });
@@ -2470,6 +2492,16 @@ namespace ServicioComunal.Controllers
                     return Json(new { success = false, message = "Asignación no encontrada" });
                 }
 
+                // Verificar si el estudiante removido es el líder del grupo
+                var grupo = await _context.Grupos
+                    .FirstOrDefaultAsync(g => g.Numero == grupoNumero);
+                
+                if (grupo != null && grupo.LiderIdentificacion == estudianteId)
+                {
+                    // Remover el liderazgo
+                    grupo.LiderIdentificacion = null;
+                }
+
                 _context.GruposEstudiantes.Remove(grupoEstudiante);
                 await _context.SaveChangesAsync();
 
@@ -3127,6 +3159,38 @@ namespace ServicioComunal.Controllers
             catch (Exception ex)
             {
                 return Json(new { success = false, message = $"Error al eliminar formulario: {ex.Message}" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditarFormulario(int identificacion, string nombre, string descripcion)
+        {
+            try
+            {
+                var formulario = await _context.Formularios
+                    .FirstOrDefaultAsync(f => f.Identificacion == identificacion);
+
+                if (formulario == null)
+                {
+                    return Json(new { success = false, message = "Formulario no encontrado" });
+                }
+
+                // Verificar si hay entregas asociadas (solo para información)
+                var tieneEntregas = await _context.Entregas
+                    .AnyAsync(e => e.FormularioIdentificacion == identificacion);
+
+                // Permitir la edición ya que solo se cambia nombre y descripción
+                // El archivo físico permanece intacto, por lo que no afecta a las entregas existentes
+                formulario.Nombre = nombre.Trim();
+                formulario.Descripcion = descripcion?.Trim() ?? string.Empty;
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Formulario actualizado exitosamente" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error al editar formulario: {ex.Message}" });
             }
         }
 

@@ -21,7 +21,7 @@
                     var totalGrupos = Model.Count;
                     var totalEstudiantes = Model.Sum(gp => gp.Grupo.GruposEstudiantes.Count);
                     var gruposAlDia = Model.Count(gp => gp.Grupo.Entregas.Any() && gp.Grupo.Entregas.All(e => !string.IsNullOrEmpty(e.Retroalimentacion)));
-                    var gruposAtrasados = totalGrupos - gruposAlDia;
+                    var gruposPendientes = Model.Count(gp => gp.Grupo.Entregas.Any(e => string.IsNullOrEmpty(e.Retroalimentacion)));
                     var progresoGeneral = Model.Any() ? Model.Average(gp => gp.Grupo.Entregas.Any() ? (gp.Grupo.Entregas.Count(e => !string.IsNullOrEmpty(e.Retroalimentacion)) * 100.0 / gp.Grupo.Entregas.Count) : 0) : 0;
                 }
 
@@ -52,8 +52,8 @@
                         <i class="fas fa-exclamation-triangle"></i>
                     </div>
                     <div class="card-content">
-                        <div class="card-number">@gruposAtrasados</div>
-                        <div class="card-label">Atrasados</div>
+                        <div class="card-number">@gruposPendientes</div>
+                        <div class="card-label">Pendientes</div>
                         <small>Con entregas pendientes</small>
                     </div>
                 </div>
@@ -160,7 +160,7 @@
                                             <button type="button" class="btn btn-sm btn-outline-primary" onclick="verDetallesGrupo(@grupo.Numero)" title="Ver detalles">
                                                 <i class="fas fa-eye"></i>
                                             </button>
-                                            <a href="@Url.Action("Revisiones", "Tutor")" class="btn btn-sm btn-outline-success" title="Ver entregas">
+                                            <a href="@Url.Action("Revisiones", "Tutor", new { grupo = grupo.Numero })" class="btn btn-sm btn-outline-success" title="Ver entregas">
                                                 <i class="fas fa-clipboard-check"></i>
                                             </a>
                                         </div>

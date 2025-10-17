@@ -93,8 +93,8 @@ function filtrarTabla() {
         if (mostrar) visibleRows++;
     });
     
-    // Mostrar mensaje si no hay resultados
-    mostrarMensajeNoResultados(visibleRows === 0);
+    // No mostrar mensaje si no hay resultados (comentado para que funcione como en usuarios)
+    // mostrarMensajeNoResultados(visibleRows === 0);
 }
 
 function mostrarMensajeNoResultados(mostrar) {
@@ -581,7 +581,7 @@ function exportarEstudiantes() {
         if (notification && notification.parentNode) {
             notification.remove();
             // Mostrar notificación de éxito
-            mostrarNotificacion('Archivo Excel generado exitosamente. La descarga debería iniciar automáticamente.', 'success');
+            mostrarNotificacion('Archivo Excel generado exitosamente. La descarga está lista para iniciar.', 'success');
         }
     }, 3000);
 }
