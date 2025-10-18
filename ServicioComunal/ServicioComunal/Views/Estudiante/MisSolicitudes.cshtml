@@ -262,40 +262,42 @@
             </div>
             }
 
-            <!-- Solicitudes Recibidas - Solo para estudiantes con grupo -->
+            <!-- Solicitudes Recibidas - Para todos los miembros del grupo -->
             @if (tieneGrupo)
             {
+                var solicitudesGrupo = ViewBag.SolicitudesGrupo as List<ServicioComunal.Models.Solicitud>;
+                var esLider = (bool)ViewBag.EsLider;
+                
                 <div class="row">
                     <div class="col-md-12">
                         <div class="card">
                             <div class="card-header bg-success text-white">
                                 <h5 class="mb-0">
                                     <i class="fas fa-inbox"></i> Solicitudes Recibidas
+                                    @if (!esLider)
+                                    {
+                                        <span class="badge bg-light text-dark ms-2">
+                                            <i class="fas fa-eye"></i> Solo visualización
+                                        </span>
+                                    }
                                 </h5>
                             </div>
                             <div class="card-body">
-                                @if (solicitudesRecibidas != null && solicitudesRecibidas.Any())
+                                @if (solicitudesGrupo != null && solicitudesGrupo.Any())
                             {
-                                @foreach (var solicitud in solicitudesRecibidas)
+                                @foreach (var solicitud in solicitudesGrupo)
                                 {
-                                    <div class="card mb-3 @(solicitud.Estado == "PENDIENTE" ? "border-warning" : solicitud.Estado == "ACEPTADA" ? "border-success" : "border-danger")">
+                                    <div class="card mb-3 border-warning">
                                         <div class="card-body">
                                             <div class="row align-items-center">
                                                 <div class="col-md-8">
                                                     <h6 class="card-title mb-1">
-                                                        @if (solicitud.Tipo == "INVITACION_GRUPO")
-                                                        {
-                                                            <i class="fas fa-user-plus text-primary"></i>
-                                                            <strong>Invitación al Grupo @solicitud.GrupoNumero</strong>
-                                                        }
-                                                        else
-                                                        {
-                                                            <i class="fas fa-handshake text-info"></i>
-                                                            <strong>Solicitud de Ingreso al Grupo @solicitud.GrupoNumero</strong>
-                                                        }
+                                                        <i class="fas fa-handshake text-info"></i>
+                                                        <strong>Solicitud de Ingreso al Grupo @solicitud.GrupoNumero</strong>
                                                     </h6>
                                                     <p class="card-text mb-1">
                                                         <strong>De:</strong> @solicitud.EstudianteRemitente?.Nombre @solicitud.EstudianteRemitente?.Apellidos
+                                                        <span class="badge bg-secondary ms-2">@solicitud.EstudianteRemitente?.Clase</span>
                                                     </p>
                                                     @if (!string.IsNullOrEmpty(solicitud.Mensaje))
                                                     {
@@ -304,36 +306,28 @@
                                                         </p>
                                                     }
                                                     <small class="text-muted">
-                                                        Recibida: @solicitud.FechaCreacion.ToString("dd/MM/yyyy HH:mm")
-                                                        @if (solicitud.FechaRespuesta.HasValue)
-                                                        {
-                                                            <span><br>Respondida: @solicitud.FechaRespuesta.Value.ToString("dd/MM/yyyy HH:mm")</span>
-                                                        }
+                                                        <i class="fas fa-calendar-alt"></i> Recibida: @solicitud.FechaCreacion.ToString("dd/MM/yyyy HH:mm")
                                                     </small>
                                                 </div>
                                                 <div class="col-md-4 text-right">
-                                                    @switch (solicitud.Estado)
+                                                    @if (esLider)
                                                     {
-                                                        case "PENDIENTE":
-                                                            <div class="btn-group-vertical" role="group">
-                                                                <button class="btn btn-success btn-sm mb-2" onclick="responderSolicitud(@solicitud.Id, true)">
-                                                                    <i class="fas fa-check"></i> Aceptar
-                                                                </button>
-                                                                <button class="btn btn-danger btn-sm" onclick="responderSolicitud(@solicitud.Id, false)">
-                                                                    <i class="fas fa-times"></i> Rechazar
-                                                                </button>
-                                                            </div>
-                                                            break;
-                                                        case "ACEPTADA":
-                                                            <span class="badge badge-success badge-lg">
-                                                                <i class="fas fa-check"></i> Aceptada
-                                                            </span>
-                                                            break;
-                                                        case "RECHAZADA":
-                                                            <span class="badge badge-danger badge-lg">
-                                                                <i class="fas fa-times"></i> Rechazada
-                                                            </span>
-                                                            break;
+                                                        <div class="btn-group-vertical" role="group">
+                                                            <button class="btn btn-success btn-sm mb-2" onclick="responderSolicitud(@solicitud.Id, true)">
+                                                                <i class="fas fa-check"></i> Aceptar
+                                                            </button>
+                                                            <button class="btn btn-danger btn-sm" onclick="responderSolicitud(@solicitud.Id, false)">
+                                                                <i class="fas fa-times"></i> Rechazar
+                                                            </button>
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-warning text-dark">
+                                                            <i class="fas fa-clock"></i> Pendiente
+                                                        </span>
+                                                        <br>
+                                                        <small class="text-muted mt-2 d-block">Solo el líder puede responder</small>
                                                     }
                                                 </div>
                                             </div>
@@ -345,8 +339,8 @@
                             {
                                 <div class="text-center py-4">
                                     <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                                    <h5 class="text-muted">No has recibido solicitudes</h5>
-                                    <p class="text-muted">Las solicitudes que recibas aparecerán aquí.</p>
+                                    <h5 class="text-muted">No hay solicitudes pendientes</h5>
+                                    <p class="text-muted">Las solicitudes de ingreso al grupo aparecerán aquí.</p>
                                 </div>
                             }
                         </div>
@@ -409,39 +403,93 @@
 
 <script>
     function enviarSolicitud(grupoNumero, liderNombre) {
-        if (!confirm(`¿Estás seguro de que deseas solicitar ingreso al grupo ${grupoNumero} liderado por ${liderNombre}?`)) {
-            return;
-        }
-        
-        // Obtener token CSRF
-        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
-        
-        // Crear FormData en lugar de JSON
-        const formData = new FormData();
-        formData.append('grupoNumero', grupoNumero);
-        formData.append('__RequestVerificationToken', token);
-        
-        fetch('@Url.Action("SolicitarIngreso", "Estudiante")', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert(data.message || 'Solicitud enviada correctamente');
-                location.reload();
-            } else {
-                alert('Error: ' + (data.message || 'No se pudo enviar la solicitud'));
+        Swal.fire({
+            title: '¿Solicitar ingreso?',
+            html: `¿Estás seguro de que deseas solicitar ingreso al <strong>Grupo ${grupoNumero}</strong> liderado por <strong>${liderNombre}</strong>?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fas fa-paper-plane"></i> Sí, enviar solicitud',
+            cancelButtonText: '<i class="fas fa-times"></i> Cancelar'
+        }).then((result) => {
+            if (!result.isConfirmed) {
+                return;
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error al enviar la solicitud. Por favor intenta de nuevo.');
+            
+            // Mostrar loading
+            Swal.fire({
+                title: 'Enviando solicitud...',
+                html: 'Por favor espera',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // Obtener token CSRF
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            
+            // Crear FormData en lugar de JSON
+            const formData = new FormData();
+            formData.append('grupoNumero', grupoNumero);
+            formData.append('__RequestVerificationToken', token);
+            
+            fetch('@Url.Action("SolicitarIngreso", "Estudiante")', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: '¡Solicitud Enviada!',
+                        text: data.message || 'Tu solicitud ha sido enviada correctamente al líder del grupo.',
+                        icon: 'success',
+                        confirmButtonColor: '#28a745',
+                        confirmButtonText: 'Aceptar'
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.message || 'No se pudo enviar la solicitud',
+                        icon: 'error',
+                        confirmButtonColor: '#dc3545',
+                        confirmButtonText: 'Aceptar'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al enviar la solicitud. Por favor intenta de nuevo.',
+                    icon: 'error',
+                    confirmButtonColor: '#dc3545',
+                    confirmButtonText: 'Aceptar'
+                });
+            });
         });
     }
 
     function eliminarSolicitud(solicitudId) {
-        if (confirm('¿Estás seguro de que quieres eliminar esta solicitud? Esta acción no se puede deshacer.')) {
+        Swal.fire({
+            title: '¿Eliminar solicitud?',
+            text: '¿Estás seguro de que quieres eliminar esta solicitud? Esta acción no se puede deshacer.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fas fa-trash"></i> Sí, eliminar',
+            cancelButtonText: '<i class="fas fa-times"></i> Cancelar'
+        }).then((result) => {
+            if (!result.isConfirmed) {
+                return;
+            }
+            
             // Obtener token CSRF
             const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
             
@@ -456,22 +504,62 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert(data.message);
-                    location.reload();
+                    Swal.fire({
+                        title: '¡Eliminada!',
+                        text: data.message,
+                        icon: 'success',
+                        confirmButtonColor: '#28a745',
+                        confirmButtonText: 'Aceptar'
+                    }).then(() => {
+                        location.reload();
+                    });
                 } else {
-                    alert('Error: ' + data.message);
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.message,
+                        icon: 'error',
+                        confirmButtonColor: '#dc3545',
+                        confirmButtonText: 'Aceptar'
+                    });
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error al eliminar la solicitud');
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al eliminar la solicitud',
+                    icon: 'error',
+                    confirmButtonColor: '#dc3545',
+                    confirmButtonText: 'Aceptar'
+                });
             });
-        }
+        });
     }
 
     function responderSolicitud(solicitudId, aceptar) {
         const accion = aceptar ? 'aceptar' : 'rechazar';
-        if (confirm('¿Estás seguro de que quieres ' + accion + ' esta solicitud?')) {
+        const titulo = aceptar ? '¿Aceptar solicitud?' : '¿Rechazar solicitud?';
+        const texto = aceptar 
+            ? '¿Estás seguro de que quieres aceptar esta solicitud? El estudiante será agregado a tu grupo.' 
+            : '¿Estás seguro de que quieres rechazar esta solicitud?';
+        const icono = aceptar ? 'question' : 'warning';
+        const btnColor = aceptar ? '#28a745' : '#dc3545';
+        const btnTexto = aceptar ? '<i class="fas fa-check"></i> Sí, aceptar' : '<i class="fas fa-times"></i> Sí, rechazar';
+        
+        Swal.fire({
+            title: titulo,
+            text: texto,
+            icon: icono,
+            showCancelButton: true,
+            confirmButtonColor: btnColor,
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: btnTexto,
+            cancelButtonText: '<i class="fas fa-ban"></i> Cancelar'
+        }).then((result) => {
+            if (!result.isConfirmed) {
+                return;
+            }
+            
             // Obtener token CSRF
             const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
             
@@ -486,17 +574,36 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert(data.message);
-                    location.reload();
+                    Swal.fire({
+                        title: aceptar ? '¡Solicitud Aceptada!' : 'Solicitud Rechazada',
+                        text: data.message,
+                        icon: aceptar ? 'success' : 'info',
+                        confirmButtonColor: '#28a745',
+                        confirmButtonText: 'Aceptar'
+                    }).then(() => {
+                        location.reload();
+                    });
                 } else {
-                    alert('Error: ' + data.message);
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.message,
+                        icon: 'error',
+                        confirmButtonColor: '#dc3545',
+                        confirmButtonText: 'Aceptar'
+                    });
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error al procesar la solicitud');
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al procesar la solicitud',
+                    icon: 'error',
+                    confirmButtonColor: '#dc3545',
+                    confirmButtonText: 'Aceptar'
+                });
             });
-        }
+        });
     }
 </script>
 

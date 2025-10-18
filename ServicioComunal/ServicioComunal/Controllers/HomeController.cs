@@ -2823,6 +2823,12 @@ namespace ServicioComunal.Controllers
         {
             try
             {
+                // Validar máximo de 4 estudiantes por grupo
+                if (request.EstudiantesIds.Count > 4)
+                {
+                    return Json(new { success = false, message = "Un grupo no puede tener más de 4 estudiantes" });
+                }
+
                 // Verificar que el grupo existe
                 var grupo = await _context.Grupos
                     .Include(g => g.GruposEstudiantes)

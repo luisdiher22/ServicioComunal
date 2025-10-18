@@ -419,6 +419,12 @@ function toggleSeleccion(elemento, tipo) {
 
 // Mover estudiante específico al grupo
 function moverEstudianteAGrupo(identificacion) {
+    // Validar máximo de 4 estudiantes
+    if (estudiantesGrupoData.length >= 4) {
+        mostrarError('El grupo no puede tener más de 4 estudiantes');
+        return;
+    }
+
     const estudiante = estudiantesDisponiblesData.find(e => e.identificacion === identificacion);
     if (estudiante) {
         // Mover de disponibles a grupo
@@ -454,6 +460,13 @@ function moverSeleccionadosAGrupo() {
         parseInt(cb.closest('.estudiante-item').dataset.id)
     );
     
+    // Validar que no se exceda el máximo
+    const espaciosDisponibles = 4 - estudiantesGrupoData.length;
+    if (identificaciones.length > espaciosDisponibles) {
+        mostrarError(`El grupo solo puede tener ${espaciosDisponibles} estudiante(s) más. Has seleccionado ${identificaciones.length}.`);
+        return;
+    }
+    
     identificaciones.forEach(id => moverEstudianteAGrupo(id));
 }
 
@@ -469,6 +482,13 @@ function moverSeleccionadosADisponibles() {
 
 // Mover todos los estudiantes al grupo
 function moverTodosAGrupo() {
+    // Validar que no se exceda el máximo
+    const espaciosDisponibles = 4 - estudiantesGrupoData.length;
+    if (estudiantesDisponiblesData.length > espaciosDisponibles) {
+        mostrarError(`El grupo solo puede tener ${espaciosDisponibles} estudiante(s) más. Hay ${estudiantesDisponiblesData.length} disponibles.`);
+        return;
+    }
+
     estudiantesDisponiblesData.forEach(estudiante => {
         estudiantesGrupoData.push(estudiante);
     });

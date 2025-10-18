@@ -563,6 +563,7 @@ let entregablesData = [
             nombre: "@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(entrega.Nombre))",
             archivoRuta: "@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(entrega.ArchivoRuta ?? ""))",
             fechaEntrega: "@(entrega.FechaEntrega?.ToString("yyyy-MM-ddTHH:mm:ss") ?? "")",
+            fechaLimite: "@(entrega.FechaLimite.ToString("yyyy-MM-ddTHH:mm:ss"))",
             fechaRetroalimentacion: "@(entrega.FechaRetroalimentacion?.ToString("yyyy-MM-ddTHH:mm:ss") ?? "")",
             retroalimentacion: "@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(entrega.Retroalimentacion ?? ""))",
             grupo: {

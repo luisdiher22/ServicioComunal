@@ -245,6 +245,30 @@ namespace ServicioComunal.Controllers
                 .OrderByDescending(s => s.FechaCreacion)
                 .ToListAsync();
 
+            // Si el estudiante está en un grupo, obtener las solicitudes del grupo
+            if (grupoEstudiante != null)
+            {
+                var solicitudesGrupo = await _context.Solicitudes
+                    .Include(s => s.EstudianteRemitente)
+                    .Include(s => s.Grupo)
+                    .Where(s => s.GrupoNumero == grupoEstudiante.GrupoNumero && 
+                               s.Tipo == "SOLICITUD_INGRESO" &&
+                               s.Estado == "PENDIENTE")
+                    .OrderByDescending(s => s.FechaCreacion)
+                    .ToListAsync();
+
+                ViewBag.SolicitudesGrupo = solicitudesGrupo;
+                
+                // Verificar si el estudiante es el líder del grupo
+                var esLider = grupoEstudiante.Grupo.LiderIdentificacion == estudiante.Identificacion;
+                ViewBag.EsLider = esLider;
+            }
+            else
+            {
+                ViewBag.SolicitudesGrupo = new List<Solicitud>();
+                ViewBag.EsLider = false;
+            }
+
             ViewBag.SolicitudesEnviadas = solicitudesEnviadas;
             ViewBag.SolicitudesRecibidas = solicitudesRecibidas;
 
@@ -315,6 +339,13 @@ namespace ServicioComunal.Controllers
                 if (grupo.LiderIdentificacion == null)
                 {
                     return Json(new { success = false, message = "Este grupo no tiene líder asignado" });
+                }
+
+                // Verificar que el grupo no esté lleno (máximo 4 estudiantes)
+                var cantidadMiembros = grupo.GruposEstudiantes.Count;
+                if (cantidadMiembros >= 4)
+                {
+                    return Json(new { success = false, message = "Este grupo ya está lleno (máximo 4 estudiantes)" });
                 }
 
                 // Verificar que no haya una solicitud pendiente ya
@@ -463,6 +494,15 @@ namespace ServicioComunal.Controllers
                     if (yaEnGrupo)
                     {
                         return Json(new { success = false, message = "El estudiante ya pertenece a un grupo" });
+                    }
+
+                    // Verificar que el grupo no esté lleno (máximo 4 estudiantes)
+                    var cantidadMiembros = await _context.GruposEstudiantes
+                        .CountAsync(ge => ge.GrupoNumero == solicitud.GrupoNumero!.Value);
+
+                    if (cantidadMiembros >= 4)
+                    {
+                        return Json(new { success = false, message = "El grupo ya está lleno (máximo 4 estudiantes)" });
                     }
 
                     // Agregar al grupo

@@ -297,6 +297,9 @@ async function verEntrega(id) {
 async function editarEntrega(id) {
     console.log('Iniciando edición para entrega ID:', id);
     
+    // IMPORTANTE: Establecer modo edición ANTES de abrir el modal
+    esEdicion = true;
+    
     try {
         console.log('Haciendo petición a:', `/Home/ObtenerEntrega/${id}`);
         const response = await fetch(`/Home/ObtenerEntrega/${id}`);
@@ -308,40 +311,32 @@ async function editarEntrega(id) {
             const entrega = result.entrega;
             console.log('Datos de la entrega:', entrega);
             
-            // Abrir el modal primero
-            console.log('Abriendo modal primero...');
+            // Abrir el modal
+            console.log('Abriendo modal para edición...');
             const modalElement = document.getElementById('modalEntrega');
             if (!modalElement) {
                 throw new Error('Elemento modal no encontrado');
             }
 
-            // Configurar el modal
-            if (typeof $ !== 'undefined' && $.fn.modal) {
-                console.log('Usando jQuery para abrir modal');
-                $('#modalEntrega').modal('show');
-                
-                // Esperar a que el modal se abra completamente
-                $('#modalEntrega').on('shown.bs.modal', function () {
-                    llenarFormularioEdicion(entrega);
-                });
-            } else {
-                console.log('Usando Bootstrap nativo para abrir modal');
-                const modal = new bootstrap.Modal(modalElement);
-                modal.show();
-                
-                // Esperar a que el modal se abra completamente
-                modalElement.addEventListener('shown.bs.modal', function () {
-                    llenarFormularioEdicion(entrega);
-                });
-            }
+            // Configurar el modal usando Bootstrap nativo con evento de una sola ejecución
+            const modal = new bootstrap.Modal(modalElement);
+            
+            // Usar addEventListener con { once: true } para que solo se ejecute una vez
+            modalElement.addEventListener('shown.bs.modal', function () {
+                llenarFormularioEdicion(entrega);
+            }, { once: true });
+            
+            modal.show();
             
         } else {
             console.error('Error del servidor:', result.message);
             mostrarError(result.message);
+            esEdicion = false; // Resetear si hay error
         }
     } catch (error) {
         console.error('Error completo:', error);
         mostrarError('Error al cargar la entrega: ' + error.message);
+        esEdicion = false; // Resetear si hay error
     }
 }
 
@@ -566,16 +561,26 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cargar formularios disponibles
     cargarFormularios();
     
-    // Event listener para limpiar formulario al abrir modal
-    document.getElementById('modalEntrega').addEventListener('show.bs.modal', function () {
-        if (!esEdicion) {
+    // Event listener para preparar el modal al abrirlo
+    document.getElementById('modalEntrega').addEventListener('show.bs.modal', function (event) {
+        console.log('Modal abriendo, esEdicion:', esEdicion);
+        
+        // Si el modal se abre desde el botón "Nueva Entrega" (no desde editarEntrega)
+        // entonces limpiamos el formulario
+        const botonActivador = event.relatedTarget;
+        
+        // Si hay un botón activador y no estamos en modo edición, limpiar
+        if (botonActivador || !esEdicion) {
+            console.log('Limpiando formulario para nueva entrega');
             limpiarFormulario();
         }
     });
     
-    // Event listener para limpiar al cerrar modal
+    // Event listener para resetear al cerrar modal
     document.getElementById('modalEntrega').addEventListener('hidden.bs.modal', function () {
-        limpiarFormulario();
+        console.log('Modal cerrado, reseteando estado');
+        // Solo resetear la bandera, no limpiar el formulario aquí
+        esEdicion = false;
     });
 
     // Event listeners para los radio buttons de destinatarios

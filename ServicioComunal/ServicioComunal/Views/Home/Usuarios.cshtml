@@ -12,7 +12,7 @@
 
     <!-- Estadísticas rápidas -->
     <div class="row mb-4">
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card bg-primary text-white stats-card-small">
                 <div class="card-body text-center p-3">
                     <i class="fas fa-users fa-lg mb-1"></i>
@@ -21,7 +21,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card bg-warning text-dark stats-card-small">
                 <div class="card-body text-center p-3">
                     <i class="fas fa-exclamation-triangle fa-lg mb-1"></i>
@@ -30,16 +30,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white stats-card-small">
-                <div class="card-body text-center p-3">
-                    <i class="fas fa-check-circle fa-lg mb-1"></i>
-                    <h6 class="mb-1">@Model.Count(u => u.Activo)</h6>
-                    <small>Usuarios Activos</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card bg-info text-white stats-card-small">
                 <div class="card-body text-center p-3">
                     <i class="fas fa-clock fa-lg mb-1"></i>
@@ -67,7 +58,6 @@
                     <label class="form-label">Filtrar por estado:</label>
                     <select class="form-select" id="filtroEstado" onchange="filtrarUsuarios()">
                         <option value="">Todos los estados</option>
-                        <option value="activo">Activos</option>
                         <option value="requiere-cambio">Requiere cambio contraseña</option>
                     </select>
                 </div>
