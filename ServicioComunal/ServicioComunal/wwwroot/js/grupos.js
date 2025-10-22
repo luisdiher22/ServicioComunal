@@ -138,10 +138,10 @@ function filtrarTabla() {
                     if (cantidadEstudiantes < 1 || cantidadEstudiantes > 2) mostrar = false;
                     break;
                 case 'mediano':
-                    if (cantidadEstudiantes < 3 || cantidadEstudiantes > 4) mostrar = false;
+                    if (cantidadEstudiantes !== 3) mostrar = false;
                     break;
                 case 'grande':
-                    if (cantidadEstudiantes < 5) mostrar = false;
+                    if (cantidadEstudiantes !== 4) mostrar = false;
                     break;
             }
         }
@@ -462,6 +462,13 @@ function moverSeleccionadosAGrupo() {
     
     // Validar que no se exceda el máximo
     const espaciosDisponibles = 4 - estudiantesGrupoData.length;
+    
+    // Validación especial cuando el grupo está lleno
+    if (espaciosDisponibles === 0) {
+        mostrarError('El grupo ya cuenta con la máxima cantidad de estudiantes, seleccione otro grupo.');
+        return;
+    }
+    
     if (identificaciones.length > espaciosDisponibles) {
         mostrarError(`El grupo solo puede tener ${espaciosDisponibles} estudiante(s) más. Has seleccionado ${identificaciones.length}.`);
         return;

@@ -59,6 +59,7 @@
                     <select class="form-select" id="filtroEstado" onchange="filtrarUsuarios()">
                         <option value="">Todos los estados</option>
                         <option value="requiere-cambio">Requiere cambio contraseña</option>
+                        <option value="personalizada">Contraseña personalizada</option>
                     </select>
                 </div>
                 <div class="col-md-3">
@@ -99,7 +100,7 @@
                     <tbody>
                         @foreach (var usuario in Model)
                         {
-                            <tr class="usuario-row" data-rol="@usuario.Rol" data-estado="@(usuario.Activo ? "activo" : "inactivo")" data-requiere-cambio="@usuario.RequiereCambioContraseña">
+                            <tr class="usuario-row" data-rol="@usuario.Rol" data-estado="@(usuario.Activo ? "activo" : "inactivo")" data-requiere-cambio="@usuario.RequiereCambioContraseña" data-identificacion="@usuario.Identificacion" data-nombre="@usuario.NombreUsuario">
                                 <td>
                                     <strong>@usuario.Identificacion</strong>
                                 </td>
@@ -259,7 +260,8 @@
                 const rol = fila.getAttribute('data-rol');
                 const estado = fila.getAttribute('data-estado');
                 const requiereCambio = fila.getAttribute('data-requiere-cambio') === 'True';
-                const textoFila = fila.textContent.toLowerCase();
+                const identificacion = fila.getAttribute('data-identificacion').toLowerCase();
+                const nombre = fila.getAttribute('data-nombre').toLowerCase();
                 
                 let mostrar = true;
                 
@@ -273,10 +275,11 @@
                     if (filtroEstado === 'activo' && estado !== 'activo') mostrar = false;
                     if (filtroEstado === 'inactivo' && estado !== 'inactivo') mostrar = false;
                     if (filtroEstado === 'requiere-cambio' && !requiereCambio) mostrar = false;
+                    if (filtroEstado === 'personalizada' && requiereCambio) mostrar = false;
                 }
                 
-                // Filtro por búsqueda
-                if (busqueda && !textoFila.includes(busqueda)) {
+                // Filtro por búsqueda (solo en identificación y nombre de usuario)
+                if (busqueda && !identificacion.includes(busqueda) && !nombre.includes(busqueda)) {
                     mostrar = false;
                 }
                 
