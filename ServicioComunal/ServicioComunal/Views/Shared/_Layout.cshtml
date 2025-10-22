@@ -47,7 +47,7 @@
         <!-- Sidebar móvil -->
         <aside class="mobile-sidebar" id="mobileSidebar">
             <div class="mobile-sidebar-header">
-                <img src="~/images/logo.png" alt="Logo" onerror="this.style.display='none';">
+                <div class="logo-placeholder"></div>
                 <div class="user-info">
                     <h5>@(Context.Session.GetString("UsuarioNombreCompleto") ?? "Usuario")</h5>
                     <small>@(Context.Session.GetString("UsuarioRol") ?? "Administrador")</small>

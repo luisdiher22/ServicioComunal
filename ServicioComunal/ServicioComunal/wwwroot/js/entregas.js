@@ -249,10 +249,10 @@ async function verEntrega(id) {
                     </div>
                     <div class="col-md-6">
                         <h6><strong>Fechas</strong></h6>
-                        <p><strong>Fecha Límite:</strong> ${new Date(entrega.fechaLimite).toLocaleString()}</p>
+                        <p><strong>Fecha Límite:</strong> ${new Date(entrega.fechaLimite).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
                         ${fechaVencida ? '<p class="text-danger"><i class="fas fa-exclamation-triangle"></i> <strong>VENCIDA</strong></p>' : ''}
                         ${entrega.fechaRetroalimentacion && entrega.fechaRetroalimentacion !== '0001-01-01T00:00:00' ? 
-                            `<p><strong>Fecha Retroalimentación:</strong> ${new Date(entrega.fechaRetroalimentacion).toLocaleString()}</p>` : ''}
+                            `<p><strong>Fecha Retroalimentación:</strong> ${new Date(entrega.fechaRetroalimentacion).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>` : ''}
                     </div>
                 </div>
                 <hr>

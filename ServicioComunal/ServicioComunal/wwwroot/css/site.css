@@ -884,6 +884,19 @@ input, textarea, select {
         margin-bottom: 10px;
     }
     
+    /* Hacer las animaciones del login más lentas en móvil */
+    .logo-container::before {
+        animation: pulse 6s ease-in-out infinite !important;
+    }
+    
+    .logo {
+        animation: logoFloat 8s ease-in-out infinite !important;
+    }
+    
+    .help-title i {
+        animation: helpIcon 4s ease-in-out infinite !important;
+    }
+    
     .help-text {
         font-size: 12px;
         padding: 10px;
@@ -4928,20 +4941,6 @@ h1, h2, h3, h4, h5, h6, .card, .modal, .table, .form-control,
         border: 1px solid #e9ecef;
     }
     
-    .table-responsive::after {
-        content: "← Desliza para ver más →";
-        position: absolute;
-        bottom: 5px;
-        right: 10px;
-        font-size: 10px;
-        color: #6c757d;
-        background: rgba(255, 255, 255, 0.9);
-        padding: 2px 6px;
-        border-radius: 4px;
-        pointer-events: none;
-        opacity: 0.7;
-    }
-    
     .table-responsive::-webkit-scrollbar {
         height: 8px;
     }
@@ -5399,6 +5398,11 @@ h1, h2, h3, h4, h5, h6, .card, .modal, .table, .form-control,
         padding: 8px 16px !important;
     }
     
+    /* Espaciado adicional para botón Transferir Liderazgo en móvil */
+    .btn-warning.mt-2 {
+        margin-bottom: 20px !important;
+    }
+    
     /* Better spacing for mobile forms */
     .form-group {
         margin-bottom: 1.5rem;
@@ -5850,6 +5854,17 @@ h1, h2, h3, h4, h5, h6, .card, .modal, .table, .form-control,
     border-bottom: 2px solid rgba(255, 255, 255, 0.1);
 }
 
+.mobile-sidebar-header .logo-placeholder {
+    width: 50px;
+    height: 50px;
+    flex-shrink: 0;
+}
+
+.mobile-sidebar-header .user-info {
+    flex: 1;
+    padding-left: 0;
+}
+
 .mobile-sidebar-header img {
     width: 50px;
     height: 50px;
@@ -5988,7 +6003,7 @@ h1, h2, h3, h4, h5, h6, .card, .modal, .table, .form-control,
     width: 100%;
     padding: 12px 15px;
     background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-    color: white;
+    color: white !important;
     border: none;
     border-radius: 8px;
     text-decoration: none;
@@ -5998,12 +6013,22 @@ h1, h2, h3, h4, h5, h6, .card, .modal, .table, .form-control,
     justify-content: center;
 }
 
+.mobile-logout-btn span,
+.mobile-logout-btn i {
+    color: white !important;
+}
+
 .mobile-logout-btn:hover {
     background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
-    color: white;
+    color: white !important;
     text-decoration: none;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.mobile-logout-btn:hover span,
+.mobile-logout-btn:hover i {
+    color: white !important;
 }
 
 /* Ajustes para el layout móvil */
@@ -6353,23 +6378,6 @@ h1, h2, h3, h4, h5, h6, .card, .modal, .table, .form-control,
         margin: 0;
         position: relative;
         background: white;
-    }
-    
-    /* Indicador de scroll horizontal */
-    .table-responsive::before {
-        content: "← Desliza para ver más →";
-        position: absolute;
-        bottom: 8px;
-        right: 15px;
-        font-size: 10px;
-        color: #6c757d;
-        background: rgba(255, 255, 255, 0.95);
-        padding: 4px 8px;
-        border-radius: 12px;
-        border: 1px solid #e9ecef;
-        z-index: 10;
-        pointer-events: none;
-        font-weight: 500;
     }
     
     .table {
@@ -7129,6 +7137,12 @@ h1, h2, h3, h4, h5, h6, .card, .modal, .table, .form-control,
     .btn-info,
     .btn-secondary {
         background: #8b7765 !important;
+        color: white !important;
+    }
+    
+    .btn-secondary i,
+    .btn-secondary span {
+        color: white !important;
     }
     
     .btn-warning {
