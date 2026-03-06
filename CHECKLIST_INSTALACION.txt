@@ -1,0 +1,125 @@
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║    CHECKLIST DE INSTALACIÓN - SERVICIO COMUNAL                ║
+║    Liceo de Carrillos                                          ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝
+
+
+FECHA DE INSTALACIÓN: _______________
+REALIZADA POR: _______________________
+COMPUTADORA: _________________________
+
+
+────────────────────────────────────────────────────────────────
+
+[ ] PASO 1: PREPARACIÓN
+
+    [ ] Carpeta de la aplicación recibida
+    [ ] Archivos copiados a: C:\ServicioComunal\
+    [ ] Verificado que existe ServicioComunal.exe
+    [ ] Archivos .bat copiados (INICIAR_SERVIDOR y CONFIGURAR_FIREWALL)
+
+
+[ ] PASO 2: CONFIGURACIÓN DEL FIREWALL
+
+    [ ] Click derecho en CONFIGURAR_FIREWALL.bat
+    [ ] Ejecutado como Administrador
+    [ ] Mensaje de éxito recibido
+    [ ] Puerto 5000 abierto confirmado
+
+
+[ ] PASO 3: PRIMERA EJECUCIÓN
+
+    [ ] Doble click en INICIAR_SERVIDOR.bat
+    [ ] Ventana del servidor abierta
+    [ ] IP del servidor anotada: ____________________
+    [ ] No hay mensajes de error
+
+
+[ ] PASO 4: PRUEBA DE ACCESO LOCAL
+
+    [ ] Navegador abierto en el servidor
+    [ ] Acceso a: http://localhost:5000
+    [ ] Página de login visible
+    [ ] Login probado exitosamente
+
+
+[ ] PASO 5: PRUEBA DE ACCESO REMOTO
+
+    [ ] Dispositivo conectado al WiFi de la escuela
+    [ ] Acceso a: http://_______________:5000
+    [ ] Página de login visible desde dispositivo remoto
+    [ ] Login probado desde dispositivo remoto
+
+
+[ ] PASO 6: CONFIGURACIÓN ADICIONAL (OPCIONAL)
+
+    [ ] Acceso directo creado en el escritorio
+    [ ] Inicio automático configurado (Carpeta Startup)
+    [ ] Guías impresas y archivadas
+    [ ] Personal capacitado en uso básico
+
+
+────────────────────────────────────────────────────────────────
+
+INFORMACIÓN DEL SISTEMA:
+
+IP del Servidor: ____________________
+Puerto: 5000
+URL de Acceso: http://____________________:5000
+
+Ubicación de archivos: C:\ServicioComunal\
+
+────────────────────────────────────────────────────────────────
+
+CREDENCIALES DE ACCESO:
+(completar según corresponda)
+
+Administrador:
+Usuario: ____________________
+Contraseña: ____________________
+
+────────────────────────────────────────────────────────────────
+
+NOTAS Y OBSERVACIONES:
+
+______________________________________________________________
+
+______________________________________________________________
+
+______________________________________________________________
+
+______________________________________________________________
+
+______________________________________________________________
+
+
+────────────────────────────────────────────────────────────────
+
+FIRMA DEL RESPONSABLE: _____________________
+
+FECHA: _______________
+
+
+────────────────────────────────────────────────────────────────
+
+RECORDATORIOS:
+
+✓ NO cerrar la ventana del servidor
+✓ La ventana debe permanecer abierta mientras se use el sistema
+✓ Para detener: Ctrl + C o cerrar la ventana
+✓ Para reiniciar: Ejecutar nuevamente INICIAR_SERVIDOR.bat
+✓ El servidor requiere conexión a Internet (base de datos en la nube)
+
+────────────────────────────────────────────────────────────────
+
+CONTACTO DE SOPORTE:
+
+Desarrollador: ____________________
+Teléfono: ____________________
+Email: ____________________
+
+────────────────────────────────────────────────────────────────
+
+[IMPRIMIR Y ARCHIVAR DESPUÉS DE LA INSTALACIÓN]

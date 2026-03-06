@@ -1,0 +1,211 @@
+================================================================================
+   SISTEMA DE SERVICIO COMUNAL - LICEO DE CARRILLOS
+   INSTRUCCIONES DE INSTALACION EN EL SERVIDOR
+================================================================================
+
+IMPORTANTE: Lea todo este documento antes de comenzar
+
+
+==== PARTE 1: PREPARAR LA APLICACION ====
+
+Si ya tiene la carpeta "ServicioComunal_Publicado", salte a PARTE 2.
+
+Si necesita generar la aplicacion desde el codigo:
+
+1. Asegurese de tener .NET SDK 9.0 instalado
+   Descarga: https://dotnet.microsoft.com/download/dotnet/9.0
+
+2. Haga doble click en: PUBLICAR_APLICACION.bat
+
+3. Espere 3-5 minutos hasta que termine
+
+4. Los archivos estaran en:
+   ServicioComunal\ServicioComunal\bin\Release\net9.0\win-x64\publish
+
+5. Copie TODA esa carpeta a una USB o al servidor
+
+
+==== PARTE 2: INSTALAR EN EL SERVIDOR ====
+
+1. Copie la carpeta completa al servidor
+   Ubicacion sugerida: C:\ServicioComunal\
+
+2. Verifique que la carpeta contenga:
+   - ServicioComunal.exe (el archivo principal)
+   - Muchos archivos .dll
+   - Carpeta "wwwroot"
+   - Carpeta "Views"
+   - Archivo "appsettings.json"
+
+3. Copie estos archivos a la carpeta del servidor:
+   - INICIAR_SERVIDOR.bat
+   - CONFIGURAR_FIREWALL.bat
+
+
+==== PARTE 3: CONFIGURAR EL FIREWALL ====
+
+El firewall de Windows debe permitir el puerto 5000:
+
+1. Haga CLICK DERECHO en: CONFIGURAR_FIREWALL.bat
+
+2. Seleccione: "Ejecutar como administrador"
+
+3. Si Windows pregunta, seleccione "Si"
+
+4. Espere el mensaje: "FIREWALL CONFIGURADO EXITOSAMENTE"
+
+5. Presione cualquier tecla para cerrar
+
+
+==== PARTE 4: INICIAR EL SERVIDOR ====
+
+1. Haga DOBLE CLICK en: INICIAR_SERVIDOR.bat
+
+2. Vera una ventana con informacion como esta:
+
+   ==============================================================
+        SISTEMA DE SERVICIO COMUNAL - LICEO DE CARRILLOS
+   ==============================================================
+
+   [INFO] Iniciando servidor...
+   [INFO] La aplicacion estara disponible en:
+
+          • Desde esta computadora: http://localhost:5000
+          • Desde la red local:      http://192.168.1.100:5000
+   ==============================================================
+
+3. ANOTE LA IP QUE APARECE (ejemplo: 192.168.1.100)
+
+4. NO CIERRE ESTA VENTANA - El servidor se detendra si la cierra
+
+
+==== PARTE 5: PROBAR EL ACCESO ====
+
+Desde el servidor:
+1. Abra un navegador (Chrome, Edge, Firefox)
+2. Vaya a: http://localhost:5000
+3. Debe ver la pagina de inicio de sesion
+
+Desde otro dispositivo:
+1. Conectese al WiFi de la escuela
+2. Abra un navegador
+3. Vaya a: http://[LA-IP-QUE-ANOTO]:5000
+   Ejemplo: http://192.168.1.100:5000
+4. Debe ver la pagina de inicio de sesion
+
+
+==== USO DIARIO ====
+
+Para INICIAR el servidor:
+- Doble click en INICIAR_SERVIDOR.bat
+- Mantenga la ventana abierta
+
+Para DETENER el servidor:
+- Presione Ctrl + C en la ventana
+- O cierre la ventana
+
+Para REINICIAR el servidor:
+- Cierre la ventana
+- Vuelva a ejecutar INICIAR_SERVIDOR.bat
+
+
+==== INICIO AUTOMATICO (OPCIONAL) ====
+
+Para que el servidor inicie cuando enciende la computadora:
+
+1. Presione las teclas: Windows + R
+2. Escriba: shell:startup
+3. Presione Enter
+4. Se abrira una carpeta
+5. Cree un acceso directo a INICIAR_SERVIDOR.bat en esa carpeta
+
+
+==== SOLUCIONAR PROBLEMAS ====
+
+Problema: No puedo acceder desde otro dispositivo
+Solucion:
+  - Verifique que configuro el firewall (PARTE 3)
+  - Confirme que el otro dispositivo esta en el WiFi de la escuela
+  - Use la IP exacta que aparece al iniciar el servidor
+  - Pruebe desactivando el antivirus temporalmente
+
+Problema: "El puerto 5000 ya esta en uso"
+Solucion:
+  - Reinicie la computadora
+  - Si persiste, otro programa usa el puerto 5000
+  - Puede cambiar el puerto editando INICIAR_SERVIDOR.bat
+
+Problema: Error de conexion a base de datos
+Solucion:
+  - Verifique que el servidor tiene Internet
+  - La base de datos esta en la nube y requiere Internet
+  - Contacte al administrador del sistema
+
+Problema: La aplicacion se cierra inmediatamente
+Solucion:
+  - Verifique que copio TODOS los archivos
+  - Ejecute ServicioComunal.exe directamente
+  - Lea el mensaje de error que aparece
+
+
+==== INFORMACION TECNICA ====
+
+Puerto usado: 5000
+Base de datos: En la nube (automatica)
+Acceso: Solo desde la red local
+Sistema operativo: Windows 10/11 o Windows Server
+Espacio necesario: 2GB
+RAM necesaria: 4GB minimo
+
+
+==== LISTA DE VERIFICACION ====
+
+Use esta lista para verificar que todo este listo:
+
+[ ] Carpeta completa copiada al servidor (C:\ServicioComunal\)
+[ ] Archivo ServicioComunal.exe presente
+[ ] Archivos INICIAR_SERVIDOR.bat y CONFIGURAR_FIREWALL.bat copiados
+[ ] Firewall configurado (ejecutado como administrador)
+[ ] Servidor iniciado con INICIAR_SERVIDOR.bat
+[ ] IP del servidor anotada
+[ ] Acceso probado desde el servidor (localhost:5000)
+[ ] Acceso probado desde otro dispositivo en la red
+[ ] Ventana del servidor permanece abierta
+
+
+==== CONTACTO Y SOPORTE ====
+
+Si tiene problemas:
+
+1. Documente el error:
+   - Tome captura de pantalla
+   - Anote que estaba haciendo
+   - Revise mensajes en la ventana del servidor
+
+2. Contacte al desarrollador con:
+   - Capturas de pantalla
+   - Descripcion del problema
+   - Version de Windows
+
+
+==== ACTUALIZACIONES FUTURAS ====
+
+Cuando reciba una actualizacion:
+
+1. Detenga el servidor (cierre la ventana)
+2. Haga copia de seguridad de la carpeta actual
+3. Reemplace los archivos con la nueva version
+4. Inicie el servidor nuevamente
+
+
+================================================================================
+CONSEJO: Imprima este documento y mantengalo cerca del servidor
+================================================================================
+
+Sistema desarrollado para el Liceo de Carrillos
+Version: 1.0 | Marzo 2026
+
+¡Listo para usar! El sistema permite a estudiantes y profesores gestionar
+el servicio comunal desde cualquier dispositivo conectado al WiFi de la escuela.
+
+================================================================================
