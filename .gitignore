@@ -43,3 +43,24 @@ bld/
 
 # Aider-specific
 .aider*
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+**/appsettings.*.Local.json
+
+# Local build and package output
+**/node_modules/
+**/TestResults/
+**/coverage/
+**/publish/
+**/*.pubxml.user
+
+# User uploaded files. Keep only the bundled, named form templates.
+/ServicioComunal/ServicioComunal/wwwroot/uploads/entregas/
+/ServicioComunal/ServicioComunal/wwwroot/uploads/formularios/*
+!/ServicioComunal/ServicioComunal/wwwroot/uploads/formularios/.gitkeep
+!/ServicioComunal/ServicioComunal/wwwroot/uploads/formularios/Anexo*.pdf
+!/ServicioComunal/ServicioComunal/wwwroot/uploads/formularios/Carta*.pdf
+!/ServicioComunal/ServicioComunal/wwwroot/uploads/formularios/Informe*.pdf

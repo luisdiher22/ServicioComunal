@@ -41,52 +41,18 @@
 ## Configuración de Entornos
 
 ### 1. Desarrollo (Local)
-```json
-// appsettings.Development.json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=ServicioComunalDB_Dev;Trusted_Connection=true;MultipleActiveResultSets=true"
-  },
-  "Logging": {
-    "LogLevel": {
-      "Default": "Debug",
-      "Microsoft.AspNetCore": "Information"
-    }
-  }
-}
+```text
+// Define en .env: ConnectionStrings__DefaultConnection=<cadena local de SQL Server>
 ```
 
 ### 2. Staging (Pruebas)
-```json
-// appsettings.Staging.json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=staging-server;Database=ServicioComunalDB_Staging;User ID=staging_user;Password=staging_password;TrustServerCertificate=True"
-  },
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information",
-      "Microsoft.AspNetCore": "Warning"
-    }
-  }
-}
+```text
+// Configura ConnectionStrings__DefaultConnection en el entorno del servicio.
 ```
 
 ### 3. Producción
-```json
-// appsettings.Production.json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=prod-server;Database=ServicioComunalDB;User ID=prod_user;Password=prod_password;TrustServerCertificate=False;Encrypt=True"
-  },
-  "Logging": {
-    "LogLevel": {
-      "Default": "Warning",
-      "Microsoft.AspNetCore": "Error"
-    }
-  },
-  "AllowedHosts": "liceocarrillos.edu.cr,www.liceocarrillos.edu.cr"
-}
+```text
+// Configura ConnectionStrings__DefaultConnection en el panel del hosting.
 ```
 
 ## Proceso de Build y Deployment

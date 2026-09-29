@@ -7,11 +7,48 @@ using Microsoft.EntityFrameworkCore;
 using ServicioComunal.Data;
 using ServicioComunal.Services;
 
+// Carga la cadena local desde .env solo si el proceso aún no recibió la variable.
+const string connectionStringVariable = "ConnectionStrings__DefaultConnection";
+if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(connectionStringVariable)))
+{
+    var envFile = Path.Combine(Directory.GetCurrentDirectory(), ".env");
+    if (File.Exists(envFile))
+    {
+        foreach (var line in File.ReadLines(envFile))
+        {
+            var trimmedLine = line.Trim();
+            if (trimmedLine.Length == 0 || trimmedLine.StartsWith('#'))
+                continue;
+
+            var separator = trimmedLine.IndexOf('=');
+            if (separator < 0 || !string.Equals(
+                    trimmedLine[..separator].Trim(),
+                    connectionStringVariable,
+                    StringComparison.Ordinal))
+                continue;
+
+            var value = trimmedLine[(separator + 1)..].Trim();
+            if (value.Length >= 2 &&
+                ((value[0] == '"' && value[^1] == '"') ||
+                 (value[0] == '\'' && value[^1] == '\'')))
+                value = value[1..^1];
+
+            if (!string.IsNullOrWhiteSpace(value))
+                Environment.SetEnvironmentVariable(connectionStringVariable, value);
+
+            break;
+        }
+    }
+}
+
 var builder = WebApplication.CreateBuilder(args);
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException(
+        $"Falta la cadena de conexión. Configura {connectionStringVariable} en el entorno o en un archivo .env local.");
 
 // Configuración de la base de datos con Entity Framework
 builder.Services.AddDbContext<ServicioComunalDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(connectionString));
 
 // Configuración de servicios MVC
 builder.Services.AddControllersWithViews();

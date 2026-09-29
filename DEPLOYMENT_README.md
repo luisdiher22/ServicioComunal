@@ -132,7 +132,7 @@ La IP se mostrará automáticamente al ejecutar `INICIAR_SERVIDOR.bat`
 La aplicación ya está configurada para usar una base de datos SQL Server en la nube:
 - **Servidor:** SQL5106.site4now.net
 - **Base de datos:** db_abef5f_liceocarrillos
-- **Autenticación:** Ya configurada en appsettings.json
+- **Cadena de conexión:** Configurar `ConnectionStrings__DefaultConnection` en el entorno del hosting
 
 No se requiere instalación de SQL Server local.
 
@@ -197,7 +197,7 @@ Antes de entregar al personal de la escuela:
 - [ ] Copiar `CONFIGURAR_FIREWALL.bat` a la carpeta publicada
 - [ ] Incluir `GUIA_INSTALACION_SERVIDOR.md`
 - [ ] Incluir `GUIA_RAPIDA.md`
-- [ ] Verificar que `appsettings.json` tenga la conexión correcta
+- [ ] Verificar que el hosting tenga configurada `ConnectionStrings__DefaultConnection`
 - [ ] Probar localmente que todo funciona
 - [ ] Comprimir todo en un archivo ZIP o copiar a USB
 

@@ -2,6 +2,10 @@
 
 ## Variables de Entorno
 
+La cadena de conexión se configura con `ConnectionStrings__DefaultConnection`. ASP.NET Core convierte el doble guion bajo (`__`) en la sección `ConnectionStrings:DefaultConnection`.
+
+Para desarrollo local, copia `.env.example` como `.env` en la carpeta del proyecto y edita su valor. La aplicación carga esa variable al iniciar; `.env` está ignorado por Git. En staging y producción, configura la misma variable en el panel del hosting o en el entorno del proceso. No guardes credenciales en `appsettings*.json`.
+
 ### Desarrollo Local
 ```bash
 ASPNETCORE_ENVIRONMENT=Development
@@ -34,25 +38,13 @@ ServicioComunal/
 ## Configuración de Base de Datos por Entorno
 
 ### Desarrollo
-```json
-"ConnectionStrings": {
-  "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=ServicioComunalDB_Dev;Trusted_Connection=true;MultipleActiveResultSets=true"
-}
-```
+En `.env`, define `ConnectionStrings__DefaultConnection` con la cadena de tu SQL Server local.
 
 ### Staging
-```json
-"ConnectionStrings": {
-  "DefaultConnection": "Server=staging-sql-server;Database=ServicioComunalDB_Staging;User ID=staging_user;Password=staging_password;TrustServerCertificate=True"
-}
-```
+Configura `ConnectionStrings__DefaultConnection` en el entorno del servicio de staging.
 
 ### Producción
-```json
-"ConnectionStrings": {
-  "DefaultConnection": "Server=prod-sql-server;Database=ServicioComunalDB;User ID=prod_user;Password=prod_password;TrustServerCertificate=False;Encrypt=True"
-}
-```
+Configura `ConnectionStrings__DefaultConnection` en el panel del hosting o en el entorno del proceso de producción.
 
 ## Configuración de Seguridad
 

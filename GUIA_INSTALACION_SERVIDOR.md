@@ -209,7 +209,7 @@ La base de datos está alojada en un servidor seguro en la nube (site4now.net) y
 **Solución:**
 1. Verifique que el servidor tenga conexión a Internet
 2. Contacte al administrador del sistema
-3. Revise el archivo `appsettings.json` para confirmar la cadena de conexión
+3. Revise en el entorno del hosting la variable `ConnectionStrings__DefaultConnection`
 
 ### Problema: La aplicación se cierra inmediatamente
 
@@ -244,7 +244,7 @@ Si encuentra problemas que no puede resolver:
 ServicioComunal/
 │
 ├── ServicioComunal.exe          ← Archivo principal ejecutable
-├── appsettings.json             ← Configuración (conexión a BD)
+├── appsettings.json             ← Configuración general
 ├── INICIAR_SERVIDOR.bat         ← Script para iniciar el servidor
 ├── CONFIGURAR_FIREWALL.bat      ← Script para configurar firewall
 │
